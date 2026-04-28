@@ -5,7 +5,7 @@
 #### Atores:
 
 - Cliente.
-  
+
 #### Fluxo principal:
 
 - O cliente seleciona a opção “Criar conta”.
@@ -21,6 +21,51 @@
 - O sistema realiza o cadastro, salvando os dados do novo usuário.
   
 - O sistema encaminha o usuário para a página principal do site.
+
+
+#### Fluxo Alternativo A: O email já está cadastrado
+
+- O sistema apresenta formulário de cadastro.
+ 
+- O usuário preenche os campos.
+
+- O sistema consulta o banco de dados.
+
+- O banco de dados retorna que o email informado já está em uso.
+
+- O sistema exibe uma mensagem de erro informando que o email digitado já está em uso.
+
+- O usuário digita um novo email no formulário e tenta novamente.
+
+- O sistema registra as informações no banco de dados e informa usuário.
+
+
+#### Fluxo Alternativo B: Campo vazio
+
+- O sistema apresenta formulário de cadastro.
+
+- O usuário não preenche um dos campos e clica no botão de "Criar Conta"
+
+- O sistema analisa os campos de cadastro e pede que o usuário preencha todos os campos.
+
+- O usuário preenche todos os campos  e clica no botão de "Criar Conta".
+
+- O sistema registra as informações no banco de dados e informa usuário.
+
+
+#### Fluxo Alternativo C: Senha diferente dos padrões exigidos
+
+- O sistema apresenta formulário de cadastro.
+
+- O usuário insere uma senha.
+
+- O sistema analisa se a senha está dentro dos padrões exigidos  (mínimo 8 caracteres e 1 símbolo)
+
+- O sistema exibe uma mensagem de erro e informa ao usuário que a senha está fora dos padrões.
+
+- O sistema exibe uma mensagem sugerindo que o usuário coloque a senha correta.
+  
+- O sistema registra as informações no banco de dados e informa usuário.
 
 
 
@@ -46,6 +91,49 @@
 - O sistema encaminha o usuário para a página principal do site.
 
 
+#### Fluxo Alternativo A: Email inválido
+
+- O sistema apresenta a página de formulário de Login.
+
+- O usuário insere um email.
+
+- O sistema consulta o banco de dados.
+
+- O banco de dados retorna que o email informado já está em uso.
+
+- O sistema exibe uma mensagem dizendo que o email está inválido e sugere que o usuário digite outro email.
+
+
+#### Fluxo Alternativo B: Senha inválida
+
+- O sistema apresenta a página de formulário de Login.
+
+- O usuário insere uma senha.
+
+- O sistema consulta o banco de dados.
+
+- O banco de dados retorna que a senha informada está inválida.
+
+- O sistema exibe uma mensagem dizendo que a senha está invalida e sugere que o usuário insira uma senha correta.
+
+
+#### Fluxo Alternativo C: Campo vazio
+
+- O sistema apresenta a página de formulário de Login.
+
+- O usuário não preenche um dos campos e clica no botão de "Login".
+
+- O sistema analisa os campos de cadastro e pede que o usuário preencha todos os campos.
+
+- O usuário preenche todos os campos (insere email e senha)  e clica no botão de "Login".
+
+- O sistema verifica no banco de dados se as informações estão corretas.
+
+- O banco de dados retorna verdadeiro.
+
+- O sistema redireciona o usuário para a página inicial do site.
+
+
 
 
 ### Caso de Uso 3: Buscar livros.
@@ -53,7 +141,6 @@
 #### Atores: 
 
 - Usuário.
-Regras de uso
 
 #### Fluxo principal: 
 
@@ -72,7 +159,23 @@ Regras de uso
 - Os livros são exibidos.
 
 
+#### Fluxo Alternativo A: Campo vazio.
 
+- O sistema apresenta a página inicial do site.
+
+- O usuário aperta na barra de pesquisa.
+
+- O usuário não preenche o campo e aperta a barra de pesquisa.
+
+- O sistema analisa e pede que o usuário digite o tipo de livro desejada.     PAREI AQUI
+
+- O usuário digita a flor desejada e clica na barra de pesquisa.
+
+- O sistema verifica no banco de dados se tem a flor desejada.
+
+- O banco de dados retorna verdadeiro.
+
+- O sistema direciona o usuário para a página com a flor desejada.
 
 ### Caso de Uso 4: Comentar.
  
@@ -198,7 +301,7 @@ Regras de uso
 
 - O sistema apaga o usuário.
 
-- O sistema manda uma mensagem de que o usuário foi apagado.
+- O sistema avisa que o usuário foi apagado.
 
 
 
@@ -207,27 +310,96 @@ Regras de uso
 
 #### Atores:
 
-- Cliente.
+- Usuário.
 
-#### Fluxos principal:
+#### Fluxo principal:
 
-- O cliente clica no ícone do próprio perfil.
+- O usuário clica no ícone do próprio perfil.
 
-- O sistema abre a página do perfil do cliente.
+- O sistema abre a página do perfil do usuário.
 
-- O cliente clica em editar informações do perfil.
+- O sistema exibe os dados de cadastro do usuário.
 
-- O cliente edita as informações do perfil.
+- O usuário clica em editar informações do perfil.
 
-- O cliente clica no botão de editar.
+- O usuário edita as informações do perfil.
+
+- O usuário clica no botão de editar.
 
 - O sistema pede confirmação.
 
-- O cliente confirma.
+- O usuário confirma.
 
 - O sistema edita as informações.
 
-- O sistema manda uma mensagem dizendo que a edição foi feita.
+- O sistema avisa que a edição foi feita.
+
+- O sistema abre a página do perfil do usuário.
+
+
+#### Fluxo Alternativo A: Cancelar edição
+
+- O usuário clica no ícone do próprio perfil.
+
+- O sistema abre a página do perfil do usuário.
+
+- O usuário clica em editar informações do perfil.
+  
+- O sistema exibe os dados de cadastro do usuário.
+
+- O usuário decide que não quer mais editar e aperta o botão de cancelar edição.
+
+- O sistema redireciona o usuário para a página do perfil do usuário. 
+
+
+#### Fluxo Alternativo B: Excluir usuário.
+
+- O usuário clica no ícone do próprio perfil.
+
+- O sistema abre a página do perfil do usuário.
+
+- O usuário aperta no botão de excluir conta.
+
+- O sistema solicita a senha do usuário para proseguir com a exclusão.
+  
+- O usário digita a senha.
+  
+- O sistema analisa a veracidade da senha no banco de dados.
+  
+- O banco de dados retorna uma confirmação positiva.
+  
+- O sistema pergunta se quer confirmar a exclusão.
+  
+- O usuário aperta o botão confirmar.
+  
+- O sistema apaga os dados do usuário no banco de dados.
+  
+- O sistema manda uma mensagem dizendo que o usuário foi apagado.
+  
+- O sistema realoca o usuário para a página de login e cadastro.
+
+
+#### Fluxo Alternativo C: Senha incorreta.
+
+- O usuário acessa o menu do seu perfil com as configurações da sua conta e aperta no botão de excluir conta.
+
+- O sistema pede que o usuário insira senha para continuar.
+
+- O usuário insere a senha.
+
+- O sistema verifica no banco de dados se a senha está correta.
+
+- O banco de dados retorna negativo.
+
+- O sistema envia uma mensagem de erro e pede que ao usuário que ele insira a senha correta.
+
+- O usuário insere a senha correta.
+
+- O sistema verifica no banco de dados se a senha está correta.
+
+- O banco de dados retorna uma confirmação positiva.
+
+- O sistema envia uma mensagem de sucesso e envia o usuário para a página de cadastro e login. 
 
 
 
