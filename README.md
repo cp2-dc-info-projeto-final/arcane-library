@@ -6,7 +6,7 @@ Projeto Final 2025 do Curso Técnico Integrado de Desenvolvimento de Sistemas - 
  - Emanuelle Victória Rodrigues Viana 
  - João Pedro dos Santos Silva
  - Hudson Gabriel Lopes
- - Guilherme
+ - Guilherme s.
 
  ## Tecnologias
 
