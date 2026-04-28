@@ -4,15 +4,15 @@
 
 #### Atores:
 
-- Cliente.
+- Usuário.
 
 #### Fluxo principal:
 
-- O cliente seleciona a opção “Criar conta”.
+- O usuário seleciona a opção “Criar conta”.
   
 - O sistema leva o usuário até a tela de registro contendo um formulário.
   
-- O cliente preenche os campos do formulário (informando nome, e-mail e criando uma senha).
+- O usuário preenche os campos do formulário (informando nome, e-mail e criando uma senha).
   
 - O sistema consulta o banco de dados para verificar a disponibilidade das informações fornecidas.
   
@@ -167,15 +167,33 @@
 
 - O usuário não preenche o campo e aperta a barra de pesquisa.
 
-- O sistema analisa e pede que o usuário digite o tipo de livro desejada.     PAREI AQUI
+- O sistema analisa e pede que o usuário digite o livro que deseja, o gênero de livro que deseja ou o autor.    PAREI AQUI
 
-- O usuário digita a flor desejada e clica na barra de pesquisa.
+- O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor desejado e clica na barra de pesquisa.
 
-- O sistema verifica no banco de dados se tem a flor desejada.
+- O sistema verifica no banco de dados se tem o livro que deseja, o gênero de livro que deseja ou o autor desejado.
 
 - O banco de dados retorna verdadeiro.
 
-- O sistema direciona o usuário para a página com a flor desejada.
+- O sistema direciona o usuário para a página com o livro que deseja, o gênero de livro que deseja ou o autor desejado.
+
+
+#### Fluxo Alternativo B: Livros indisponíveis.
+
+- O sistema apresenta a página inicial do site.
+
+- O usuário aperta na barra de pesquisa.
+
+- O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor desejado e aperta no botão "Enter".
+
+- O sistema consulta o banco de dados.
+
+- O banco de dados retorna negativo.
+
+- O sistema apresenta mensagem dizendo que o livro que deseja, livros do gênero que deseja ou livros do autor desejado não tem disponíveis para aluguel no momento.
+
+
+
 
 ### Caso de Uso 4: Comentar.
  
@@ -183,30 +201,86 @@
 
 - Usuário.
 
-#### Regras de uso: O cliente pode comentar e apagar o comentário. O administrador só pode apagar um comentário.
+#### Regras de uso: O cliente pode comentar, apagar e editar o próprio comentário. O administrador pode comentar, apagar e editar o próprio comentário e apenas excluir um comentário que não é dele.
 
 #### Fluxo principal:  
 
-- O cliente abre a aba de um livro específico.
+- O usuário abre a aba de um livro específico.
 
-- O cliente aperta em um botão de comentário.
+- O usuário aperta em um botão de comentário.
 
 - O sistema abre uma página de comentários do tal livro.
 
-- O cliente escreve o seu comentário.
+- O usuário escreve o seu comentário.
 
-- O cliente aperta em um botão de publicar em comentário.
+- O usuário aperta em um botão de publicar um comentário.
 
 - O sistema pede confimação do usuário.
 
-- O cliente confirma a publicação.
+- O usuário confirma a publicação.
 
 - O sistema publica o comentário.
 
 
+#### Fluxo Alternativo A: Excluir comentário.             REFAZER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+- O usuário clica no ícone do próprio perfil.
+
+- O sistema abre a página do perfil do usuário.
+
+- O sistema exibe os dados de cadastro do usuário.
+
+- O usuário clica no botão comentários.
+
+- O sistema abre a página onde listam todos os seus comentários.
+
+- O usuário seleciona o comentário que deseja excluir.
+
+- O sistema abre o comentário desejado.
+
+- O usuário clica no botão de excluir comentário.
+
+- O sistema pede confirmação.
+
+- O usuário confirma.
+
+- O sistema apaga o comentário do banco de dados.
+
+- O sistema apresenta mensagem dizendo que o comentário foi apagado.
 
 
-### Caso de Uso 5: Efetuar aluguel.
+#### Fluxo Alternativo B: Editar comentário.
+
+- O usuário clica no ícone do próprio perfil.
+
+- O sistema abre a página do perfil do usuário.
+
+- O sistema exibe os dados de cadastro do usuário.
+
+- O usuário clica no botão comentários.
+
+- O sistema abre a página onde listam todos os seus comentários.
+
+- O usuário seleciona o comentário que deseja editar.
+
+- O sistema abre o comentário desejado.
+
+- O usuário clica no botão de editar comentário.
+
+- O usuário edita o comentário.
+
+- O usuário clica no botão de editar.
+
+- O sistema pede confirmação.
+
+- O usuário confirma.
+
+- O sistema edita o comentário do banco de dados.
+
+- O sistema apresenta mensagem dizendo que o comentário foi editado.
+
+
+### Caso de Uso 5: Efetuar aluguel.                      PAREI AQUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #### Atores: 
 
@@ -299,7 +373,7 @@
 
 - O administrador confirma.
 
-- O sistema apaga o usuário.
+- O sistema apaga o usuário do banco de dados.
 
 - O sistema avisa que o usuário foi apagado.
 
@@ -337,7 +411,7 @@
 - O sistema abre a página do perfil do usuário.
 
 
-#### Fluxo Alternativo A: Cancelar edição
+#### Fluxo Alternativo A: Cancelar edição.
 
 - O usuário clica no ícone do próprio perfil.
 
