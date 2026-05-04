@@ -288,20 +288,50 @@
 
 #### Fluxo principal:  
 
-- O administrador inicia o processo de aluguel.
+- O administrador clica no botão de iniciar o processo de aluguel.
+
+- O sistema abre a página de aluguel de livros.
+
+- O administrador clica no campo de digitar o código do livro.
 
 - O administrador preenche o código do livro a ser alugado.
 
 - O sistema exibe os dados do livro a ser alugado.
 
+- O sistema pede confirmação.
+
+- O administrador confirma.
+
 - O administrador preenche a identificação do cliente.
 
--O sistema exibe um prazo pra devolução. 
+- O sistema pede confirmação.
+
+- O administrador confirma.
+
+- O sistema exibe um prazo pra devolução. 
   
 - O administrador finaliza o aluguel e é redirecionado para a pagina inicial.
 
 
- 
+ #### Fluxo Alternativo A: Livro não encontrado.
+
+- O administrador clica no botão de iniciar o processo de aluguel.
+
+- O sistema abre a página de aluguel de livros.
+
+- O administrador clica no campo de digitar o código do livro.
+
+- O administrador preenche o código do livro a ser alugado.
+
+- O sistema avisa que o livro não está disponível.
+
+- O administrador aperta em cancelar.
+
+- O sistema cancela.
+
+- O sistema redireciona o administrador para a página de processo de aluguel.
+
+
 
 ### Caso de Uso 6: Finalizar aluguel.
 
@@ -319,12 +349,12 @@
 
 - O administrador confirma.
 
-- O sistema volta pra página inicial.
+- O sistema volta pra página de aluguéis do cliente.
 
 
 
 
-### Caso de Uso 7: Gerenciar livros.
+### Caso de Uso 7: Gerenciar livros.                                                           PAREI AQUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #### Atores: 
 
@@ -347,6 +377,24 @@
 - O administrador confirma.
 
 - O sistema avisa que a edição foi feita.
+
+- O sistema volta pra página inicial.
+
+
+#### Fluxo Alternativo A: Excluir livro.
+
+- O administrador abre a página de um livro.
+
+- O administrador clicar em apagar o livro.
+
+- O sistema pede confirmação.
+
+- O administrador confirma.
+
+- O sistema avisa que o livro foi apagado.
+
+- O sistema volta pra página inicial.
+
 
 
 
