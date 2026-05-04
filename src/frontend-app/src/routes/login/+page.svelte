@@ -83,7 +83,7 @@
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
-          <a href="../users/new"> Cadastra-s</a>
+          <a href="../users/new"> Cadastra-se.</a>
       </form>
     </Card>
   </div>
