@@ -222,7 +222,7 @@
 - O sistema publica o comentário.
 
 
-#### Fluxo Alternativo A: Excluir comentário.             REFAZER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#### Fluxo Alternativo A: Excluir comentário.
 
 - O usuário clica no ícone do próprio perfil.
 
@@ -280,7 +280,7 @@
 - O sistema apresenta mensagem dizendo que o comentário foi editado.
 
 
-### Caso de Uso 5: Efetuar aluguel.                      PAREI AQUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+### Caso de Uso 5: Efetuar aluguel.
 
 #### Atores: 
 
@@ -323,6 +323,25 @@
 
 - O administrador preenche o código do livro a ser alugado.
 
+- O sistema avisa que o livro não encontrado.
+
+- O administrador aperta em cancelar.
+
+- O sistema cancela.
+
+- O sistema redireciona o administrador para a página de processo de aluguel.
+
+
+ #### Fluxo Alternativo B: Livro não disponível.
+
+- O administrador clica no botão de iniciar o processo de aluguel.
+
+- O sistema abre a página de aluguel de livros.
+
+- O administrador clica no campo de digitar o código do livro.
+
+- O administrador preenche o código do livro a ser alugado.
+
 - O sistema avisa que o livro não está disponível.
 
 - O administrador aperta em cancelar.
@@ -330,6 +349,7 @@
 - O sistema cancela.
 
 - O sistema redireciona o administrador para a página de processo de aluguel.
+
 
 
 
@@ -354,7 +374,7 @@
 
 
 
-### Caso de Uso 7: Gerenciar livros.                                                           PAREI AQUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+### Caso de Uso 7: Gerenciar livros.
 
 #### Atores: 
 
@@ -398,7 +418,6 @@
 
 
 
-
 ### Caso de Uso 8: Gerenciar usuários.
 
 #### Atores: 
@@ -424,6 +443,27 @@
 - O sistema apaga o usuário do banco de dados.
 
 - O sistema avisa que o usuário foi apagado.
+
+
+#### Fluxo Alternativo A: Editar usuário.
+
+- O administrador vai para a página de usuários.
+
+- O administrador escolhe um usuário.
+
+- O administrador clica no perfil do usuário.
+
+- O administrador entra no perfil do usuário.
+
+- O administrador clica no botão de editar usuário.
+
+- O sistema pede confirmação.
+
+- O administrador confirma.
+
+- O sistema edita as informações do usuário no banco de dados.
+
+- O sistema avisa que o usuário foi editado.
 
 
 
