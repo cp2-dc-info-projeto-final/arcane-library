@@ -8,7 +8,6 @@ const verifyToken = (req, res, next) => {
     Split ' ' separa o 'Bearer' do token
   */
   const token = req.headers.authorization?.split(' ')[1];
-  
   if (!token) {
     // http status 401 = Unauthorized
     return res.status(401).json({
