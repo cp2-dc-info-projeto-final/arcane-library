@@ -6,7 +6,7 @@
 
 <Menu />
 
-<div class="text-center p-8 pt-32">
+<div class=" bg-primary-400 text-center p-8 pt-32">
 	<Heading tag="h2" class="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6">Home</Heading>
 	<P class="text-lg leading-relaxed text-gray-700 dark:text-gray-300 mb-4 text-justify">
 		Que alegria ter você aqui conosco. 🎉

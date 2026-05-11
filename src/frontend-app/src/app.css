@@ -5,11 +5,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary-50: #fff5f2;
-  --color-primary-100: #fff1ee;
-  --color-primary-200: #ffe4de;
-  --color-primary-300: #ffd5cc;
-  --color-primary-400: #ffbcad;
+  --color-primary-50: #219EBC;
+  --color-primary-100: #8ECAE6;
+  --color-primary-200: #FFB703;
+  --color-primary-300: #219EBC;
+  --color-primary-400: #8ECAE6;
+  /* verão */
   --color-primary-500: #fe795d;
   --color-primary-600: #ef562f;
   --color-primary-700: #eb4f27;
