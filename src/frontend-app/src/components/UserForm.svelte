@@ -178,10 +178,6 @@
         {#if hasToken}
           <Label for="role">Perfil</Label>
           <Select id="role" bind:value={user.role} items={roleOptions} class="mt-1" />
-
-        {:else}
-          
-          <Select id="role" bind:value={user.role} items={roleOptions} class="mt-1" hidden />
         {/if}
         
 
