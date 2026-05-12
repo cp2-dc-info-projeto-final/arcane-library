@@ -128,7 +128,7 @@ router.post('/login', async function(req, res) {
       FROM usuario 
       WHERE login = $1`, [login]);
 
-    /*
+    /* 
      tratar login inválido igual senha incorreta
      confere maior segurança por não expor indiretamente
      se existe uma conta com aquele login 

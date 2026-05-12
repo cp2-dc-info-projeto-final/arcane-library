@@ -50,4 +50,20 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken, isAdmin};
+// Middleware para verificar se o usuário logado tem o id que se quer acessar
+const isIdUser = (req, res, next) => {
+  console.log("Entrou no isIdUser");
+  console.log(req);
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    // http status 403 - Forbidden
+    return res.status(403).json({
+      success: false,
+      message: 'Acesso negado: requer privilégios de administrador',
+      errors: []
+    });
+  }
+};
+
+module.exports = { verifyToken, isAdmin, isIdUser};
