@@ -5,12 +5,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary-50: #219EBC;
-  --color-primary-100: #8ECAE6;
-  --color-primary-200: #FFB703;
-  --color-primary-300: #219EBC;
-  --color-primary-400: #8ECAE6;
-  /* verão */
+  --color-primary-50: #fff5f2;
+  --color-primary-100: #fff1ee;
+  --color-primary-200: #ffe4de;
+  --color-primary-300: #ffd5cc;
+  --color-primary-400: #ffbcad;
   --color-primary-500: #fe795d;
   --color-primary-600: #ef562f;
   --color-primary-700: #eb4f27;
@@ -33,7 +32,7 @@
 @source "../node_modules/flowbite-svelte-icons/dist";
 
 @layer base {
-  /* disable chrome cancel button */
+  /* desativar o botão cancelar do Chrome */
   input[type="search"]::-webkit-search-cancel-button {
     display: none;
   }
@@ -42,4 +41,93 @@
 /* Desativa animação dos placeholders do Flowbite-Svelte */
 .animate-pulse, .animate-shimmer {
   animation: none !important;
+}
+
+/* ================================= */
+/* TEMAS SAZONAIS - BACKGROUNDS */
+/* ================================= */
+
+/* Primavera - Verde e Rosa */
+:global(.theme-spring) {
+  --color-primary-500: #10b981;
+  --color-secondary-500: #fbbf24;
+  --color-accent-500: #ec4899;
+  --bg-light: #f0fdf4;
+  --bg-dark: #064e3b;
+  --accent-light: #fce7f3;
+}
+
+:global(.theme-spring main) {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fce7f3 100%);
+  transition: background 0.5s ease;
+}
+
+:global(.theme-spring.dark main) {
+  background: linear-gradient(135deg, #064e3b 0%, #831843 100%);
+}
+
+/* Verão - Âmbar e Ciano */
+:global(.theme-summer) {
+  --color-primary-500: #f59e0b;
+  --color-secondary-500: #06b6d4;
+  --color-accent-500: #f97316;
+  --bg-light: #fffbeb;
+  --bg-dark: #78350f;
+  --accent-light: #cffafe;
+}
+
+:global(.theme-summer main) {
+  background: linear-gradient(135deg, #fffbeb 0%, #cffafe 100%);
+  transition: background 0.5s ease;
+}
+
+:global(.theme-summer.dark main) {
+  background: linear-gradient(135deg, #78350f 0%, #164e63 100%);
+}
+
+/* Outono - Vermelho e Laranja */
+:global(.theme-autumn) {
+  --color-primary-500: #dc2626;
+  --color-secondary-500: #f97316;
+  --color-accent-500: #b45309;
+  --bg-light: #fef2f2;
+  --bg-dark: #7c2d12;
+  --accent-light: #fed7aa;
+}
+
+:global(.theme-autumn main) {
+  background: linear-gradient(135deg, #fef2f2 0%, #fed7aa 100%);
+  transition: background 0.5s ease;
+}
+
+:global(.theme-autumn.dark main) {
+  background: linear-gradient(135deg, #7c2d12 0%, #92400e 100%);
+}
+
+/* Inverno - Azul e Índigo */
+:global(.theme-winter) {
+  --color-primary-500: #0ea5e9;
+  --color-secondary-500: #60a5fa;
+  --color-accent-500: #818cf8;
+  --bg-light: #f0f9ff;
+  --bg-dark: #0c2d6b;
+  --accent-light: #e0e7ff;
+}
+
+:global(.theme-winter main) {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+  transition: background 0.5s ease;
+}
+
+:global(.theme-winter.dark main) {
+  background: linear-gradient(135deg, #0c2d6b 0%, #312e81 100%);
+}
+
+/* Transições suaves */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+main {
+  transition: background 0.5s ease;
 }
