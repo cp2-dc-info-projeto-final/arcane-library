@@ -54,7 +54,7 @@
               id="login"
               type="text"
               bind:value={login}
-              placeholder="Digite seu login"
+              placeholder="Digite seu nick para o login"
               required
             />
           </div>
