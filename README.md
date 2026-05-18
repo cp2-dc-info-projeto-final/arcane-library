@@ -7,6 +7,7 @@ Projeto Final 2025 do Curso Técnico Integrado de Desenvolvimento de Sistemas - 
  - João Pedro dos Santos Silva
  - Hudson Gabriel Lopes
  - Guilherme s.
+ - Judce
 
  ## Tecnologias
 

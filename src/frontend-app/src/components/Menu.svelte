@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ThemeModal from './ThemeModal.svelte';
   import { Navbar, NavBrand, NavLi, NavUl, NavHamburger, Heading} from "flowbite-svelte";
   import { onMount } from "svelte";
   import { logout, getCurrentUser, getToken, type User } from "$lib/auth";
@@ -112,6 +113,13 @@
         <!-- se não tem token, exibe botão de login-->
         <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Login</NavLi>
       {/if}
+
+		<!-- Theme selector button when not logged in -->
+		{#if !hasToken}
+			<NavLi>
+			<ThemeModal />
+			</NavLi>
+		{/if}
     </NavUl>
   </Navbar>
 </div>
