@@ -17,6 +17,74 @@ CREATE TABLE usuario (
     CONSTRAINT ck_usuario_role_valid CHECK (role IN ('admin','bibliotecario','cliente')) -- tipos de usuário
 );
 
+DROP TABLE IF EXISTS  categoria CASCADE;
+ 
+CREATE TABLE cateoria (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    nome text NOT NULL,
+    
+    CONSTRAINT pk_categoria PRIMARY KEY (id)
+);
+
+
+DROP TABLE IF EXISTS livro CASCADE;
+
+CREATE TABLE livro (
+     id BIGINT GENERATED ALWAYS AS IDENTITY,
+     id_categoria BIGINT NOT NULL,
+     titulo text NOT NULL,
+     ano_de_publicacao text NOT NULL,
+     editora text NOT NULL,
+     isbn int NOT NULL,
+
+    CONSTRAINT pk_livro PRIMARY KEY(id),
+    CONSTRAINT uk_livro_isbn UNIQUE (isbn),
+    CONSTRAINT fk_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id) ON DELETE CASCADE
+);
+
+
+DROP TABLE IF EXISTS autor CASCADE;  
+CREATE TABLE autor (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    nome text NOT NULL,
+    pseunonimo text
+);
+
+DROP TABLE IF EXISTS livro_autor CASCADE;
+
+CREATE TABLE livro_autor (
+    id_autor INT,
+    id_livro INT, 
+    PRIMARY KEY (id_autor, id_livro),
+    CONSTRAINT fk_autor FOREIGN KEY (id_autor) REFERENCES autor(id),
+    CONSTRAINT fk_livro FOREIGN KEY (id_livro) REFERENCES livro(id)
+);
+
+
+DROP TABLE IF  EXISTS emprestimo CASCADE;
+CREATE TABLE emprestimo (
+    id BIGINT GENERATED ALWAYS AS IDENTITY, 
+    id_usuario BIGINT NOT NULL,
+    data_de_emprestimo TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_fim_emprestimo TIMESTAMP,
+    status_emprestimo text NOT NULL DEFAULT 'ativo', 
+    CONSTRAINT pk_emprestimo PRIMARY KEY (id),
+    CONSTRAINT fk_emprestimo_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT ck_emprestimo_status CHECK (status_emprestimo IN ('ativo', 'devolvido', 'atrasado'))
+);
+
+
+DROP TABLE IF EXISTS emprestimo_livro CASCADE;
+
+CREATE TABLE emprestimo_livro (
+    id_emprestimo INT,
+    id_livro INT, 
+    PRIMARY KEY (id_emprestimo, id_livro),
+    CONSTRAINT fk_emprestimo FOREIGN KEY (id_emprestimo) REFERENCES emprestimo(id),
+    CONSTRAINT fk_livro FOREIGN KEY (id_livro1) REFERENCES livro(id)
+);
+
+
 INSERT INTO usuario (login, email, senha, role) VALUES
 -- senha 123456
 ('Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK', 'admin'),
