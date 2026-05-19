@@ -9,6 +9,7 @@
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from "$lib/auth";
 
+
   export let id: number | null = null; // id do usuário
 
   let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'user' }; // dados do form
@@ -161,26 +162,28 @@
     errosCustomizados['cpf'] = '';
   }
 
-  function MascaraTelefone(telefone) {
-		telefone = telefone.replace(/\D/g, '').substring(0, 11);
-		telefone = telefone.replace(/^(\d{2})(\d)/g, '($1) $2');
-		telefone = telefone.replace(/(\d{5})(\d{4})$/, '$1-$2');
-		return telefone;}
-    $: if (user.telefone) {
-    // Aplica os pontos e hífen na tela
-    user.telefone = aplicarMascara(user.telefone); 
+  let telefone = '';
+
+  function aplicarTelefone(tele) {
+    let telefone = tele.target.value;
     
-    const apenasNumeros = user.telefone.replace(/\D/g, '');
+    // Remove tudo que não é número
+    telefone = telefone.replace(/\D/g, '');
     
-    // Atualiza a mensagem de erro em tempo real
-    if (apenasNumeros.length === 11) {
-      errosCustomizados['telefone'] = valida(apenasNumeros) ? '' : 'telefone inválido';
-    } else {errorOf
-      errosCustomizados['telefone'] = 'O telefone deve conter 11 dígitos';
-    }
-  } else {
-    errosCustomizados['telefone'] = '';
+    // Limita em 11 dígitos (DDD + 9 dígitos)
+    telefone = telefone.substring(0, 11);
+    
+    // Aplica a máscara
+    telefone = telefone.replace(/^(\d{2})(\d)/g, '($1) $2');
+    telefone = telefone.replace(/(\d)(\d{4})$/, '$1-$2');
+    
+    // Atualiza a variável e o input
+    telefone = telefone;
+    tele.target.value = telefone;
   }
+  let dataNasc = ''
+  const dataMin ='01-01-1920'
+  const hoje = new Date().toISOString().split('T')[0];
   
 </script>
 
@@ -234,7 +237,7 @@
     <!-- Campo telefone -->
     <div>
     <Label for="telefone">Telefone</Label>
-    <Input id="telefone" type="tel" bind:value={user.telefone} placeholder="(XX) XXXXX-XXXX" required class="mt-1" />
+    <Input id="telefone" type="tel" bind:value={user.telefone} placeholder="(XX) XXXXX-XXXX" required class="mt-1" onInput={aplicarTelefone} />
     {#if errorOf('telefone')}
         <div class="mt-1 text-sm text-red-500">{errorOf('telefone')}</div>
       {/if}
@@ -249,6 +252,8 @@
       placeholder="00/00/0000" 
       required class="mt-1"
       maxlenght="10"
+      min={dataMin}
+      max={hoje}
       />
       {#if errorOf('dataNasc')}
           <div class="mt-1 text-sm text-red-500">{errorOf('dataNasc')}</div>

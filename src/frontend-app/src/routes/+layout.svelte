@@ -1,3 +1,5 @@
+
+
 <script lang="ts">
 	import '../app.css';
 	import Menu from '../components/Menu.svelte';
@@ -16,14 +18,15 @@
 	});
 </script>
 
-<html class="theme-spring">
+
 	<main class="flex flex-col items-center justify-center min-h-screen w-full">
 		<Menu />
 		<div class="w-full max-w-3xl px-4 md:px-8">
 			{@render children()}
 		</div>
 	</main>
-</html>
+
+
 
 <style>
 	:global(html) {

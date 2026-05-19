@@ -115,7 +115,7 @@
       {/if}
 
 		<!-- Theme selector button when not logged in -->
-		{#if !hasToken}
+		{#if hasToken}
 			<NavLi>
 			<ThemeModal />
 			</NavLi>

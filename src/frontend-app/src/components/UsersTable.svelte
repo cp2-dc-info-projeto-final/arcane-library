@@ -1,6 +1,6 @@
 <script lang="ts">
   // Tabela de usuários
-  import { Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Card, Badge } from 'flowbite-svelte'; // UI
+  import { Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Card, Badge, input } from 'flowbite-svelte'; // UI
   import ConfirmModal from './ConfirmModal.svelte'; // modal de confirmação
   import { UserEditOutline, TrashBinOutline } from 'flowbite-svelte-icons'; // ícones
   import { goto } from '$app/navigation'; // navegação
@@ -15,6 +15,7 @@
   let deletingId: number | null = null; // id em deleção
   let confirmOpen = false; // modal aberto?
   let confirmTargetId: number | null = null; // id alvo do modal
+  let consulta = ''
 
   // Abre modal de confirmação
   function openConfirm(id: number) {
@@ -77,6 +78,24 @@
       loading = false;
     }
   });
+  async function filtrarUsuario(){
+    try {
+      const res = await api.get(`/users?consulta=${encodeURIComponent(consulta)}`);
+      const body = res.data as ApiResponse<User[]>;
+      if (body.success) {
+        users = body.data ?? [];
+      } else {
+        error = body.message;
+      }
+    } catch (e: any) {
+      console.error('Erro ao carregar usuários:', e);
+      const body = e.response?.data as ApiResponse<User[]> | undefined;
+      error = body?.message || 'Erro ao carregar usuários';
+    } finally {
+      loading = false;
+    }
+  };
+  
 </script>
 
 {#if loading}
@@ -84,6 +103,13 @@
 {:else if error}
   <div class="my-8 text-center text-red-500">{error}</div>
 {:else}
+  <div class = "hidden xl:block">
+
+    
+    <input type ="text" id = "pesquisa" bind:value={consulta} on:input={filtrarUsuario} placeholder="Busca por usuário">
+    
+  </div>
+  
   <!-- Tabela para telas médias/grandes -->
   <div class="hidden xl:block">
     <!-- Tabela de usuários -->

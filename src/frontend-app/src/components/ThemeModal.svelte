@@ -61,17 +61,17 @@
 								class="w-6 h-6 rounded-full border border-gray-300"
 								style="background-color: {theme.primaryColor};"
 								title={theme.primaryColor}
-							/>
+							></div>
 							<div
 								class="w-6 h-6 rounded-full border border-gray-300"
 								style="background-color: {theme.secondaryColor};"
 								title={theme.secondaryColor}
-							/>
+							></div>
 							<div
 								class="w-6 h-6 rounded-full border border-gray-300"
 								style="background-color: {theme.accentColor};"
 								title={theme.accentColor}
-							/>
+							></div>
 						</div>
 
 						{#if currentTheme === key}
@@ -92,7 +92,7 @@
 						<div
 							class="w-8 h-8 rounded border border-gray-300"
 							style="background-color: {themes[currentTheme].primaryColor};"
-						/>
+						></div>
 						<code class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
 							{themes[currentTheme].primaryColor}
 						</code>
@@ -104,7 +104,7 @@
 						<div
 							class="w-8 h-8 rounded border border-gray-300"
 							style="background-color: {themes[currentTheme].secondaryColor};"
-						/>
+						></div>
 						<code class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
 							{themes[currentTheme].secondaryColor}
 						</code>
@@ -116,7 +116,7 @@
 						<div
 							class="w-8 h-8 rounded border border-gray-300"
 							style="background-color: {themes[currentTheme].accentColor};"
-						/>
+						></div>
 						<code class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
 							{themes[currentTheme].accentColor}
 						</code>
