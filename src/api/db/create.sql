@@ -5,7 +5,7 @@ CREATE TABLE usuario (
     login text NOT NULL,
     email text NOT NULL,
     senha text NOT NULL,
-    role text NOT NULL DEFAULT 'cliente',
+    role text NOT NULL DEFAULT 'cliente',+.
     
     -- Constraints
     CONSTRAINT pk_usuario PRIMARY KEY (id),
@@ -19,7 +19,7 @@ CREATE TABLE usuario (
 
 DROP TABLE IF EXISTS  categoria CASCADE;
  
-CREATE TABLE cateoria (
+CREATE TABLE categoria (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     nome text NOT NULL,
     

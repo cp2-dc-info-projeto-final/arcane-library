@@ -11,7 +11,7 @@
   
     export let id: number | null = null; // id do usuário
   
-    let user: UserFormData = { id: 0, login: '', email: '', senha: '', role: 'user', cpf: 0 }; // dados do form
+    let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'user' }; // dados do form
     
     // Opções de roles
     const roleOptions = [
@@ -112,6 +112,76 @@
       hasToken = getToken() !== null;
       console.log('SIIIIIIIIIIXSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEVEN')
     }
+    let errosCustomizados = {};   
+
+     // 1. Função de Máscara Automática
+  function aplicarMascara(valor) {
+    const digitos = valor.replace(/\D/g, '').slice(0, 11);
+    return digitos
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+
+  // 2. Algoritmo de Validação Matemática (Módulo 11)
+  function validarCPF(cpf) {
+    const limpo = cpf.replace(/\D/g, '');
+    if (limpo.length !== 11 || /^(\d)\1+$/.test(limpo)) return false;
+    
+    let soma = 0;
+    for (let i = 1; i <= 9; i++) soma += parseInt(limpo.substring(i - 1, i)) * (11 - i);
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(limpo.substring(9, 10))) return false;
+    
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(limpo.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(limpo.substring(10, 11));
+  }
+
+  // 3. CONSTRUÇÃO AUTOMÁTICA (Reatividade Nativa do Svelte)
+  // Roda automaticamente a cada caractere digitado no input
+  $: if (user.cpf) {
+    // Aplica os pontos e hífen na tela
+    user.cpf = aplicarMascara(user.cpf); 
+    
+    const apenasNumeros = user.cpf.replace(/\D/g, '');
+    
+    // Atualiza a mensagem de erro em tempo real
+    if (apenasNumeros.length === 11) {
+      errosCustomizados['cpf'] = validarCPF(apenasNumeros) ? '' : 'CPF inválido';
+    } else {errorOf
+      errosCustomizados['cpf'] = 'O CPF deve conter 11 dígitos';
+    }
+  } else {
+    errosCustomizados['cpf'] = '';
+  }
+
+  let telefone = '';
+
+  function aplicarTelefone(tele) {
+    let telefone = tele.target.value;
+    
+    // Remove tudo que não é número
+    telefone = telefone.replace(/\D/g, '');
+    
+    // Limita em 11 dígitos (DDD + 9 dígitos)
+    telefone = telefone.substring(0, 11);
+    
+    // Aplica a máscara
+    telefone = telefone.replace(/^(\d{2})(\d)/g, '($1) $2');
+    telefone = telefone.replace(/(\d)(\d{4})$/, '$1-$2');
+    
+    // Atualiza a variável e o input
+    telefone = telefone;
+    tele.target.value = telefone;
+  }
+  let dataNasc = ''
+  const dataMin ='01-01-1920'
+  const hoje = new Date().toISOString().split('T')[0];
+  
   </script>
   
   <!-- Card do formulário -->
@@ -134,6 +204,54 @@
           <div class="mt-1 text-sm text-red-500">{errorOf('login')}</div>
         {/if}
       </div>
+
+    <!-- Campo cpf -->
+  <div>
+    <Label for="cpf">CPF</Label>
+    <Input 
+      id="cpf" 
+      bind:value={user.cpf} 
+      placeholder="000.000.000-00" 
+      maxlength="14"
+      required 
+      class="mt-1 {errorOf('cpf') ? 'border-red-500 focus:ring-red-500' : ''}" 
+    />
+    
+    <!-- Exibe a mensagem gerada automaticamente -->
+    {#if errorOf('cpf')}
+      <div class="mt-1 text-sm text-red-500">
+        {errorOf('cpf')}
+      </div>
+    {/if}
+    </div>
+  
+      <!-- Campo telefone -->
+      <div>
+      <Label for="telefone">Telefone</Label>
+      <Input id="telefone" type="tel" bind:value={user.telefone} placeholder="(XX) XXXXX-XXXX" required class="mt-1" onInput={aplicarTelefone} />
+      {#if errorOf('telefone')}
+          <div class="mt-1 text-sm text-red-500">{errorOf('telefone')}</div>
+        {/if}
+      </div>
+      
+      <!-- Campo dataNasc -->
+      <div>
+        <Label for="dataNasc">Data de nascimento</Label>
+        <Input id="dataNasc"
+        type="date" 
+        bind:value={user.dataNasc} 
+        placeholder="00/00/0000" 
+        required class="mt-1"
+        maxlenght="10"
+        min={dataMin}
+        max={hoje}
+        />
+        {#if errorOf('dataNasc')}
+            <div class="mt-1 text-sm text-red-500">{errorOf('dataNasc')}</div>
+        {/if}
+        
+        </div>
+
       <!-- Campo email -->
       <div>
         <Label for="email">Email</Label>

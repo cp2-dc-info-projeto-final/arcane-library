@@ -212,7 +212,7 @@
  
 
 
-<div>
+  <div>
   <Label for="cpf">CPF</Label>
   <Input 
     id="cpf" 
