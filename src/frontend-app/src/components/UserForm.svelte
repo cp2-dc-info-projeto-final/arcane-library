@@ -11,6 +11,7 @@
 
 
   export let id: number | null = null; // id do usuário
+  export let me: string = 'false';
 
   let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'user' }; // dados do form
   
@@ -36,7 +37,13 @@
     if (id !== null) {
       loading = true;
       try {
-        const res = await api.get(`/users/${id}`);
+        let targetRoute = ''
+        if (me === 'true') {
+          targetRoute = '/users/me'
+        } else  {
+          targetRoute = `/users/${id}`
+        }
+        const res = await api.get(targetRoute);
         const body = res.data as ApiResponse<User>;
         if (body.success && body.data) {
           user = { ...body.data, senha: '' }; // não carrega senha na edição
@@ -78,7 +85,7 @@
         delete userData.senha;
       }
       
-      if (id === null) {
+      if (id === null && me !== 'true') {
         const res = await api.post('/users', userData);
         const body = res.data as ApiResponse<User>;
         if (!body.success) {
@@ -87,7 +94,13 @@
           return;
         }
       } else {
-        const res = await api.put(`/users/${id}`, userData);
+        let targetRoute = `/users/${id}`;
+
+        if (me === 'true') {
+          targetRoute = '/users/me/'
+        }
+        const res = await api.put(targetRoute, userData);
+
         const body = res.data as ApiResponse<User>;
         if (!body.success) {
           error = body.message;
@@ -182,7 +195,7 @@
     tele.target.value = telefone;
   }
   let dataNasc = ''
-  const dataMin ='01-01-1920'
+  const dataMin ='21-08-1909' // data de nascimento da pessoa mais velha ethel caterham
   const hoje = new Date().toISOString().split('T')[0];
   
 </script>

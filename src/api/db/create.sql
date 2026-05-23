@@ -5,6 +5,9 @@ CREATE TABLE usuario (
     login text NOT NULL,
     email text NOT NULL,
     senha text NOT NULL,
+    telefone text NOT NULL,
+    cpf text NOT NULL,
+    dataNasc date NOT NULL,
     role text NOT NULL DEFAULT 'cliente',+.
     
     -- Constraints
