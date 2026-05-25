@@ -13,7 +13,7 @@
   export let id: number | null = null; // id do usuário
   export let me: string = 'false';
 
-  let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'user' }; // dados do form
+  let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'cliente' }; // dados do form
   
   // Opções de roles
   const roleOptions = [
