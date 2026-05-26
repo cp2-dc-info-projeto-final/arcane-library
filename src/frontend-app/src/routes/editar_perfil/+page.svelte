@@ -9,4 +9,4 @@
   </script>
   
   <!-- Utiliza o componente UserForm passando id -->
-  <UserForm me='true'/>
+  <UserForm me='true' id={Number(id)} />

@@ -13,11 +13,11 @@
   export let id: number | null = null; // id do usuário
   export let me: string = 'false';
 
-  let user: UserFormData = { id: 0, login: '',cpf: '',dataNasc: '',telefone: '', email: '', senha: '', role: 'cliente' }; // dados do form
+  let user: UserFormData = { id: 0, login: '',cpf: '',telefone: '', dataNasc: '',  email: '', senha: '', role: 'cliente' }; // dados do form
   
   // Opções de roles
   const roleOptions = [
-    { value: 'user', name: 'Usuário' },
+    { value: 'cliente', name: 'Cliente' },
     { value: 'admin', name: 'Administrador' }
   ];
   let loading = false;
@@ -27,6 +27,7 @@
   let confirmarSenha = '';
   let senhaVisivel = false;
   let confirmarSenhaVisivel = false;
+  //let dataFormatada = '';
 
   function errorOf(field: string): string | null {
     return fieldErrors.find((item) => item.field === field)?.message ?? null;
@@ -47,6 +48,7 @@
         const body = res.data as ApiResponse<User>;
         if (body.success && body.data) {
           user = { ...body.data, senha: '' }; // não carrega senha na edição
+          console.log(user);
         } else {
           error = body.message;
         }
