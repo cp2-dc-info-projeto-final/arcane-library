@@ -1,6 +1,6 @@
 <script lang="ts">
     // Importa o componente de formulário de usuário
-    import UserForm from '../../components/UserFormEdit.svelte';
+    import UserForm from '../../components/UserForm.svelte';
     import { page } from '$app/stores';
     import { get } from 'svelte/store';
   
@@ -9,4 +9,4 @@
   </script>
   
   <!-- Utiliza o componente UserForm passando id -->
-  <UserForm id={Number(id)} />
+  <UserForm me='true'/>

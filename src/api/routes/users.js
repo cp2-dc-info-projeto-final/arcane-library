@@ -24,7 +24,8 @@ function sendError(res, status, message, errors = []) {
 // requer usuário autenticado como admin
 router.get('/', verifyToken, isAdmin, async function(req, res) {
   try {
-    const result = await pool.query('SELECT id, login, email, role FROM usuario ORDER BY id');
+    const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
+    const result = await pool.query('SELECT id, login, email, role FROM usuario WHERE login LIKE $1 ORDER BY id', [consulta]);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
@@ -250,17 +251,17 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
 router.put('/me', verifyToken, async function(req, res) {
   try {
     const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email FROM usuario WHERE id = $1', [id]);
+    const result = await pool.query('SELECT id, login, email, cpf, dataNasc, telefone FROM usuario WHERE id = $1', [id]);
 
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3 WHERE id = $4 RETURNING id, login, email ';
-      params = [login, email, hashedPassword, id];
+      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3, telefone = $4, cpf = $5, dataNasc = $6 WHERE id = $7 RETURNING id, login, email, dataNasc, cpf, telefone ';
+      params = [login, cpf, telefone, dataNasc, email, hashedPassword, id];
     } else {
       // Atualizar sem alterar senha
-      query = 'UPDATE usuario SET login = $1, email = $2 WHERE id = $3 RETURNING id, login, email';
-      params = [login, email, id];
+      query = 'UPDATE usuario SET login = $1, email = $2, telefone = $3, cpf = $4, dataNasc = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, dataNasc, email';
+      params = [login, cpf, telefone, dataNasc, email, id];
     }
 
     return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
