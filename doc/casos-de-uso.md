@@ -80,7 +80,7 @@
 
 - O usuário seleciona a opção "Login".
 
-- O sistema leva o usuário até a tela de preenchimento de senha e email.
+- O sistema leva o usuário até a tela de preenchimento de nome, senha e email.
 
 - O usuário preenche os campos da tela.
 
