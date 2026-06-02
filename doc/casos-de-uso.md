@@ -12,7 +12,7 @@
   
 - O sistema leva o usuário até a tela de registro contendo um formulário.
   
-- O usuário preenche os campos do formulário (informando nome, e-mail e criando uma senha).
+- O usuário preenche os campos do formulário (informando nome, e-mail, cpf, telefone, data de nascimento, criando uma senha e confirmando-a).
   
 - O sistema consulta o banco de dados para verificar a disponibilidade das informações fornecidas.
   
