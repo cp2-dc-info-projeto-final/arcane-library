@@ -3,7 +3,7 @@ var router = express.Router();
 const pool = require('../db/config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { verifyToken, isAdmin } = require('../middlewares/auth');
+const { verifyToken, isAdmin, isIdUser } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
@@ -188,12 +188,44 @@ router.post('/login', async function(req, res) {
   
 });
 
+/* PUT - Atualizar o próprio usuário */
+router.put('/me', verifyToken, isIdUser, async function(req, res) {
+  console.log('CLEITONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN');
+  console.log(req.body);
+  try {
+      const { id, login, email, datanasc, cpf, telefone, role, senha, dataNasc} = req.body;
+    
+    
+    if (senha && senha.trim() !== '') {
+      // Atualizar com nova senha
+      const hashedPassword = await bcrypt.hash(senha, 12);
+      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3, dataNasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, login, email, dataNasc, cpf, telefone ';
+      params = [login, email, hashedPassword, dataNasc, cpf, telefone, id];
+    } else {
+      // Atualizar sem alterar senha
+      query = 'UPDATE usuario SET login = $1, email = $2, dataNasc = $3, cpf = $4, telefone = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, dataNasc, email';
+      params = [login, email, dataNasc, cpf, telefone, id];
+    }
+    const result = await pool.query(
+    query, params
+    );
+    return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    // Verificar se é erro de constraint
+    if (error.code === '23514') {
+      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
+    }
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
 
 /* PUT - Atualizar usuário */
 router.put('/:id', verifyToken, isAdmin, async function(req, res) {
+  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
   try {
     const { id } = req.params;
-    const { login, email, dataNasc, cpf, telefone, senha, role } = req.body;
+    const { login, email, senha, dataNasc, cpf, telefone, role } = req.body;
     
     // Validação básica
     if (!login || !email || !role) {
@@ -242,33 +274,6 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
     
     const result = await pool.query(query, params);
     
-    return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
-    // Verificar se é erro de constraint
-    if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
-    }
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
-router.put('/me', verifyToken, async function(req, res) {
-  try {
-    const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email, dataNasc, cpf, telefone FROM usuario WHERE id = $1', [id]);
-
-    if (senha && senha.trim() !== '') {
-      // Atualizar com nova senha
-      const hashedPassword = await bcrypt.hash(senha, 12);
-      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3, telefone = $4, cpf = $5, dataNasc = $6 WHERE id = $7 RETURNING id, login, email, dataNasc, cpf, telefone ';
-      params = [login, email, hashedPassword, dataNasc, cpf, telefone, id];
-    } else {
-      // Atualizar sem alterar senha
-      query = 'UPDATE usuario SET login = $1, email = $2, telefone = $3, cpf = $4, dataNasc = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, dataNasc, email';
-      params = [login, email, dataNasc, cpf, telefone, id];
-    }
-
     return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);

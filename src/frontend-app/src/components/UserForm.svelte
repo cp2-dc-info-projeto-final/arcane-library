@@ -8,8 +8,6 @@
   import { ArrowLeftOutline, FloppyDiskAltOutline } from 'flowbite-svelte-icons'; // ícones
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from "$lib/auth";
-
-
   export let id: number | null = null; // id do usuário
   export let me: string = 'false';
 
@@ -20,6 +18,7 @@
     { value: 'cliente', name: 'Cliente' },
     { value: 'admin', name: 'Administrador' }
   ];
+  
   let loading = false;
   let error = '';
   let fieldErrors: ApiFieldError[] = [];
@@ -27,6 +26,7 @@
   let confirmarSenha = '';
   let senhaVisivel = false;
   let confirmarSenhaVisivel = false;
+  let falaManu = true;
   //let dataFormatada = '';
 
   function errorOf(field: string): string | null {
@@ -61,6 +61,7 @@
     } 
   });
 
+  
   // Submissão do formulário
   async function handleSubmit() {
     fieldErrors = [];
@@ -77,18 +78,12 @@
       error = 'Senhas precisam ser iguais!';
       return;
     }
-
+  
     loading = true;
     error = '';
     try {
-      const userData = { ...user };
-      // Remove senha vazia na edição para não sobrescrever indevidamente
-      if (id !== null && !userData.senha) {
-        delete userData.senha;
-      }
-      
-      if (id === null && me !== 'true') {
-        const res = await api.post('/users', userData);
+      if (id === null) {
+        const res = await api.post('/users', user);
         const body = res.data as ApiResponse<User>;
         if (!body.success) {
           error = body.message;
@@ -96,12 +91,14 @@
           return;
         }
       } else {
-        let targetRoute = `/users/${id}`;
-
+        let targetRoute = '';
         if (me === 'true') {
-          targetRoute = '/users/me/'
+          targetRoute = '/users/me'
+        } else  {
+          targetRoute = `/users/${id}`
         }
-        const res = await api.put(targetRoute, userData);
+        console.log('FALAMANUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
+        const res = await api.put(targetRoute, user);
 
         const body = res.data as ApiResponse<User>;
         if (!body.success) {
@@ -317,7 +314,8 @@
 
     <!-- Campo role -->
     <div>
-        {#if hasToken}
+        
+        {#if hasToken && me !== 'true'}
           <Label for="role">Perfil</Label>
           <Select id="role" bind:value={user.role} items={roleOptions} class="mt-1" />
         {/if}
