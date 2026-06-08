@@ -22,6 +22,7 @@
   
 - O sistema encaminha o usuário para a página principal do site.
 
+![Diagrama de sequência do caso de uso 1](diagramas/diagrama_sequencia_caso_1.drawio.png)
 
 #### Fluxo Alternativo A: O email já está cadastrado
 
