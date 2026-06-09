@@ -152,7 +152,7 @@
 
 	:global(.theme-winter) {
 		--color-primary-500: #0ea5e9;
-		--color-secondary-500: #60a5fa;
-		--color-accent-500: #818cf8;
+		--color-secondary-500: #8d6969;
+		--color-accent-500: #1e224b;
 	}
 </style>

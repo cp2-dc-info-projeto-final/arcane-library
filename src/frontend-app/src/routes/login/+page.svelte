@@ -40,9 +40,9 @@
   <title>Login - Arcane Library</title>
 </svelte:head>
 
-<div class="h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+<div class=" h-screen flex flex-col items-center justify-center bg-gray-900 p-4">
   <div class="w-full max-w-sm">
-    <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-6">
+    <h2 class="text-center text-3xl font-extrabold text-gray-500 mb-6">
       Login
     </h2>
     
@@ -84,7 +84,7 @@
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
             
-          <a href="/public_user" style="color: var(--color-primary-700); text-decoration: underline;">Cadastre-se</a>
+          <a href="/public_user" style="color: var(--color-primary-700), var(--color-accent-700); text-decoration: underline;">Cadastre-se</a>
 
       </form>
     </Card>

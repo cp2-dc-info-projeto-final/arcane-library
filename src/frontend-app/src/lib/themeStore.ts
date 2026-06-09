@@ -37,7 +37,7 @@ export const themes: Record<Season, Theme> = {
 		label: 'Inverno ❄️',
 		primaryColor: '#0ea5e9',
 		secondaryColor: '#60a5fa',
-		accentColor: '#818cf8'
+		accentColor: '#1e224b'
 	}
 };
 

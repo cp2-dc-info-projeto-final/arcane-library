@@ -38,7 +38,7 @@ router.get('/me', verifyToken, async function(req, res) {
   try {
     // parâmetro obtido do token pelo middleware
     const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email, TO_CHAR(datanasc, \'DD-MM-YYYY\') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1', [id]);
+    const result = await pool.query('SELECT id, login, email, TO_CHAR(datanasc, \'YYYY-MM-DD\') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1', [id]);
     
 
     if (result.rows.length === 0) {
