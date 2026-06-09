@@ -376,7 +376,7 @@
 
 - O sistema volta pra página de aluguéis do cliente.
 
-
+![Diagrama de sequência do caso de uso 6](diagramas/diagrama_sequencia_caso_6.drawio.png)
 
 
 ### Caso de Uso 7: Gerenciar livros.
@@ -405,6 +405,7 @@
 
 - O sistema volta pra página inicial.
 
+![Diagrama de sequência do caso de uso 7](diagramas/diagrama_sequencia_caso_7.drawio.png)
 
 #### Fluxo Alternativo A: Excluir livro.
 
@@ -449,6 +450,7 @@
 
 - O sistema avisa que o usuário foi apagado.
 
+![Diagrama de sequência do caso de uso 8](diagramas/diagrama_sequencia_caso_8.drawio.png)
 
 #### Fluxo Alternativo A: Editar usuário.
 
@@ -503,6 +505,7 @@
 
 - O sistema abre a página do perfil do usuário.
 
+![Diagrama de sequência do caso de uso 9](diagramas/diagrama_sequencia_caso_9.drawio.png)
 
 #### Fluxo Alternativo A: Cancelar edição.
 
@@ -592,3 +595,5 @@
 - O sistema multa o usuário.
 
 - O sistema manda uma mensagem dizendo que a multa foi feita.
+
+![Diagrama de sequência do caso de uso 10](diagramas/diagrama_sequencia_caso_10.drawio.png)
