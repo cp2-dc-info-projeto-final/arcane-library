@@ -11,7 +11,7 @@
   export let id: number | null = null; // id do usuário
   export let me: string = 'false';
 
-  let user: UserFormData = { id: 0, login: '',cpf: '',telefone: '', dataNasc: '',  email: '', senha: '', role: 'cliente' }; // dados do form
+  let user: UserFormData = { id: 0, login: '',cpf: '',telefone: '', datanasc: '',  email: '', senha: '', role: 'cliente' }; // dados do form
   
   // Opções de roles
   const roleOptions = [
@@ -193,9 +193,11 @@
     telefone = telefone;
     tele.target.value = telefone;
   }
-  let dataNasc = ''
-  const dataMin ='21-08-1909' // data de nascimento da pessoa mais velha ethel caterham
+  
+  let datanasc = ""
+  const dataMin ='1909-08-21'; // data de nascimento da pessoa mais velha ethel caterham
   const hoje = new Date().toISOString().split('T')[0];
+  
   
 </script>
 
@@ -255,20 +257,20 @@
       {/if}
     </div>
     
-    <!-- Campo dataNasc -->
+    <!-- Campo datanasc -->
     <div>
-      <Label for="dataNasc">Data de nascimento</Label>
-      <Input id="dataNasc"
+      <Label for="datanasc">Data de nascimento</Label>
+      <Input id="datanasc"
       type="date" 
-      bind:value={user.dataNasc} 
+      bind:value={user.datanasc} 
       placeholder="00/00/0000" 
       required class="mt-1"
       maxlenght="10"
       min={dataMin}
       max={hoje}
       />
-      {#if errorOf('dataNasc')}
-          <div class="mt-1 text-sm text-red-500">{errorOf('dataNasc')}</div>
+      {#if errorOf('datanasc')}
+          <div class="mt-1 text-sm text-red-500">{errorOf('datanasc')}</div>
       {/if}
       
       </div>
