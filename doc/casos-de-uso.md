@@ -91,6 +91,7 @@
 
 - O sistema encaminha o usuário para a página principal do site.
 
+![Diagrama de sequência do caso de uso 2](diagramas/diagrama_sequencia_caso_2.drawio.png)
 
 #### Fluxo Alternativo A: Email inválido
 
@@ -159,6 +160,7 @@
 
 - Os livros são exibidos.
 
+![Diagrama de sequência do caso de uso 3](diagramas/diagrama_sequencia_caso_3.drawio.png)
 
 #### Fluxo Alternativo A: Campo vazio.
 
@@ -222,6 +224,7 @@
 
 - O sistema publica o comentário.
 
+![Diagrama de sequência do caso de uso 4](diagramas/diagrama_sequencia_caso_4.drawio.png)
 
 #### Fluxo Alternativo A: Excluir comentário.
 
@@ -313,6 +316,7 @@
   
 - O administrador finaliza o aluguel e é redirecionado para a pagina inicial.
 
+![Diagrama de sequência do caso de uso 5](diagramas/diagrama_sequencia_caso_5.drawio.png)
 
  #### Fluxo Alternativo A: Livro não encontrado.
 
