@@ -12,7 +12,7 @@
   let loadingUser = false;
   let authRequestId = 0;
 
-  // Verifica token sincronamente (instantâneo)
+  // Verifica token sincronamente (instantâneo) /ojsojosjosd
   async function updateAuthStatus() {
     hasToken = getToken() !== null;
 
