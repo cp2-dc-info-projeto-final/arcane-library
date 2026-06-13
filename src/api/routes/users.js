@@ -54,9 +54,10 @@ router.get('/me', verifyToken, async function(req, res) {
 
 /* GET parametrizado - Buscar usuário por ID */
 router.get('/:id', verifyToken, isAdmin, async function(req, res) {
+  console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { id } = req.params;
-    const result = await pool.query('SELECT id, login, email, TO_CHAR(datanasc, "YYYY-MM-DD") as datanasc, cpf, telefone, role FROM usuario WHERE id = $1', [id]);
+    const result = await pool.query("SELECT id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
 
     if (result.rows.length === 0) {
       return sendError(res, 404, 'Usuário não encontrado');
@@ -199,12 +200,12 @@ router.put('/me', verifyToken, isIdUser, async function(req, res) {
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-      query = "UPDATE usuario SET login = $1, email = $2, senha = $3, datanasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone ";
-      params = [login, email, hashedPassword, datanasc, cpf, telefone, id];
+      let query = "UPDATE usuario SET login = $1, email = $2, senha = $3, datanasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone ";
+      let params = [login, email, hashedPassword, datanasc, cpf, telefone, id];
     } else {
       // Atualizar sem alterar senha
-      query = "UPDATE usuario SET login = $1, email = $2, datanasc = $3, cpf = $4, telefone = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, email";
-      params = [login, email, datanasc, cpf, telefone, id];
+      let query = "UPDATE usuario SET login = $1, email = $2, datanasc = $3, cpf = $4, telefone = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, email";
+      let params = [login, email, datanasc, cpf, telefone, id];
     }
     const result = await pool.query(
     query, params
@@ -264,7 +265,7 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-      query = "UPDATE usuario SET login = $1, email = $2, senha = %3, datanasc = $4, cpf = %5, telefone = $6, role = $7 WHERE id = $8 RETURNING id, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
+      query = "UPDATE usuario SET login = $1, email = $2, senha = $3, datanasc = $4, cpf = $5, telefone = $6, role = $7 WHERE id = $8 RETURNING id, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
       params = [login, email, hashedPassword, datanasc, cpf, telefone,  role, id];
     } else {
       // Atualizar sem alterar senha
