@@ -67,7 +67,7 @@
 
 /* Verão - Âmbar e Ciano */
 :global(.theme-summer) {
-  --color-primary-500: #f59e0b;
+  --color-primary-500: #1d0925;
   --color-secondary-500: #06b6d4;
   --color-accent-500: #f97316;
   --bg-light: #fffbeb;
@@ -86,7 +86,7 @@
 
 /* Outono - Vermelho e Laranja */
 :global(.theme-autumn) {
-  --color-primary-500: #dc2626;
+  --color-primary-500: #1a0505;
   --color-secondary-500: #f97316;
   --color-accent-500: #b45309;
   --bg-light: #fef2f2;

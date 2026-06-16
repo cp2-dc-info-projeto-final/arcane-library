@@ -19,9 +19,7 @@
 	
 	
 	</P>
-	<Skeleton class="mt-16 mb-8" />
-	<ImagePlaceholder class="my-8" />
-	<TextPlaceholder class="my-8" />
+	
 </div>
 
 <style >

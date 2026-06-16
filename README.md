@@ -11,7 +11,7 @@ Projeto Final 2025 do Curso Técnico Integrado de Desenvolvimento de Sistemas - 
 
  ## Tecnologias
 
-Este projeto é desenvolvido utilizando  para desenvolvimento da API de backend, SvelteKit como framework frontend e Tailwind como framework CSS.
+Este projeto é desenvolvido utilizando para desenvolvimento da API de backend, SvelteKit como framework frontend e Tailwind como framework CSS.
 
 Em termos de arquitetura de software, este projeto é composto por duas aplicações:
 - API/Backend desenvolvida em Node.js com Express

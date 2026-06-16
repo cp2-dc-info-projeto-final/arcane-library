@@ -14,21 +14,21 @@ export const themes: Record<Season, Theme> = {
 	spring: {
 		name: 'spring',
 		label: 'Primavera 🌸',
-		primaryColor: '#10b981',
+		primaryColor: '#1f7459',
 		secondaryColor: '#fbbf24',
 		accentColor: '#ec4899'
 	},
 	summer: {
 		name: 'summer',
 		label: 'Verão ☀️',
-		primaryColor: '#f59e0b',
+		primaryColor: '#1d0925',
 		secondaryColor: '#06b6d4',
 		accentColor: '#f97316'
 	},
 	autumn: {
 		name: 'autumn',
 		label: 'Outono 🍂',
-		primaryColor: '#dc2626',
+		primaryColor: '#1a0505',
 		secondaryColor: '#f97316',
 		accentColor: '#b45309'
 	},

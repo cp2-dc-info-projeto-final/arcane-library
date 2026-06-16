@@ -133,19 +133,19 @@
 
 <style>
 	:global(.theme-spring) {
-		--color-primary-500: #10b981;
+		--color-primary-500: #1f7459;
 		--color-secondary-500: #fbbf24;
 		--color-accent-500: #ec4899;
 	}
 
 	:global(.theme-summer) {
-		--color-primary-500: #f59e0b;
+		--color-primary-500: #0a0a08;
 		--color-secondary-500: #06b6d4;
 		--color-accent-500: #f97316;
 	}
 
 	:global(.theme-autumn) {
-		--color-primary-500: #dc2626;
+		--color-primary-500: #1d0925;
 		--color-secondary-500: #f97316;
 		--color-accent-500: #b45309;
 	}

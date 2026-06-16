@@ -74,10 +74,10 @@
 </script>
 
 <div class="relative px-8">
-	<Navbar class=" theme-background fixed start-0 top-0 z-20 w-full px-2 py-2.5 sm:px-4">
+	<Navbar class=" theme-background fixed start-0 top-0 z-50 w-full px-2 py-2.5 sm:px-50">
 		<NavBrand href="/">
-			<img src="/images/arcaneL.png" class="me-3 h-6 sm:h-9" alt="Logo aleatória" />
-			<Heading class="self-center text-xl font-semibold whitespace-nowrap text-primary-500 dark:text-primary-400"
+			<img src="/images/arcaneL.png" class="me-3 h-5 sm:h-22" alt="Logo aleatória" />
+			<Heading class="self-center text-xl font-baskerville-old-face whitespace-nowrap text-primary-500 dark:text-primary-400"
 				>Arcane Library</Heading
 			>
 		</NavBrand>
