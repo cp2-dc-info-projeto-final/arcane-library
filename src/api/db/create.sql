@@ -8,6 +8,7 @@ CREATE TABLE usuario (
     telefone text NOT NULL,
     cpf text NOT NULL,
     datanasc date NOT NULL,
+    foto TEXT,
     role text NOT NULL DEFAULT 'cliente',
     
     -- Constraints
@@ -94,7 +95,7 @@ CREATE TABLE exemplar (
     PRIMARY KEY (id_exemplar),
     CONSTRAINT fk_livro FOREIGN KEY (id_livro) REFERENCES livro(id)
 );
-INSERT INTO usuario (login, email, senha, cpf, datanasc, telefone, role) VALUES
+INSERT INTO usuario (foto, login, email, senha, cpf, datanasc, telefone, role) VALUES
 -- senha 123456
-('Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
-('Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'cliente');
+('','Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
+('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'cliente');

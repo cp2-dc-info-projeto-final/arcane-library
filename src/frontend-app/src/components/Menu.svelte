@@ -12,7 +12,7 @@
   let loadingUser = false;
   let authRequestId = 0;
 
-  // Verifica token sincronamente (instantâneo) /ojsojosjosd
+  // Verifica token sincronamente (instantâneo)
   async function updateAuthStatus() {
     hasToken = getToken() !== null;
 
@@ -74,10 +74,10 @@
 </script>
 
 <div class="relative px-8">
-	<Navbar class=" theme-background fixed start-0 top-0 z-50 w-full px-2 py-2.5 sm:px-50">
+	<Navbar class="fixed start-0 top-0 z-20 w-full bg-amber-800 px-2 py-2.5 sm:px-4">
 		<NavBrand href="/">
-			<img src="/images/arcaneL.png" class="me-3 h-5 sm:h-22" alt="Logo aleatória" />
-			<Heading class="self-center text-xl font-baskerville-old-face whitespace-nowrap text-primary-500 dark:text-primary-400"
+			<img src="/images/arcaneL.png" class="me-3 h-6 sm:h-9" alt="Logo aleatória" />
+			<Heading class="self-center text-xl font-semibold whitespace-nowrap text-primary-500 dark:text-primary-400 arcane-title"
 				>Arcane Library</Heading
 			>
 		</NavBrand>
@@ -85,9 +85,8 @@
     <NavUl>
       <NavLi href="/" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Início</NavLi>
       <NavLi href="/about" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Sobre</NavLi>
-      {#if hasToken}
       <NavLi href="/editar_perfil" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Perfil</NavLi>
-      {/if}
+      
       {#if hasToken}
         {#if user} <!-- se existir usuário é porque conseguiu logar-->
           {#if user.role === 'admin'} <!-- só exibe menu usuários para admin-->
@@ -97,7 +96,7 @@
             <div class="flex items-center">
               <span class="text-primary-500 dark:text-primary-400 px-4 py-2">Olá, {user.login}</span>
               <button 
-                class="ml-2 px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm flex items-center gap-1"
+                class="ml-2 px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white   rounded text-sm flex items-center gap-1"
                 on:click={handleLogout}
               >
                 <ArrowRightToBracketOutline class="w-4 h-4" />
@@ -118,9 +117,17 @@
 		<!-- Theme selector button when not logged in -->
 		{#if hasToken}
 			<NavLi>
-			<ThemeModal/>
+			<ThemeModal />
 			</NavLi>
 		{/if}
     </NavUl>
   </Navbar>
 </div>
+
+<style>
+  :global(.arcane-title) {
+    font-family: 'Baskerville Old Face', 'Baskerville', Georgia, serif !important;
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+</style>

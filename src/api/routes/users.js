@@ -25,7 +25,7 @@ function sendError(res, status, message, errors = []) {
 router.get('/', verifyToken, isAdmin, async function(req, res) {
   try {
     const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query("SELECT id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE login LIKE $1 ORDER BY id", [consulta]);
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE login LIKE $1 ORDER BY id", [consulta]);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
@@ -38,7 +38,7 @@ router.get('/me', verifyToken, async function(req, res) {
   try {
     // parâmetro obtido do token pelo middleware
     const id = req.user.id;
-    const result = await pool.query("SELECT id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
     
 
     if (result.rows.length === 0) {
@@ -57,7 +57,7 @@ router.get('/:id', verifyToken, isAdmin, async function(req, res) {
   console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { id } = req.params;
-    const result = await pool.query("SELECT id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
 
     if (result.rows.length === 0) {
       return sendError(res, 404, 'Usuário não encontrado');
@@ -106,10 +106,10 @@ router.post('/', async function(req, res) {
 
     // Hash da senha
     const hashedPassword = await bcrypt.hash(senha, 12);
-    
+    const { foto } = req.body;  
     const result = await pool.query(
-      "INSERT INTO usuario (login, email, senha, datanasc, cpf, telefone, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role",
-      [login, email, hashedPassword, datanasc, cpf, telefone, role]
+      "INSERT INTO usuario (foto, login, email, senha, datanasc, cpf, telefone, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role",
+      [foto, login, email, hashedPassword, datanasc, cpf, telefone, role]
     );
 
     return sendSuccess(res, 201, 'Usuário criado com sucesso', result.rows[0]);
@@ -130,7 +130,7 @@ router.post('/login', async function(req, res) {
     const { login, password } = req.body;
     // obtém o usuário do banco de dados
     const result = await pool.query(`SELECT 
-      id, login, email, senha as passwordHash, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role
+      id, foto, login, email, senha as passwordHash, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role
       FROM usuario 
       WHERE login = $1`, [login]);
 
@@ -166,6 +166,7 @@ router.post('/login', async function(req, res) {
       const token = jwt.sign(
         { 
           id: user.id, 
+          foto: user.foto,
           login: user.login,
           email: user.email,
           datanasc: user.datanasc,
@@ -194,18 +195,19 @@ router.post('/login', async function(req, res) {
 router.put('/me', verifyToken, isIdUser, async function(req, res) {
   console.log('CLEITONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN');
   console.log(req.body);
+  console.log(req.body.foto);
   try {
-      const { id, login, email, datanasc, cpf, telefone, role, senha} = req.body;
+      const { id, foto, login, email, datanasc, cpf, telefone, role, senha} = req.body;
       let query, params;
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-       query = "UPDATE usuario SET login = $1, email = $2, senha = $3, datanasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone ";
-       params = [login, email, hashedPassword, datanasc, cpf, telefone, id];
+       query = "UPDATE usuario SET foto = $1, login = $2, email = $3, senha = $4, datanasc = $5, cpf = $6, telefone = $7 WHERE id = $8 RETURNING id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone ";
+       params = [foto, login, email, hashedPassword, datanasc, cpf, telefone, id];
     } else {
       // Atualizar sem alterar senha
-       query = "UPDATE usuario SET login = $1, email = $2, datanasc = $3, cpf = $4, telefone = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, email";
-       params = [login, email, datanasc, cpf, telefone, id];
+       query = "UPDATE usuario SET foto =$1, login = $2, email = $3, datanasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, foto, login, cpf, telefone, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, email";
+       params = [foto, login, email, datanasc, cpf, telefone, id];
     }
     console.log("QUERY", query);
     console.log("PARAMS", params);
@@ -228,7 +230,7 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
   console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
   try {
     const { id } = req.params;
-    const { login, email, senha, datanasc, cpf, telefone, role } = req.body;
+    const { foto, login, email, senha, datanasc, cpf, telefone, role } = req.body;
     
     // Validação básica
     if (!login || !email || !role) {
@@ -267,12 +269,12 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-      query = "UPDATE usuario SET login = $1, email = $2, senha = $3, datanasc = $4, cpf = $5, telefone = $6, role = $7 WHERE id = $8 RETURNING id, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
-      params = [login, email, hashedPassword, datanasc, cpf, telefone,  role, id];
+      query = "UPDATE usuario SET foto = $1, login = $2, email = $3, senha = $4, datanasc = $5, cpf = $6, telefone = $7, role = $8 WHERE id = $9 RETURNING id, foto, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
+      params = [foto, login, email, hashedPassword, datanasc, cpf, telefone,  role, id];
     } else {
       // Atualizar sem alterar senha
-      query = "UPDATE usuario SET login = $1, email = $2, datanasc = $3, cpf = $4, telefone = $5, role = $6 WHERE id = $7 RETURNING id, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
-      params = [login, email, datanasc, cpf, telefone, role, id];
+      query = "UPDATE usuario SET foto = $1, login = $2, email = $3, datanasc = $4, cpf = $5, telefone = $6, role = $7 WHERE id = $8 RETURNING id, foto, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
+      params = [foto, login, email, datanasc, cpf, telefone, role, id];
     }
     
     const result = await pool.query(query, params);

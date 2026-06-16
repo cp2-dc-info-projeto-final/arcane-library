@@ -1,5 +1,6 @@
 export interface User {
   id: number;
+  foto: string;
   login: string;
   cpf: number;
   datanasc: number;
@@ -10,6 +11,7 @@ export interface User {
 
 export interface UserFormData {
   id: number;
+  foto: string;
   login: string;
   cpf: number;
   datanasc: number;

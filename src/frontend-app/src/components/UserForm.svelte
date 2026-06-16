@@ -1,117 +1,141 @@
 <script lang="ts">
-  // Formulário de usuário
-  import { Card, Button, Label, Input, Heading, Select } from 'flowbite-svelte'; // UI
-  import { onMount } from 'svelte'; // ciclo de vida
-  import api from '$lib/api'; // API backend
+  import { Card, Button, Label, Input, Heading, Select, Modal } from 'flowbite-svelte';
+  import { onMount } from 'svelte';
+  import api from '$lib/api';
   import type { ApiFieldError, ApiResponse } from '$lib/api';
-  import { goto } from '$app/navigation'; // navegação
-  import { ArrowLeftOutline, FloppyDiskAltOutline } from 'flowbite-svelte-icons'; // ícones
+  import { goto } from '$app/navigation';
+  import { ArrowLeftOutline, FloppyDiskAltOutline } from 'flowbite-svelte-icons';
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from "$lib/auth";
-  export let id: number | null = null; // id do usuário
+
+  export let id: number | null = null;
   export let me: string = 'false';
 
-  let user: UserFormData = { id: 0, login: '',cpf: '',telefone: '', datanasc: '',  email: '', senha: '', role: 'cliente' }; // dados do form
-  
-  // Opções de roles
+  let user: UserFormData = { id: 0, foto: '', login: '', cpf: '', telefone: '', datanasc: '', email: '', senha: '', role: 'cliente' };
+
   const roleOptions = [
     { value: 'cliente', name: 'Cliente' },
     { value: 'admin', name: 'Administrador' }
   ];
-  
+
+  let fotoPerfil = '';
+  let abrirModalFoto = false;
+
   let loading = false;
   let error = '';
   let fieldErrors: ApiFieldError[] = [];
   let hasToken = false;
   let confirmarSenha = '';
-  let senhaVisivel = false;
-  let confirmarSenhaVisivel = false;
-  let falaManu = true;
-  //let dataFormatada = '';
+
+  // 🔥 NOVO: guarda arquivo real da imagem
+  let fotoFile: File | null = null;
 
   function errorOf(field: string): string | null {
     return fieldErrors.find((item) => item.field === field)?.message ?? null;
   }
 
-  // Carrega usuário se for edição
+
   onMount(async () => {
     if (id !== null) {
       loading = true;
       try {
-        let targetRoute = ''
+        let targetRoute = '';
+
         if (me === 'true') {
-          targetRoute = '/users/me'
-        } else  {
-          targetRoute = `/users/${id}`
+          targetRoute = '/users/me';
+        } else {
+          targetRoute = `/users/${id}`;
         }
+
         const res = await api.get(targetRoute);
         const body = res.data as ApiResponse<User>;
-        if (body.success && body.data) {
-          user = { ...body.data, senha: '' }; // não carrega senha na edição
-          console.log(user);
+
+        if (body && body.success && body.data) {
+          user = { ...body.data, senha: '' };
+          fotoPerfil = user.foto || '';
         } else {
-          error = body.message;
+          error = body?.message || 'Erro ao carregar usuário.';
         }
+
       } catch (e: any) {
         const body = e.response?.data as ApiResponse<User> | undefined;
         error = body?.message || 'Erro ao carregar usuário.';
       } finally {
         loading = false;
       }
-    } 
+    }
   });
 
-  
-  // Submissão do formulário
   async function handleSubmit() {
     fieldErrors = [];
 
-    // Validação de senha
     if (id === null && (!user.senha || user.senha.length < 6)) {
       fieldErrors = [{ field: 'senha', message: 'Senha deve ter pelo menos 6 caracteres.' }];
-      error = 'Senha deve ter pelo menos 6 caracteres.';
+      error = 'Senha inválida';
       return;
     }
-    
+
     if (user.senha !== confirmarSenha) {
       fieldErrors = [{ field: 'senha', message: 'Senhas precisam ser iguais!' }];
-      error = 'Senhas precisam ser iguais!';
+      error = 'Senhas não conferem';
       return;
     }
-  
+
     loading = true;
     error = '';
-    try {
-      if (id === null) {
-        const res = await api.post('/users', user);
-        const body = res.data as ApiResponse<User>;
-        if (!body.success) {
-          error = body.message;
-          fieldErrors = body.errors;
-          return;
-        }
-      } else {
-        let targetRoute = '';
-        if (me === 'true') {
-          targetRoute = '/users/me'
-        } else  {
-          targetRoute = `/users/${id}`
-        }
-        console.log('FALAMANUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-        const res = await api.put(targetRoute, user);
 
-        const body = res.data as ApiResponse<User>;
-        if (!body.success) {
-          error = body.message;
-          fieldErrors = body.errors;
-          return;
-        }
+    try {
+      let targetRoute = '';
+
+      if (me === 'true') {
+        targetRoute = '/users/me';
+      } else {
+        targetRoute = id === null ? '/users' : `/users/${id}`;
       }
+
+      const formData = new FormData();
+
+      formData.append('login', user.login);
+      formData.append('cpf', user.cpf);
+      formData.append('telefone', user.telefone);
+      formData.append('datanasc', user.datanasc);
+      formData.append('email', user.email);
+      formData.append('role', user.role);
+
+      if (user.senha) {
+        formData.append('senha', user.senha);
+      }
+
+      // 🔥 arquivo real (NÃO base64)
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      let res;
+
+      if (id === null) {
+        res = await api.post('/users', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        res = await api.put(targetRoute, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+
+      const body = res.data as ApiResponse<User>;
+
+      if (!body?.success) {
+        error = body?.message || 'Erro ao salvar usuário.';
+        fieldErrors = body?.errors || [];
+        return;
+      }
+
       goto('/users');
+
     } catch (e: any) {
-      const body = e.response?.data as ApiResponse<User> | undefined;
-      error = body?.message || 'Erro ao salvar usuário.';
-      fieldErrors = body?.errors || [];
+      error = e.response?.data?.message || 'Erro ao salvar usuário.';
+      fieldErrors = e.response?.data?.errors || [];
     } finally {
       loading = false;
     }
@@ -120,84 +144,106 @@
   function handleCancel() {
     goto('/users');
   }
-  void verificaUser();
-  async function verificaUser() {
+
+  function verificaUser() {
     hasToken = getToken() !== null;
-    console.log('SIIIIIIIIIIXSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEVEN')
   }
 
-  
-  let errosCustomizados = {};   
+  void verificaUser();
 
-  // 1. Função de Máscara Automática
-  function aplicarMascara(valor) {
+  let errosCustomizados: any = {};
+
+  function aplicarMascara(valor: string) {
     const digitos = valor.replace(/\D/g, '').slice(0, 11);
+
     return digitos
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
   }
 
-  // 2. Algoritmo de Validação Matemática (Módulo 11)
-  function validarCPF(cpf) {
+  function validarCPF(cpf: string) {
     const limpo = cpf.replace(/\D/g, '');
+
     if (limpo.length !== 11 || /^(\d)\1+$/.test(limpo)) return false;
-    
+
     let soma = 0;
-    for (let i = 1; i <= 9; i++) soma += parseInt(limpo.substring(i - 1, i)) * (11 - i);
+
+    for (let i = 1; i <= 9; i++) {
+      soma += parseInt(limpo.substring(i - 1, i)) * (11 - i);
+    }
+
     let resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
+    if (resto === 10) resto = 0;
+
     if (resto !== parseInt(limpo.substring(9, 10))) return false;
-    
+
     soma = 0;
-    for (let i = 1; i <= 10; i++) soma += parseInt(limpo.substring(i - 1, i)) * (12 - i);
+
+    for (let i = 1; i <= 10; i++) {
+      soma += parseInt(limpo.substring(i - 1, i)) * (12 - i);
+    }
+
     resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
+    if (resto === 10) resto = 0;
+
     return resto === parseInt(limpo.substring(10, 11));
   }
 
-  // 3. CONSTRUÇÃO AUTOMÁTICA (Reatividade Nativa do Svelte)
-  // Roda automaticamente a cada caractere digitado no input
   $: if (user.cpf) {
-    // Aplica os pontos e hífen na tela
-    user.cpf = aplicarMascara(user.cpf); 
-    
-    const apenasNumeros = user.cpf.replace(/\D/g, '');
-    
-    // Atualiza a mensagem de erro em tempo real
+    const cpfFormatado = aplicarMascara(user.cpf);
+
+    if (cpfFormatado !== user.cpf) {
+      user.cpf = cpfFormatado;
+    }
+
+    const apenasNumeros = cpfFormatado.replace(/\D/g, '');
+
     if (apenasNumeros.length === 11) {
       errosCustomizados['cpf'] = validarCPF(apenasNumeros) ? '' : 'CPF inválido';
-    } else {errorOf
+    } else {
       errosCustomizados['cpf'] = 'O CPF deve conter 11 dígitos';
     }
   } else {
     errosCustomizados['cpf'] = '';
   }
 
-  let telefone = '';
-
-  function aplicarTelefone(tele) {
+  function aplicarTelefone(tele: any) {
     let telefone = tele.target.value;
-    
-    // Remove tudo que não é número
+
     telefone = telefone.replace(/\D/g, '');
-    
-    // Limita em 11 dígitos (DDD + 9 dígitos)
     telefone = telefone.substring(0, 11);
-    
-    // Aplica a máscara
+
     telefone = telefone.replace(/^(\d{2})(\d)/g, '($1) $2');
     telefone = telefone.replace(/(\d)(\d{4})$/, '$1-$2');
-    
-    // Atualiza a variável e o input
-    telefone = telefone;
+
     tele.target.value = telefone;
+    user.telefone = telefone;
   }
-  
-  let datanasc = ""
-  const dataMin ='1909-08-21'; // data de nascimento da pessoa mais velha ethel caterham
+
+  let datanasc = "";
+  const dataMin = '1909-08-21';
   const hoje = new Date().toISOString().split('T')[0];
-  
+
+  function selecionarFoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+
+    fotoFile = file;
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      fotoPerfil = e.target?.result as string;
+    };
+
+    reader.readAsDataURL(file);
+
+    abrirModalFoto = false;
+  }
   
 </script>
 
@@ -213,6 +259,30 @@
     {#if error}
       <div class="text-red-500 text-center">{error}</div>
     {/if}
+
+    <!-- Foto de Perfil -->
+<div class="flex justify-center">
+  <button
+    type="button"
+    class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-300 hover:border-blue-500 transition"
+    on:click={() => (abrirModalFoto = true)}
+  >
+    {#if fotoPerfil}
+      <img
+        src={fotoPerfil}
+        alt="Foto de perfil"
+        class="w-full h-full object-cover"
+      />
+    {:else}
+      <div
+        class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500"
+      >
+        Foto
+      </div>
+    {/if}
+  </button>
+</div>
+
     <!-- Campo login -->
     <div>
       <Label for="login">Login</Label>
@@ -343,3 +413,25 @@
     </div>
   </form>
 </Card>
+<Modal bind:open={abrirModalFoto} size="sm" autoclose>
+  <div class="p-6 flex flex-col items-center gap-4">
+    <h3 class="text-lg font-semibold">
+      Selecione uma foto de perfil
+    </h3>
+
+    <input
+      type="file"
+      accept="image/*"
+      on:change={selecionarFoto}
+      class="block w-full text-sm text-gray-500"
+    />
+
+    {#if fotoPerfil}
+      <img
+        src={fotoPerfil}
+        alt="Pré-visualização"
+        class="w-32 h-32 rounded-full object-cover border"
+      />
+    {/if}
+  </div>
+</Modal>
