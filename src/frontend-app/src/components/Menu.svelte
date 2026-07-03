@@ -83,45 +83,44 @@
 </script>
 
 <div class="relative px-8">
-	<Navbar class="fixed start-0 top-0 z-20 w-full px-2 py-2.5 sm:px-4 transition-colors duration-300" style="background-color: {navbarColor};">
+	<Navbar class="fixed start-0 top-0 z-20 w-full bg-amber-800 px-2 py-2.5 sm:px-4">
 		<NavBrand href="/">
 			<img src="/images/arcaneL.png" class="me-3 h-6 sm:h-9" alt="Logo aleatória" />
-			<Heading class="self-center text-xl font-semibold whitespace-nowrap text-amber-100 dark:text-amber-200 arcane-title"
+			<Heading class="self-center text-xl font-semibold whitespace-nowrap text-primary-500 dark:text-primary-400 arcane-title"
 				>Arcane Library</Heading
 			>
 		</NavBrand>
     <NavHamburger />
     <NavUl>
-      <NavLi href="/" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Home</NavLi>
-      <NavLi href="/about" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Sobre</NavLi>
-      {#if hasToken}
-      <NavLi href="/editar_perfil" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Perfil</NavLi>
-      {/if}
+      <NavLi href="/" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Início</NavLi>
+      <NavLi href="/about" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Sobre</NavLi>
+      <NavLi href="/editar_perfil" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Perfil</NavLi>
+      
       {#if hasToken}
         {#if user} <!-- se existir usuário é porque conseguiu logar-->
           {#if user.role === 'admin'} <!-- só exibe menu usuários para admin-->
-            <NavLi href="/users" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Usuários</NavLi>
+            <NavLi href="/users" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Usuários</NavLi>
           {/if}
           <NavLi>
             <div class="flex items-center">
-              <span class="text-amber-100 dark:text-amber-200 px-4 py-2">Olá, {user.login}</span>
+              <span class="text-primary-500 dark:text-primary-400 px-4 py-2">Olá, {user.login}</span>
               <button 
-                class="ml-2 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm flex items-center gap-1 transition-colors"
+                class="ml-2 px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white   rounded text-sm flex items-center gap-1"
                 on:click={handleLogout}
               >
                 <ArrowRightToBracketOutline class="w-4 h-4" />
-                Sair
+                <span class="hidden sm:inline">Sair</span>
               </button>
             </div>
           </NavLi>
         {:else if loadingUser}
-          <NavLi class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200">Carregando...</NavLi>
+          <NavLi class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400">Carregando...</NavLi>
         {:else}
-          <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Login</NavLi>
+          <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Login</NavLi>
         {/if}
       {:else}
         <!-- se não tem token, exibe botão de login-->
-        <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Login</NavLi>
+        <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-primary-500 dark:text-primary-400 hover:text-yellow-300 hover:bg-gray-700 focus:text-yellow-400 focus:bg-gray-700 transition-colors rounded-lg">Login</NavLi>
       {/if}
 
 		<!-- Theme selector button when logged in -->
@@ -139,6 +138,43 @@
     font-family: 'Baskerville Old Face', 'Baskerville', Georgia, serif !important;
     font-style: italic;
     letter-spacing: 0.05em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.navbar-theme) {
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+  }
+
+  :global(.theme-spring) {
+    --color-primary-500: #1f7459;
+    --color-secondary-500: #fbbf24;
+    --color-accent-500: #ec4899;
+    --color-navbar-500: #065f46;
+    --color-navbar-hover-500: #059669;
+  }
+
+  :global(.theme-summer) {
+    --color-primary-500: #1d0925;
+    --color-secondary-500: #06b6d4;
+    --color-accent-500: #f97316;
+    --color-navbar-500: #0369a1;
+    --color-navbar-hover-500: #0284c7;
+  }
+
+  :global(.theme-autumn) {
+    --color-primary-500: #1a0505;
+    --color-secondary-500: #f97316;
+    --color-accent-500: #b45309;
+    --color-navbar-500: #7c2d12;
+    --color-navbar-hover-500: #9a3412;
+  }
+
+  :global(.theme-winter) {
+    --color-primary-500: #0ea5e9;
+    --color-secondary-500: #60a5fa;
+    --color-accent-500: #1e224b;
+    --color-navbar-500: #1e3a8a;
+    --color-navbar-hover-500: #1e40af;
   }
 
   :global(.theme-spring) {
