@@ -35,8 +35,8 @@
   <div class="flex flex-col md:flex-row items-center gap-8 bg-white/10 dark:bg-black/10 p-6 rounded-2xl backdrop-blur-sm">
     <img src="images/manu.jpeg" alt="Manu" class="w-64 h-64 object-cover rounded-xl shadow-lg">
     <div class="flex-1 text-left">
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white">Manu</h3>
-      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">akkak — Descrição curta ou função do criador aqui para preencher o espaço do bloco.</p>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white">Manúmeros</h3>
+      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">estou falando e odeio matemática</p>
     </div>
   </div>
 
@@ -45,7 +45,7 @@
     <img src="images/hudson.jpeg" alt="Hudson" class="w-64 h-64 object-cover rounded-xl shadow-lg">
     <div class="flex-1 text-right md:text-left">
       <h3 class="text-xl font-bold text-gray-900 dark:text-white">Hudson</h3>
-      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">kaka — Descrição curta ou função do criador aqui para preencher o espaço do bloco.</p>
+      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">Volei volei e volei</p>
     </div>
   </div>
 
@@ -54,7 +54,7 @@
     <img src="images/guilherme.jpeg" alt="Guilherme" class="w-64 h-64 object-cover rounded-xl shadow-lg">
     <div class="flex-1 text-left">
       <h3 class="text-xl font-bold text-gray-900 dark:text-white">Guilherme</h3>
-      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">ajja — Descrição curta ou função do criador aqui para preencher o espaço do bloco.</p>
+      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">debora debora e debora</p>
     </div>
   </div>
 
@@ -63,7 +63,7 @@
     <img src="images/judce.jpg" alt="Judce" class="w-64 h-64 object-cover rounded-xl shadow-lg">
     <div class="flex-1 text-right md:text-left">
       <h3 class="text-xl font-bold text-gray-900 dark:text-white">Judce</h3>
-      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">jaaj — Descrição curta ou função do criador aqui para preencher o espaço do bloco.</p>
+      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">Opa! Eu sou o João Miguel, um tricolor de coração aspirante a programador, apaixonado por futebol e vôlei, multi-instrumentista e louco por charlie brown, belchior e engenheiros do hawaii! E Chuck Berry é o rei do rock. </p>
     </div>
   </div>
 
@@ -72,7 +72,7 @@
     <img src="images/joao.jpeg" alt="João" class="w-64 h-64 object-cover rounded-xl shadow-lg">
     <div class="flex-1 text-left">
       <h3 class="text-xl font-bold text-gray-900 dark:text-white">João</h3>
-      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">Descrição curta ou função do criador aqui para preencher o espaço do bloco.</p>
+      <p class="text-base mt-2 text-gray-900 dark:text-gray-900">Dono da melhor china do mundo.</p>
     </div>
   </div>
 
