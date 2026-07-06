@@ -356,6 +356,29 @@
 - O sistema redireciona o administrador para a página de processo de aluguel.
 
 
+ #### Fluxo Alternativo C: Livro digital.
+
+- O administrador clica no botão de iniciar o processo de aluguel.
+
+- O sistema abre a página de aluguel de livros.
+
+- O administrador clica no campo de digitar o código do livro.
+
+- O administrador preenche o código do livro a ser alugado.
+
+- O sistema exibe os dados do livro a ser alugado.
+
+- O sistema pede confirmação.
+
+- O administrador confirma.
+
+- O administrador preenche a identificação do cliente.
+
+- O sistema pede confirmação.
+
+- O administrador confirma.
+  
+- O administrador finaliza o aluguel e é redirecionado para a pagina inicial.
 
 
 ### Caso de Uso 6: Finalizar aluguel do livro físico.
