@@ -284,7 +284,7 @@
 - O sistema apresenta mensagem dizendo que o comentário foi editado.
 
 
-### Caso de Uso 5: Efetuar aluguel.
+### Caso de Uso 5: Efetuar aluguel do livro físico.
 
 #### Atores: 
 
@@ -358,7 +358,7 @@
 
 
 
-### Caso de Uso 6: Finalizar aluguel.
+### Caso de Uso 6: Finalizar aluguel do livro físico.
 
 #### Atores: 
 
