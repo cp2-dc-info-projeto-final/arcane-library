@@ -3,6 +3,7 @@ var router = express.Router();
 const pool = require('../db/config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const upload = require('../middlewares/upload');
 const { verifyToken, isAdmin, isIdUser } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
@@ -22,7 +23,7 @@ function sendError(res, status, message, errors = []) {
 
 /* GET - Buscar todos os usuários */
 // requer usuário autenticado como admin
-router.get('/', verifyToken, isAdmin, async function(req, res) {
+router.get('/', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
   try {
     const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
     const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE login LIKE $1 ORDER BY id", [consulta]);
@@ -52,26 +53,8 @@ router.get('/me', verifyToken, async function(req, res) {
   }
 });
 
-/* GET parametrizado - Buscar usuário por ID */
-router.get('/:id', verifyToken, isAdmin, async function(req, res) {
-  console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
-  try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
-
-    if (result.rows.length === 0) {
-      return sendError(res, 404, 'Usuário não encontrado');
-    }
-    console.log(result.rows[0]);
-    return sendSuccess(res, 200, null, result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
 /* POST - Criar novo usuário */
-router.post('/', async function(req, res) {
+router.post('/', upload.single('foto'), async function(req, res) {
   try {
     const { login, email, cpf, telefone, datanasc, senha, role = 'user' } = req.body;
     
@@ -133,7 +116,6 @@ router.post('/login', async function(req, res) {
       id, foto, login, email, senha as passwordHash, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role
       FROM usuario 
       WHERE login = $1`, [login]);
-
     /* 
      tratar login inválido igual senha incorreta
      confere maior segurança por não expor indiretamente
@@ -192,12 +174,13 @@ router.post('/login', async function(req, res) {
 });
 
 /* PUT - Atualizar o próprio usuário */
-router.put('/me', verifyToken, isIdUser, async function(req, res) {
-  console.log('CLEITONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN');
+router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
+  console.log('CLEITONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN') // tava achando erro chefe?;
   console.log(req.body);
   console.log(req.body.foto);
   try {
-      const { id, foto, login, email, datanasc, cpf, telefone, role, senha} = req.body;
+      const id = req.user.id
+      const { foto, login, email, datanasc, cpf, telefone, role, senha} = req.body;
       let query, params;
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
@@ -225,8 +208,48 @@ router.put('/me', verifyToken, isIdUser, async function(req, res) {
   }
 });
 
+
+
+/* DELETE - Remover usuário */
+router.delete('/me', verifyToken, async function(req, res) {
+  try {
+    const id = req.user.id;
+    const result = await pool.query('SELECT id = $1', [id]);
+    // Verificar se o usuário existe
+    const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
+    if (userExists.rows.length === 0) {
+      return sendError(res, 404, 'Usuário não encontrado');
+    }
+    
+    await pool.query('DELETE FROM usuario WHERE id = $1', [id]);
+    
+    return sendSuccess(res, 200, 'Usuário deletado com sucesso');
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
+
+/* GET parametrizado - Buscar usuário por ID */
+router.get('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
+  console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return sendError(res, 404, 'Usuário não encontrado');
+    }
+    console.log(result.rows[0]);
+    return sendSuccess(res, 200, null, result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
+
 /* PUT - Atualizar usuário */
-router.put('/:id', verifyToken, isAdmin, async function(req, res) {
+router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
   console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
   try {
     const { id } = req.params;
@@ -295,26 +318,6 @@ router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
   try {
     const { id } = req.params;
     
-    // Verificar se o usuário existe
-    const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
-    if (userExists.rows.length === 0) {
-      return sendError(res, 404, 'Usuário não encontrado');
-    }
-    
-    await pool.query('DELETE FROM usuario WHERE id = $1', [id]);
-    
-    return sendSuccess(res, 200, 'Usuário deletado com sucesso');
-  } catch (error) {
-    console.error('Erro ao deletar usuário:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
-/* DELETE - Remover usuário */
-router.delete('/me', verifyToken, async function(req, res) {
-  try {
-    const id = req.user.id;
-    const result = await pool.query('SELECT id = $1', [id]);
     // Verificar se o usuário existe
     const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
     if (userExists.rows.length === 0) {

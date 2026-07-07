@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Card, Button, Label, Input, Heading, Select, Modal } from 'flowbite-svelte';
+   import { Card, Button, Label, Input, Heading, Select, Modal, Alert } from 'flowbite-svelte';
   import { onMount } from 'svelte';
   import api from '$lib/api';
   import type { ApiFieldError, ApiResponse } from '$lib/api';
@@ -7,6 +7,7 @@
   import { ArrowLeftOutline, FloppyDiskAltOutline } from 'flowbite-svelte-icons';
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from "$lib/auth";
+  import { themeStore, themes, type Season } from '$lib/themeStore';
 
   export let id: number | null = null;
   export let me: string = 'false';
@@ -26,6 +27,11 @@
   let fieldErrors: ApiFieldError[] = [];
   let hasToken = false;
   let confirmarSenha = '';
+  let currentTheme: Season = 'spring';
+
+ themeStore.subscribe((theme) => {
+  currentTheme = theme;
+});
 
   // 🔥 NOVO: guarda arquivo real da imagem
   let fotoFile: File | null = null;
@@ -49,7 +55,6 @@
 
         const res = await api.get(targetRoute);
         const body = res.data as ApiResponse<User>;
-
         if (body && body.success && body.data) {
           user = { ...body.data, senha: '' };
           fotoPerfil = user.foto || '';
@@ -95,6 +100,7 @@
 
       const formData = new FormData();
 
+      
       formData.append('login', user.login);
       formData.append('cpf', user.cpf);
       formData.append('telefone', user.telefone);
