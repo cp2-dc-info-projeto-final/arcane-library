@@ -8,6 +8,7 @@ var cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var livrosRouter = require('./routes/livros');
 
 var app = express();
 
@@ -26,6 +27,7 @@ app.use(cookieParser());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/livros', livrosRouter);
 
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
