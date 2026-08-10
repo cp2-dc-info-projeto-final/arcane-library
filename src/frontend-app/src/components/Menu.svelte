@@ -83,45 +83,49 @@
 </script>
 
 <div class="relative px-8">
-	<Navbar class="fixed start-0 top-0 z-20 w-full px-2 py-2.5 sm:px-4 transition-colors duration-300" style="background-color: {navbarColor};">
+	<Navbar class="fixed start-0 top-0 z-20 w-full px-2 py-3 sm:px-4 transition-all duration-300 shadow-xl navbar-theme" style="background: linear-gradient(135deg, {navbarColor} 0%, color-mix(in srgb, {navbarColor} 70%, black 30%) 100%)">
 		<NavBrand href="/">
-			<img src="/images/arcaneL.png" class="w-15 h-15 mx-auto mb-4 drop-shadow-lg" alt="Logo aleatória" />
-			<Heading class="self-center text-xl font-semibold whitespace-nowrap text-amber-100 dark:text-amber-200 arcane-title"
+
+			<img src="/images/arcaneL.png" class="me-4 h-10 sm:h-14 transition-all duration-300 hover:scale-110 drop-shadow-lg" alt="Logo Arcane Library" />
+			<Heading class="self-center text-2xl sm:text-3xl font-bold blackspace-nowrap !text-black arcane-title drop-shadow-md"
 				>Arcane Library</Heading
 			>
+     
+      <div style = "position:absolute; left: 50%;transform:translate(-50%);"><input type ="text" id = "pesquisa" placeholder="Busca por usuário"></div>
+
 		</NavBrand>
     <NavHamburger />
     <NavUl>
-      <NavLi href="/" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Home</NavLi>
-      <NavLi href="/about" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Sobre</NavLi>
+      <NavLi href="/" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Início</NavLi>
+      <NavLi href="/about" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Sobre</NavLi>
       {#if hasToken}
-      <NavLi href="/editar_perfil" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Perfil</NavLi>
+      <NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Perfil</NavLi>
       {/if}
       {#if hasToken}
-        {#if user} <!-- se existir usuário é porque conseguiu logar-->
+        {#if user} <!-- se existir usu��rio é porque conseguiu logar-->
           {#if user.role === 'admin'} <!-- só exibe menu usuários para admin-->
-            <NavLi href="/users" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Usuários</NavLi>
+            <NavLi href="/users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Usuários</NavLi>
           {/if}
           <NavLi>
-            <div class="flex items-center">
-              <span class="text-amber-100 dark:text-amber-200 px-4 py-2">Olá, {user.login}</span>
+            <div class="flex items-center gap-3">
+              <span class="!text-black px-4 py-2 text-sm sm:text-base">Olá, {user.login}</span>
               <button 
-                class="ml-2 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm flex items-center gap-1 transition-colors"
+                class="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-black rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"
                 on:click={handleLogout}
               >
                 <ArrowRightToBracketOutline class="w-4 h-4" />
-                Sair
+                <span class="hidden sm:inline">Sair</span>
               </button>
             </div>
           </NavLi>
         {:else if loadingUser}
-          <NavLi class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200">Carregando...</NavLi>
+          <NavLi class="text-base sm:text-lg font-bold px-4 py-2 !text-black">Carregando...</NavLi>
         {:else}
-          <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Login</NavLi>
+          <NavLi href="/login" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Login</NavLi>
         {/if}
       {:else}
         <!-- se não tem token, exibe botão de login-->
-        <NavLi href="/login" class="text-lg font-bold px-4 py-2 text-amber-100 dark:text-amber-200 hover:text-yellow-300 hover:opacity-80 focus:text-yellow-400 focus:opacity-80 transition-all rounded">Login</NavLi>
+        <NavLi href="/login" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Login</NavLi>
       {/if}
 
 		<!-- Theme selector button when logged in -->
@@ -139,6 +143,11 @@
     font-family: 'Baskerville Old Face', 'Baskerville', Georgia, serif !important;
     font-style: italic;
     letter-spacing: 0.05em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.navbar-theme) {
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1);
   }
 
   :global(.theme-spring) {

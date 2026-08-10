@@ -9,7 +9,7 @@ export interface Theme {
 	secondaryColor: string;
 	accentColor: string;
 	navbarColor: string;
-	navbarHoverColor: string;
+	navbarTextColor: string;
 }
 
 export const themes: Record<Season, Theme> = {
@@ -20,7 +20,7 @@ export const themes: Record<Season, Theme> = {
 		secondaryColor: '#fbbf24',
 		accentColor: '#ec4899',
 		navbarColor: '#065f46',
-		navbarHoverColor: '#059669'
+		navbarTextColor: '#ffffff'
 	},
 	summer: {
 		name: 'summer',
@@ -29,7 +29,7 @@ export const themes: Record<Season, Theme> = {
 		secondaryColor: '#06b6d4',
 		accentColor: '#f97316',
 		navbarColor: '#0369a1',
-		navbarHoverColor: '#0284c7'
+		navbarTextColor: '#ffffff'
 	},
 	autumn: {
 		name: 'autumn',
@@ -38,7 +38,7 @@ export const themes: Record<Season, Theme> = {
 		secondaryColor: '#f97316',
 		accentColor: '#b45309',
 		navbarColor: '#7c2d12',
-		navbarHoverColor: '#9a3412'
+		navbarTextColor: '#fef3c7'
 	},
 	winter: {
 		name: 'winter',
@@ -47,7 +47,7 @@ export const themes: Record<Season, Theme> = {
 		secondaryColor: '#60a5fa',
 		accentColor: '#1e224b',
 		navbarColor: '#1e3a8a',
-		navbarHoverColor: '#1e40af'
+		navbarTextColor: '#ffffff'
 	}
 };
 
@@ -77,8 +77,8 @@ export function applyTheme(theme: Season) {
 	root.style.setProperty('--color-primary-500', themeConfig.primaryColor);
 	root.style.setProperty('--color-secondary-500', themeConfig.secondaryColor);
 	root.style.setProperty('--color-accent-500', themeConfig.accentColor);
-	root.style.setProperty('--color-navbar-500', themeConfig.navbarColor);
-	root.style.setProperty('--color-navbar-hover-500', themeConfig.navbarHoverColor);
+	root.style.setProperty('--navbar-color', themeConfig.navbarColor);
+	root.style.setProperty('--navbar-text-color', themeConfig.navbarTextColor);
 
 	// Remover todas as classes de tema
 	Object.keys(themes).forEach((t) => {
