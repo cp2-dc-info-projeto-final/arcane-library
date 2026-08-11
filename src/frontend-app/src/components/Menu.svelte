@@ -91,13 +91,16 @@
 				>Arcane Library</Heading
 			>
      
-      <div style = "position:absolute; left: 50%;transform:translate(-50%);"><input type ="text" id = "pesquisa" placeholder="Busca por usuário"></div>
+
 
 		</NavBrand>
     <NavHamburger />
     <NavUl>
       <NavLi href="/" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Início</NavLi>
       <NavLi href="/about" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Sobre</NavLi>
+      <NavLi href="/categorias" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Categorias</NavLi>
+      <NavLi href="/livros" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
+
       {#if hasToken}
       <NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Perfil</NavLi>
       {/if}

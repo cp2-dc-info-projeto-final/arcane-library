@@ -1,5 +1,5 @@
 <script lang="ts">
-   import { Card, Button, Label, Input, Heading, Select, Modal, Alert } from 'flowbite-svelte';
+  import { Card, Button, Label, Input, Heading, Select, Modal, Alert } from 'flowbite-svelte';
   import { onMount } from 'svelte';
   import api from '$lib/api';
   import type { ApiFieldError, ApiResponse } from '$lib/api';

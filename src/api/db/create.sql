@@ -21,13 +21,13 @@ CREATE TABLE usuario (
     CONSTRAINT ck_usuario_role_valid CHECK (role IN ('admin','bibliotecario','cliente')) -- tipos de usuário
 );
 
-DROP TABLE IF EXISTS categoria CASCADE;
+DROP TABLE IF EXISTS categorias CASCADE;
  
-CREATE TABLE categoria (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
+CREATE TABLE categorias (
+    id_categorias BIGINT GENERATED ALWAYS AS IDENTITY,
     nome text NOT NULL,
     
-    CONSTRAINT pk_categoria PRIMARY KEY (id)
+    CONSTRAINT pk_categorias PRIMARY KEY (id)
 );
 
 
@@ -35,7 +35,7 @@ DROP TABLE IF EXISTS livro CASCADE;
 
 CREATE TABLE livro (
      id BIGINT GENERATED ALWAYS AS IDENTITY,
-     id_categoria BIGINT NOT NULL,
+     id_categorias BIGINT NOT NULL,
      titulo text NOT NULL,
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE livro (
 
     CONSTRAINT pk_livro PRIMARY KEY(id),
     CONSTRAINT uk_livro_isbn UNIQUE (isbn),
-    CONSTRAINT fk_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id) ON DELETE CASCADE
+    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id) ON DELETE CASCADE
 );
 
 
