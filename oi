@@ -1,0 +1,87 @@
+<script>
+  let searchWidth = 0;
+  let showMobileSearch = false;
+  let searchQuery = '';
+</script>
+
+<!-- Aplicamos o bind:clientWidth na div que envolve a busca -->
+<div class="search-box-container" bind:clientWidth={searchWidth}>
+  {#if searchWidth > 250}
+    <!-- Quando a DIV tiver mais de 250px, exibe o input normal -->
+    <input 
+      type="search" 
+      placeholder="Busca por usuário..." 
+      bind:value={searchQuery}
+      class="full-input"
+    />
+  {:else}
+    <!-- Quando a DIV for menor que 250px, exibe só o ícone -->
+    <button 
+      type="button" 
+      class="icon-btn" 
+      on:click={() => showMobileSearch = !showMobileSearch}
+      aria-label="Buscar"
+    >
+      🔍
+    </button>
+
+    {#if showMobileSearch}
+      <div class="dropdown-input">
+        <input 
+          type="search" 
+          placeholder="Busca por usuário..." 
+          bind:value={searchQuery}
+          autoFocus 
+        />
+      </div>
+    {/if}
+  {/if}
+</div>
+
+<style>
+  /* A div se ajusta de acordo com o espaço do seu CSS atual */
+  .search-box-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px; /* Altere para o tamanho máximo que deseja no seu layout */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .full-input {
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.4rem;
+  }
+
+  /* Input suspenso caso ela esteja recolhida no modo ícone */
+  .dropdown-input {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    width: 200px;
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+
+  .dropdown-input input {
+    width: 100%;
+    padding: 0.4rem;
+    box-sizing: border-box;
+  }
+</style>
