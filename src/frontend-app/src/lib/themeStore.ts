@@ -8,36 +8,46 @@ export interface Theme {
 	primaryColor: string;
 	secondaryColor: string;
 	accentColor: string;
+	navbarColor: string;
+	navbarTextColor: string;
 }
 
 export const themes: Record<Season, Theme> = {
 	spring: {
 		name: 'spring',
 		label: 'Primavera 🌸',
-		primaryColor: '#10b981',
+		primaryColor: '#1f7459',
 		secondaryColor: '#fbbf24',
-		accentColor: '#ec4899'
+		accentColor: '#ec4899',
+		navbarColor: '#065f46',
+		navbarTextColor: '#ffffff'
 	},
 	summer: {
 		name: 'summer',
 		label: 'Verão ☀️',
-		primaryColor: '#f59e0b',
+		primaryColor: '#1d0925',
 		secondaryColor: '#06b6d4',
-		accentColor: '#f97316'
+		accentColor: '#f97316',
+		navbarColor: '#0369a1',
+		navbarTextColor: '#ffffff'
 	},
 	autumn: {
 		name: 'autumn',
 		label: 'Outono 🍂',
-		primaryColor: '#dc2626',
+		primaryColor: '#1a0505',
 		secondaryColor: '#f97316',
-		accentColor: '#b45309'
+		accentColor: '#b45309',
+		navbarColor: '#7c2d12',
+		navbarTextColor: '#fef3c7'
 	},
 	winter: {
 		name: 'winter',
 		label: 'Inverno ❄️',
 		primaryColor: '#0ea5e9',
 		secondaryColor: '#60a5fa',
-		accentColor: '#818cf8'
+		accentColor: '#1e224b',
+		navbarColor: '#1e3a8a',
+		navbarTextColor: '#ffffff'
 	}
 };
 
@@ -67,6 +77,8 @@ export function applyTheme(theme: Season) {
 	root.style.setProperty('--color-primary-500', themeConfig.primaryColor);
 	root.style.setProperty('--color-secondary-500', themeConfig.secondaryColor);
 	root.style.setProperty('--color-accent-500', themeConfig.accentColor);
+	root.style.setProperty('--navbar-color', themeConfig.navbarColor);
+	root.style.setProperty('--navbar-text-color', themeConfig.navbarTextColor);
 
 	// Remover todas as classes de tema
 	Object.keys(themes).forEach((t) => {

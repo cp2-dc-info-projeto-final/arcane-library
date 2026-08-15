@@ -103,7 +103,7 @@
 {:else if error}
   <div class="my-8 text-center text-red-500">{error}</div>
 {:else}
-  <div class = "hidden xl:block">
+  <div class = "">
 
     
     <input type ="text" id = "pesquisa" bind:value={consulta} on:input={filtrarUsuario} placeholder="Busca por usuário">

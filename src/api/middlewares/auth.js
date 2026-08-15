@@ -54,13 +54,13 @@ const isAdmin = (req, res, next) => {
 const isIdUser = (req, res, next) => {
   console.log("Entrou no isIdUser");
   console.log(req);
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && req.body && req.user.id === req.body.id) {
     next();
   } else {
     // http status 403 - Forbidden
     return res.status(403).json({
       success: false,
-      message: 'Acesso negado: requer privilégios de administrador',
+      message: 'O usuário logado não tem o id necessário para acessar',
       errors: []
     });
   }

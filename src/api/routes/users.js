@@ -3,7 +3,8 @@ var router = express.Router();
 const pool = require('../db/config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { verifyToken, isAdmin } = require('../middlewares/auth');
+const upload = require('../middlewares/upload');
+const { verifyToken, isAdmin, isIdUser } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
@@ -22,10 +23,10 @@ function sendError(res, status, message, errors = []) {
 
 /* GET - Buscar todos os usuários */
 // requer usuário autenticado como admin
-router.get('/', verifyToken, isAdmin, async function(req, res) {
+router.get('/', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
   try {
     const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query('SELECT id, login, email, role FROM usuario WHERE login LIKE $1 ORDER BY id', [consulta]);
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE login LIKE $1 ORDER BY id", [consulta]);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
@@ -38,24 +39,8 @@ router.get('/me', verifyToken, async function(req, res) {
   try {
     // parâmetro obtido do token pelo middleware
     const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email, role FROM usuario WHERE id = $1', [id]);
-
-    if (result.rows.length === 0) {
-      return sendError(res, 404, 'Usuário não encontrado');
-    }
-
-    return sendSuccess(res, 200, null, result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
-/* GET parametrizado - Buscar usuário por ID */
-router.get('/:id', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const { id } = req.params;
-    const result = await pool.query('SELECT id, login, email, role FROM usuario WHERE id = $1', [id]);
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
+    
 
     if (result.rows.length === 0) {
       return sendError(res, 404, 'Usuário não encontrado');
@@ -69,9 +54,9 @@ router.get('/:id', verifyToken, isAdmin, async function(req, res) {
 });
 
 /* POST - Criar novo usuário */
-router.post('/', async function(req, res) {
+router.post('/', upload.single('foto'), async function(req, res) {
   try {
-    const { login, email, cpf, telefone, senha, role = 'user' } = req.body;
+    const { login, email, cpf, telefone, datanasc, senha, role = 'user' } = req.body;
     
     console.log(req.body);
 
@@ -83,6 +68,7 @@ router.post('/', async function(req, res) {
       if (!senha) errors.push({ field: 'senha', message: 'Senha é obrigatória', code: 'REQUIRED' });
 
       return sendError(res, 400, 'Login, email e senha são obrigatórios', errors);
+      console.log('cleberson')
     }
     
     // Verificar se o login já existe
@@ -103,10 +89,10 @@ router.post('/', async function(req, res) {
 
     // Hash da senha
     const hashedPassword = await bcrypt.hash(senha, 12);
-
+    const { foto } = req.body;  
     const result = await pool.query(
-      'INSERT INTO usuario (login, email, senha, role) VALUES ($1, $2, $3, $4) RETURNING id, login, email, role',
-      [login, email, hashedPassword, role]
+      "INSERT INTO usuario (foto, login, email, senha, datanasc, cpf, telefone, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role",
+      [foto, login, email, hashedPassword, datanasc, cpf, telefone, role]
     );
 
     return sendSuccess(res, 201, 'Usuário criado com sucesso', result.rows[0]);
@@ -127,10 +113,9 @@ router.post('/login', async function(req, res) {
     const { login, password } = req.body;
     // obtém o usuário do banco de dados
     const result = await pool.query(`SELECT 
-      id, login, email, senha as passwordHash, role
+      id, foto, login, email, senha as passwordHash, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role
       FROM usuario 
       WHERE login = $1`, [login]);
-
     /* 
      tratar login inválido igual senha incorreta
      confere maior segurança por não expor indiretamente
@@ -163,8 +148,13 @@ router.post('/login', async function(req, res) {
       const token = jwt.sign(
         { 
           id: user.id, 
+          foto: user.foto,
           login: user.login,
           email: user.email,
+          datanasc: user.datanasc,
+          cpf: user.cpf,
+          telefone: user.telefone,
+          
           // tipo do usuário, que vem do banco
           role: user.role 
           // a senha não entra no token para não ser exposta
@@ -183,12 +173,87 @@ router.post('/login', async function(req, res) {
   
 });
 
+/* PUT - Atualizar o próprio usuário */
+router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
+  console.log('CLEITONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN') // tava achando erro chefe?;
+  console.log(req.body);
+  console.log(req.body.foto);
+  try {
+      const id = req.user.id
+      const { foto, login, email, datanasc, cpf, telefone, role, senha} = req.body;
+      let query, params;
+    if (senha && senha.trim() !== '') {
+      // Atualizar com nova senha
+      const hashedPassword = await bcrypt.hash(senha, 12);
+       query = "UPDATE usuario SET foto = $1, login = $2, email = $3, senha = $4, datanasc = $5, cpf = $6, telefone = $7 WHERE id = $8 RETURNING id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone ";
+       params = [foto, login, email, hashedPassword, datanasc, cpf, telefone, id];
+    } else {
+      // Atualizar sem alterar senha
+       query = "UPDATE usuario SET foto =$1, login = $2, email = $3, datanasc = $4, cpf = $5, telefone = $6 WHERE id = $7 RETURNING id, foto, login, cpf, telefone, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, email";
+       params = [foto, login, email, datanasc, cpf, telefone, id];
+    }
+    console.log("QUERY", query);
+    console.log("PARAMS", params);
+    const result = await pool.query(
+    query, params
+    );
+    return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    // Verificar se é erro de constraint
+    if (error.code === '23514') {
+      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
+    }
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
 
-/* PUT - Atualizar usuário */
-router.put('/:id', verifyToken, isAdmin, async function(req, res) {
+
+
+/* DELETE - Remover usuário */
+router.delete('/me', verifyToken, async function(req, res) {
+  try {
+    const id = req.user.id;
+    const result = await pool.query('SELECT id = $1', [id]);
+    // Verificar se o usuário existe
+    const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
+    if (userExists.rows.length === 0) {
+      return sendError(res, 404, 'Usuário não encontrado');
+    }
+    
+    await pool.query('DELETE FROM usuario WHERE id = $1', [id]);
+    
+    return sendSuccess(res, 200, 'Usuário deletado com sucesso');
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
+
+/* GET parametrizado - Buscar usuário por ID */
+router.get('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
+  console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { id } = req.params;
-    const { login, email, senha, role } = req.body;
+    const result = await pool.query("SELECT id, foto, login, email, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, cpf, telefone, role FROM usuario WHERE id = $1", [id]);
+
+    if (result.rows.length === 0) {
+      return sendError(res, 404, 'Usuário não encontrado');
+    }
+    console.log(result.rows[0]);
+    return sendSuccess(res, 200, null, result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
+
+/* PUT - Atualizar usuário */
+router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
+  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  try {
+    const { id } = req.params;
+    const { foto, login, email, senha, datanasc, cpf, telefone, role } = req.body;
     
     // Validação básica
     if (!login || !email || !role) {
@@ -227,43 +292,16 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
     if (senha && senha.trim() !== '') {
       // Atualizar com nova senha
       const hashedPassword = await bcrypt.hash(senha, 12);
-      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3, role = $4 WHERE id = $5 RETURNING id, login, email, role';
-      params = [login, email, hashedPassword, role, id];
+      query = "UPDATE usuario SET foto = $1, login = $2, email = $3, senha = $4, datanasc = $5, cpf = $6, telefone = $7, role = $8 WHERE id = $9 RETURNING id, foto, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
+      params = [foto, login, email, hashedPassword, datanasc, cpf, telefone,  role, id];
     } else {
       // Atualizar sem alterar senha
-      query = 'UPDATE usuario SET login = $1, email = $2, role = $3 WHERE id = $4 RETURNING id, login, email, role';
-      params = [login, email, role, id];
+      query = "UPDATE usuario SET foto = $1, login = $2, email = $3, datanasc = $4, cpf = $5, telefone = $6, role = $7 WHERE id = $8 RETURNING id, foto, login, email, cpf, TO_CHAR(datanasc, 'YYYY-MM-DD') as datanasc, telefone, role";
+      params = [foto, login, email, datanasc, cpf, telefone, role, id];
     }
     
     const result = await pool.query(query, params);
     
-    return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
-    // Verificar se é erro de constraint
-    if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
-    }
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
-router.put('/me', verifyToken, async function(req, res) {
-  try {
-    const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email, cpf, dataNasc, telefone FROM usuario WHERE id = $1', [id]);
-
-    if (senha && senha.trim() !== '') {
-      // Atualizar com nova senha
-      const hashedPassword = await bcrypt.hash(senha, 12);
-      query = 'UPDATE usuario SET login = $1, email = $2, senha = $3, telefone = $4, cpf = $5, dataNasc = $6 WHERE id = $7 RETURNING id, login, email, dataNasc, cpf, telefone ';
-      params = [login, cpf, telefone, dataNasc, email, hashedPassword, id];
-    } else {
-      // Atualizar sem alterar senha
-      query = 'UPDATE usuario SET login = $1, email = $2, telefone = $3, cpf = $4, dataNasc = $5 WHERE id = $6 RETURNING id, login, cpf, telefone, dataNasc, email';
-      params = [login, cpf, telefone, dataNasc, email, id];
-    }
-
     return sendSuccess(res, 200, 'Usuário atualizado com sucesso', result.rows[0]);
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
@@ -280,26 +318,6 @@ router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
   try {
     const { id } = req.params;
     
-    // Verificar se o usuário existe
-    const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
-    if (userExists.rows.length === 0) {
-      return sendError(res, 404, 'Usuário não encontrado');
-    }
-    
-    await pool.query('DELETE FROM usuario WHERE id = $1', [id]);
-    
-    return sendSuccess(res, 200, 'Usuário deletado com sucesso');
-  } catch (error) {
-    console.error('Erro ao deletar usuário:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
-});
-
-/* DELETE - Remover usuário */
-router.delete('/me', verifyToken, async function(req, res) {
-  try {
-    const id = req.user.id;
-    const result = await pool.query('SELECT id, login, email, role FROM usuario WHERE id = $1', [id]);
     // Verificar se o usuário existe
     const userExists = await pool.query('SELECT id FROM usuario WHERE id = $1', [id]);
     if (userExists.rows.length === 0) {
