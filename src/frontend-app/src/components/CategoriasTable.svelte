@@ -1,5 +1,5 @@
 <script lang="ts">
-    // Tabela de usuários
+    // Tabela de categorias
     import { Table, TableHead, TableHeadCell, TableBody, TableBodyRow, TableBodyCell, Card, Badge, input } from 'flowbite-svelte'; // UI
     import ConfirmModal from './ConfirmModal.svelte'; // modal de confirmação
     import { UserEditOutline, TrashBinOutline } from 'flowbite-svelte-icons'; // ícones
@@ -9,7 +9,7 @@
     import { onMount } from 'svelte'; // ciclo de vida
     import type { Categorias } from '$lib/models/Categorias';
   
-    let categorias: Categorias[] = []; // lista de usuários
+    let categorias: Categorias[] = []; // lista de categorias
     let loading = true;
     let error = '';
     let deletingId: number | null = null; // id em deleção
@@ -45,17 +45,17 @@
       deletingId = id;
       error = '';
       try {
-        const res = await api.delete(`/users/${id}`);
+        const res = await api.delete(`/categorias/${id}`);
         const body = res.data as ApiResponse<null>;
         if (!body.success) {
           error = body.message;
           return;
         }
-        users = users.filter(user => user.id !== id);
+        categorias = categorias.filter(categorias => categorias.id !== id);
       } catch (e: any) {
-        console.error('Erro ao deletar usuário:', e);
+        console.error('Erro ao deletar categoria:', e);
         const body = e.response?.data as ApiResponse<null> | undefined;
-        error = body?.message || 'Erro ao remover usuário.';
+        error = body?.message || 'Erro ao remover categoria.';
       } finally {
         deletingId = null;
       }
@@ -63,34 +63,34 @@
   
     onMount(async () => {
       try {
-        const res = await api.get('/users');
-        const body = res.data as ApiResponse<User[]>;
+        const res = await api.get('/categorias');
+        const body = res.data as ApiResponse<Categorias[]>;
         if (body.success) {
-          users = body.data ?? [];
+          categorias= body.data ?? [];
         } else {
           error = body.message;
         }
       } catch (e: any) {
         console.error('Erro ao carregar usuários:', e);
-        const body = e.response?.data as ApiResponse<User[]> | undefined;
-        error = body?.message || 'Erro ao carregar usuários';
+        const body = e.response?.data as ApiResponse<Categorias[]> | undefined;
+        error = body?.message || 'Erro ao carregar categoria';
       } finally {
         loading = false;
       }
     });
-    async function filtrarUsuario(){
+    async function filtrarCategorias(){
       try {
-        const res = await api.get(`/users?consulta=${encodeURIComponent(consulta)}`);
-        const body = res.data as ApiResponse<User[]>;
+        const res = await api.get(`/categorias?consulta=${encodeURIComponent(consulta)}`);
+        const body = res.data as ApiResponse<Categorias[]>;
         if (body.success) {
-          users = body.data ?? [];
+          categorias = body.data ?? [];
         } else {
           error = body.message;
         }
       } catch (e: any) {
-        console.error('Erro ao carregar usuários:', e);
-        const body = e.response?.data as ApiResponse<User[]> | undefined;
-        error = body?.message || 'Erro ao carregar usuários';
+        console.error('Erro ao carregar categorias:', e);
+        const body = e.response?.data as ApiResponse<Categorias[]> | undefined;
+        error = body?.message || 'Erro ao carregar categorias';
       } finally {
         loading = false;
       }
@@ -99,14 +99,14 @@
   </script>
   
   {#if loading}
-    <div class="my-8 text-center text-gray-500">Carregando usuários...</div>
+    <div class="my-8 text-center text-gray-500">Carregando categorias...</div>
   {:else if error}
     <div class="my-8 text-center text-red-500">{error}</div>
   {:else}
     <div class = "">
   
       
-      <input type ="text" id = "pesquisa" bind:value={consulta} on:input={filtrarUsuario} placeholder="Busca por usuário">
+      <input type ="text" id = "pesquisa" bind:value={consulta} on:input={filtrarCategorias} placeholder="Busca por categorias">
       
     </div>
     

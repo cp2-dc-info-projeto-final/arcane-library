@@ -3,8 +3,7 @@ var router = express.Router();
 const pool = require('../db/config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const upload = require('../middlewares/upload');
-const { verifyToken, isAdmin, isIdUser } = require('../middlewares/auth');
+const { verifyToken, isAdmin } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
