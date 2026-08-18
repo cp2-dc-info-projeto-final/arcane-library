@@ -27,7 +27,7 @@ CREATE TABLE categorias (
     id_categorias BIGINT GENERATED ALWAYS AS IDENTITY,
     nome text NOT NULL,
     
-    CONSTRAINT pk_categorias PRIMARY KEY (id)
+    CONSTRAINT pk_categorias PRIMARY KEY (id_categorias)
 );
 
 
@@ -43,7 +43,7 @@ CREATE TABLE livro (
 
     CONSTRAINT pk_livro PRIMARY KEY(id),
     CONSTRAINT uk_livro_isbn UNIQUE (isbn),
-    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id) ON DELETE CASCADE
+    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id_categorias) ON DELETE CASCADE
 );
 
 

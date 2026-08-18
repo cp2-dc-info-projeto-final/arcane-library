@@ -33,7 +33,7 @@
 		class="flex items-center gap-2 px-3 py-1 rounded text-black-100 hover:text-yellow-300 hover:opacity-80 transition-all font-medium"
 		title="Trocar tema"
 	>
-		<PaletteOutline class="w-5 h-5" />
+		<PaletteOutline class="w-5 h-5" color="black" />
 		<span class="hidden sm:inline text-sm">Tema</span>
 	</button>
 

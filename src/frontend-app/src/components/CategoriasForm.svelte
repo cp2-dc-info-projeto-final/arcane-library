@@ -55,23 +55,18 @@
     loading = true;
     error = '';
     try {
+      
       let targetRoute = id === null ? '/categorias' : `/categorias/${id}`;
-      const formData = new FormData()
-      formData.append('nome', categorias.nome);
-     
       let res;
+
+      // REMOVIDO FormData! Enviamos o objeto JSON diretamente:
       if (id === null) {
-        res = await api.post('/categorias', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        res = await api.post(targetRoute, { nome: categorias.nome });
       } else {
-        res = await api.put(targetRoute, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        res = await api.put(targetRoute, { nome: categorias.nome });
       }
 
       const body = res.data as ApiResponse<Categorias>;
-
       if (!body?.success) {
         error = body?.message || 'Erro ao salvar categorias.';
         fieldErrors = body?.errors || [];

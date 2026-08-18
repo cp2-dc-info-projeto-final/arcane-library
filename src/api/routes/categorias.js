@@ -36,11 +36,9 @@ router.get('/', verifyToken, isAdmin, async function(req, res) {
 /* POST - Criar nova Categoria */
 router.post('/', verifyToken, isAdmin, async function(req, res) {
   try {
-    const { id_categorias, nome } = req.body;
+    const { nome } = req.body;
     
     console.log(req.body);
-
- 
     const result = await pool.query(
       "INSERT INTO categorias (nome) VALUES ($1) RETURNING id_categorias, nome",
       [nome]
