@@ -1,14 +1,19 @@
-export interface livro {
-    titulo: string;
-    id: number;
-    autor: string;
-    id_categoria: number;
-  }
-  
-export interface livroFormData {
-    titulo: string;
-    id: number;
-    autor: string;
-    id_categoria: number;
+export interface Livro {
+  id: number;
+  id_categorias: number;
+  titulo: string;
+  ano_de_publicacao: string;
+  editora: string;
+  isbn: number;
+  foto?: string; // URL da foto
+}
 
-  }  
+export interface LivroFormData {
+  id?: number;
+  id_categorias: number;
+  titulo: string;
+  ano_de_publicacao: string;
+  editora: string;
+  isbn: number;
+  foto?: string;
+}

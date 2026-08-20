@@ -3,8 +3,7 @@ var router = express.Router();
 const pool = require('../db/config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const upload = require('../middlewares/upload');
-const { verifyToken, isAdmin, isIdUser } = require('../middlewares/auth');
+const { verifyToken, isAdmin } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
@@ -37,11 +36,9 @@ router.get('/', verifyToken, isAdmin, async function(req, res) {
 /* POST - Criar nova Categoria */
 router.post('/', verifyToken, isAdmin, async function(req, res) {
   try {
-    const { id_categorias, nome } = req.body;
+    const { nome } = req.body;
     
     console.log(req.body);
-
- 
     const result = await pool.query(
       "INSERT INTO categorias (nome) VALUES ($1) RETURNING id_categorias, nome",
       [nome]
@@ -65,7 +62,7 @@ router.get('/:id', verifyToken, async function(req, res) {
   console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { nome } = req.body;
-    const result = await pool.query("SELECT id_categorias, nome FROM categorias WHERE id_categorias = $1", [id_categorias]);
+    const result = await pool.query("SELECT id_categorias, nome FROM categorias WHERE id_categorias = $1", [req.params.id]);
 
     if (result.rows.length === 0) {
       return sendError(res, 404, 'Categoria não encontrado');
@@ -88,7 +85,7 @@ router.put('/:id', verifyToken, isAdmin, async function(req, res) {
     let query, params;
     
       query = "UPDATE categorias SET nome = $1 WHERE id_categorias = $2 RETURNING id_categorias, nome";
-      params = [id_categorias, nome];
+      params = [nome, id];
     const result = await pool.query(query, params);
     
     return sendSuccess(res, 200, 'Categoria atualizada com sucesso', result.rows[0]);
@@ -108,12 +105,12 @@ router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
     const { id } = req.params;
     
     // Verificar se a categoria existe
-    const categoriasExists = await pool.query('SELECT id_categorias FROM categorias WHERE id_categorias = $1', [id_categorias]);
+    const categoriasExists = await pool.query('SELECT id_categorias FROM categorias WHERE id_categorias = $1', [id]);
     if (categoriasExists.rows.length === 0) {
       return sendError(res, 404, 'Categoria não encontrada');
     }
     
-    await pool.query('DELETE FROM categorias WHERE id = $1', [id]);
+    await pool.query('DELETE FROM categorias WHERE id_categorias = $1', [id]);
     
     return sendSuccess(res, 200, 'Categoria deletada com sucesso');
   } catch (error) {
