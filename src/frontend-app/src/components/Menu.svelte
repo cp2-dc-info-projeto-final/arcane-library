@@ -7,6 +7,8 @@
   import { ArrowRightToBracketOutline } from "flowbite-svelte-icons";
   import { page } from "$app/stores";
   import { themeStore, themes, type Season } from "$lib/themeStore";
+	import CategoriasForm from './CategoriasForm.svelte';
+	import CategoriasTable from './CategoriasTable.svelte';
   
   let user: User | null = null;
   let hasToken = false;
