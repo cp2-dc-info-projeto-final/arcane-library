@@ -30,11 +30,11 @@
 	<!-- Theme Toggle Button -->
 	<button
 		on:click={() => (openModal = true)}
-		class="flex items-center gap-2 px-3 py-1 rounded text-black-100 hover:text-yellow-300 hover:opacity-80 transition-all font-medium"
+		class="flex items-center gap-3 px-2 py-2 rounded text-green-100 hover:text-SlateGray1-900 hover:opacity-800 transition-all font-medium"
 		title="Trocar tema"
 	>
-		<PaletteOutline class="w-5 h-5" color="black" />
-		<span class="hidden sm:inline text-sm">Tema</span>
+		<PaletteOutline class="w-6 h-6" color="black" />
+		<span class="hidden sm:inline text-sm" >Tema</span>
 	</button>
 
 	<!-- Theme Modal -->

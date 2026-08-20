@@ -26,7 +26,7 @@ function sendError(res, status, message, errors = []) {
 router.get('/', verifyToken, isAdmin, async function(req, res) {
   try {
     const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query("SELECT id, id_categorias, titulo, ano_de_publicacao, editora, isbn FROM livro WHERE titulo LIKE $1 ORDER BY id", [consulta]);
+    const result = await pool.query("SELECT id, id_categorias, titulo, ano_de_publicacao, editora, isbn, foto FROM livro WHERE titulo LIKE $1 ORDER BY id", [consulta]);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
     console.error('Erro ao buscar  Livro:', error);
@@ -35,16 +35,16 @@ router.get('/', verifyToken, isAdmin, async function(req, res) {
 });
 
 /* POST - Publicar novo livro */
-router.post('/', verifyToken, isAdmin, async function(req, res) {
+router.post('/', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
   try {
-    const { id, id_categorias, titulo, ano_de_publicacao, editora, isbn } = req.body;
+    const { id_categorias, titulo, ano_de_publicacao, editora, isbn } = req.body;
     
     console.log(req.body);
 
  
     const result = await pool.query(
-      "INSERT INTO livro (id_categorias, titulo, ano_de_publicacao, editora, isbn) VALUES ($1, $2, $3, $4, $5) RETURNING id, id_categorias, titulo, ano_de_publicacao, editora, isbn",
-      [nome]
+  "INSERT INTO livro (id_categorias, titulo, ano_de_publicacao, editora, isbn, foto) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, id_categorias, titulo, ano_de_publicacao, editora, isbn, foto",
+  [id_categorias, titulo, ano_de_publicacao, editora, isbn, req.file?.filename || null]
     );
 
     return sendSuccess(res, 201, 'Livro publicado com sucesso', result.rows[0]);
@@ -65,7 +65,7 @@ router.get('/:id', verifyToken, async function(req, res) {
   console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { titulo } = req.body;
-    const result = await pool.query("SELECT id_categorias, titulo, ano_de_publicacao, editora, isbn WHERE id = $1", [id]);
+    const result = await pool.query("SELECT id, id_categorias, titulo, ano_de_publicacao, editora, isbn, foto FROM livro WHERE id = $1", [req.params.id]);
 
     if (result.rows.length === 0) {
       return sendError(res, 404, 'Livro não encontrado');
@@ -74,6 +74,39 @@ router.get('/:id', verifyToken, async function(req, res) {
     return sendSuccess(res, 200, null, result.rows[0]);
   } catch (error) {
     console.error('Erro ao buscar livro:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
+
+
+
+/* PUT - Atualizar livro */
+router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
+  try {
+    const { id } = req.params;
+    const { id_categorias, titulo, ano_de_publicacao, editora, isbn } = req.body;
+
+    // Verificar se livro existe
+    const livroExists = await pool.query('SELECT foto FROM livro WHERE id = $1', [id]);
+    if (livroExists.rows.length === 0) {
+      return sendError(res, 404, 'Livro não encontrado');
+    }
+
+    // Se enviou foto nova, usa ela. Se não, mantém a antiga
+    const fotoAtual = livroExists.rows[0].foto;
+    const fotoPath = req.file ? req.file.filename : fotoAtual;
+
+    const result = await pool.query(
+     "INSERT INTO livro (id_categorias, titulo, ano_de_publicacao, editora, isbn, foto) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, id_categorias, titulo, ano_de_publicacao, editora, isbn, foto",
+      [id_categorias, titulo, ano_de_publicacao, editora, isbn, req.file?.filename || null]
+    );
+
+    return sendSuccess(res, 200, 'Livro atualizado com sucesso', result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao atualizar livro:', error);
+    if (error.code === '23505') {
+      return sendError(res, 400, 'ISBN já existe no sistema');
+    }
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });

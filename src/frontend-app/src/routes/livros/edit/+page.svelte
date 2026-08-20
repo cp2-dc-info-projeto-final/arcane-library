@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Heading } from 'flowbite-svelte';
-  import LivroTable from '../../components/LivroTable.svelte';
+  import LivroTable from '../../../components/LivroTable.svelte';
   import { UserAddOutline } from 'flowbite-svelte-icons';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';

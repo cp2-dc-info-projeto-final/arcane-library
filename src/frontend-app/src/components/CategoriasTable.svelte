@@ -8,6 +8,7 @@
     import type { ApiResponse } from '$lib/api';
     import { onMount } from 'svelte'; // ciclo de vida
     import type { Categorias } from '$lib/models/Categorias';
+	import CategoriasForm from './CategoriasForm.svelte';
   
     let categorias: Categorias[] = []; // lista de categorias
     let loading = true;
@@ -51,7 +52,7 @@
           error = body.message;
           return;
         }
-        categorias = categorias.filter(categorias => categorias.id !== id);
+        categorias = categorias.filter(categorias => categorias.id_categorias !== id);
       } catch (e: any) {
         console.error('Erro ao deletar categoria:', e);
         const body = e.response?.data as ApiResponse<null> | undefined;
@@ -129,7 +130,7 @@
                 <button
                   class="p-2 rounded border border-primary-200 hover:border-primary-400 transition bg-transparent"
                   title="Editar"
-                  on:click={() => goto(`/categorias/edit/${categoria.id}`)}
+                  on:click={() => goto(`/categorias/edit/${categoria.id_categorias}`)}
                 >
                   <UserEditOutline class="w-5 h-5 text-primary-500" />
                 </button>
@@ -137,7 +138,7 @@
                 <button
                   title="Remover"
                   class="p-2 rounded border border-red-100 hover:border-red-300 transition bg-transparent"
-                  on:click={() => openConfirm(categoria.id)}
+                  on:click={() => openConfirm(categoria.id_categorias)}
                   disabled={deletingId === categoria.id || loading}
                 >
                   <TrashBinOutline class="w-5 h-5 text-red-400" />
@@ -157,14 +158,14 @@
             <div class="px-4 pt-4 pb-2 bg-green-100 text-left flex items-center justify-between">
               <div>
                 <div class="text-lg font-semibold text-gray-800 text-left">{categoria.nome}</div>
-                <div class="text-xs text-gray-400 text-left">ID: {categoria.id}</div>
+                <div class="text-xs text-gray-400 text-left">ID: {categoria.id_categorias}</div>
               </div>
               <div class="flex gap-2">
                 <!-- Botão editar -->
                 <button
                   class="p-2 rounded border border-primary-200 hover:border-primary-400 transition bg-transparent"
                   title="Editar"
-                  on:click={() => goto(`/categorias/edit/${categoria.id}`)}
+                  on:click={() => goto(`/categorias/edit/${categoria.id_categorias}`)}
                 >
                   <UserEditOutline class="w-5 h-5 text-primary-500" />
                 </button>
@@ -172,8 +173,8 @@
                 <button
                   title="Remover"
                   class="p-2 rounded border border-red-100 hover:border-red-300 transition bg-transparent"
-                  on:click={() => openConfirm(categoria.id)}
-                  disabled={deletingId === categoria.id || loading}
+                  on:click={() => openConfirm(categoria.id_categorias)}
+                  disabled={deletingId === categoria.id_categorias || loading}
                 >
                   <TrashBinOutline class="w-5 h-5 text-red-400" />
                 </button>
@@ -201,4 +202,5 @@
     onConfirm={handleConfirm}
     onCancel={handleCancel}
   />
+  
   

@@ -40,6 +40,7 @@ CREATE TABLE livro (
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,
      isbn int NOT NULL,
+     foto TEXT,
 
     CONSTRAINT pk_livro PRIMARY KEY(id),
     CONSTRAINT uk_livro_isbn UNIQUE (isbn),
