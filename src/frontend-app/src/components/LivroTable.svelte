@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation';
   import api from '$lib/api';
   import type { ApiResponse } from '$lib/api';
-  import type { Livro } from '$lib/models/Livros';
+  import type { Livro } from '$lib/models/Livro';
 
   let livros: Livro[] = [];
   let loading = true;
