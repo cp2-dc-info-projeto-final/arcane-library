@@ -1,39 +1,54 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Button, Table, Spinner, Modal } from 'flowbite-svelte';
-  import { PencilOutline, TrashBinOutline } from 'flowbite-svelte-icons';
+  import { TrashBinOutline } from 'flowbite-svelte-icons';
   import { goto } from '$app/navigation';
   import api from '$lib/api';
   import type { ApiResponse } from '$lib/api';
-  import type { Livro } from '$lib/models/Livro';
+  import type { Livro } from '$lib/models/Livros';
 
   let livros: Livro[] = [];
   let loading = true;
   let error = '';
   let abrirModalDelete = false;
   let livroParaDeletar: Livro | null = null;
+  let consulta: ''
 
   onMount(async () => {
-    await carregarLivros();
-  });
-
-  async function carregarLivros() {
-    loading = true;
-    error = '';
-    try {
-      const res = await api.get('/livros');
-      const body = res.data as ApiResponse<Livro[]>;
-      if (body?.success && body.data) {
-        livros = body.data;
-      } else {
-        error = body?.message || 'Erro ao carregar livros';
+      try {
+        const res = await api.get('/livros');
+        const body = res.data as ApiResponse<Livro[]>;
+        if (body.success) {
+          livros = body.data ?? [];
+        } else {
+          error = body.message;
+        }
+      } catch (e: any) {
+        console.error('Erro ao carregar livro:', e);
+        const body = e.response?.data as ApiResponse<Livro[]> | undefined;
+        error = body?.message || 'Erro ao carregar categoria';
+      } finally {
+        loading = false;
       }
-    } catch (e: any) {
-      error = e.response?.data?.message || 'Erro ao carregar livros';
-    } finally {
-      loading = false;
-    }
-  }
+    });
+    async function filtrarLivros(){
+      try {
+        const res = await api.get(`/livros?consulta=${encodeURIComponent(consulta)}`);
+        const body = res.data as ApiResponse<Livro[]>;
+        if (body.success) {
+          livros = body.data ?? [];
+        } else {
+          error = body.message;
+        }
+      } catch (e: any) {
+        console.error('Erro ao carregar livros:', e);
+        const body = e.response?.data as ApiResponse<Livro[]> | undefined;
+        error = body?.message || 'Erro ao carregar livros';
+      } finally {
+        loading = false;
+      }
+    };
+    
 
   function abrirDelete(livro: Livro) {
     livroParaDeletar = livro;
@@ -46,7 +61,7 @@
     loading = true;
     try {
       await api.delete(`/livros/${livroParaDeletar.id}`);
-      await carregarLivros();
+      await filtrarLivros();
       abrirModalDelete = false;
       livroParaDeletar = null;
     } catch (e: any) {
@@ -56,6 +71,14 @@
     }
   }
 </script>
+  
+<div class = "">
+  
+      
+  <input type ="text" id = "pesquisa" bind:value={consulta} on:input={filtrarLivros} placeholder="Busca por livros">
+  
+</div>  
+  
 
 <div class="max-w-6xl mx-auto">
   {#if error}
@@ -107,7 +130,7 @@
                   color="light"
                   on:click={() => goto(`/livros/edit/${livro.id}`)}
                 >
-                  <PencilOutline class="w-4 h-4" />
+                
                 </Button>
                 <Button 
                   size="sm" 

@@ -26,7 +26,7 @@ function sendError(res, status, message, errors = []) {
 router.get('/', verifyToken, isAdmin, async function(req, res) {
   try {
     const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query("SELECT id, id_categorias, titulo, ano_de_publicacao, editora, isbn, foto FROM livro WHERE titulo LIKE $1 ORDER BY id", [consulta]);
+    const result = await pool.query("SELECT id, id_categorias, titulo, ano_de_publicacao, editora, isbn foto FROM livro WHERE titulo LIKE $1 ORDER BY id", [consulta]);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
     console.error('Erro ao buscar  Livro:', error);

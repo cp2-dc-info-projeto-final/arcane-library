@@ -100,15 +100,14 @@
     <NavUl>
       <NavLi href="/" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Início</NavLi>
       <NavLi href="/about" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Sobre</NavLi>
-      <NavLi href="/categorias" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Categorias</NavLi>
-      <NavLi href="/livros" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
-
       {#if hasToken}
       <NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Perfil</NavLi>
       {/if}
       {#if hasToken}
         {#if user} <!-- se existir usu��rio é porque conseguiu logar-->
           {#if user.role === 'admin'} <!-- só exibe menu usuários para admin-->
+            <NavLi href="/livros" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
+            <NavLi href="/categorias" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Categorias</NavLi>
             <NavLi href="/users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Usuários</NavLi>
           {/if}
           <NavLi>
