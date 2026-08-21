@@ -14,8 +14,9 @@
   let livro: LivroFormData = { 
     id_categorias: 0,
     categoria: '', 
-    titulo: '', 
+    titulo: '',
     ano_de_publicacao: '',
+    autor: '',
     editora: '',
     isbn: 0
   };
@@ -77,8 +78,10 @@
     try {
       const formData = new FormData();
       formData.append('id_categorias', livro.id_categorias.toString());
+      formData.append('categorias', livro.categoria);
       formData.append('titulo', livro.titulo);
       formData.append('ano_de_publicacao', livro.ano_de_publicacao);
+      formData.append('autor', livro.autor);
       formData.append('editora', livro.editora);
       formData.append('isbn', livro.isbn.toString());
 
@@ -174,13 +177,13 @@
     <!-- Categoria -->
     <div>
       <Label for="categoria">Categoria</Label>
-      <Select 
-        id="categoria" 
-        bind:value={livro.id_categorias} 
-        items={categoriasOptions} 
-        class="mt-1"
-        required
-      />
+      <Input 
+      id="categorias" 
+      bind:value={livro.categoria} 
+      placeholder="Digite a categoria" 
+      required 
+      class="mt-1" 
+    />
       {#if errorOf('id_categorias')}
         <div class="mt-1 text-sm text-red-500">{errorOf('id_categorias')}</div>
       {/if}
@@ -213,6 +216,20 @@
       />
       {#if errorOf('ano_de_publicacao')}
         <div class="mt-1 text-sm text-red-500">{errorOf('ano_de_publicacao')}</div>
+      {/if}
+    </div>
+
+    <div>
+      <Label for="autor">Autores</Label>
+      <Input 
+        id="autor" 
+        bind:value={livro.autor} 
+        placeholder="Digite o autor" 
+        required 
+        class="mt-1" 
+      />
+      {#if errorOf('autor')}
+        <div class="mt-1 text-sm text-red-500">{errorOf('autor')}</div>
       {/if}
     </div>
 

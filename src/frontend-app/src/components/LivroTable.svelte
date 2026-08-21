@@ -98,6 +98,7 @@
           <th>Capa</th>
           <th>Título</th>
           <th>Ano</th>
+          <th>Autor</th>
           <th>Editora</th>
           <th>ISBN</th>
           <th>Ações</th>
