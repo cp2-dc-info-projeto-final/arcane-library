@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS livro CASCADE;
 CREATE TABLE livro (
      id BIGINT GENERATED ALWAYS AS IDENTITY,
      id_categorias BIGINT NOT NULL,
+     categorias BIGINT NOT NULL,
      titulo text NOT NULL,
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,

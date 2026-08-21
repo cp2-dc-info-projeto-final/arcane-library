@@ -9,6 +9,7 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var livrosRouter = require('./routes/livros');
+var autoresRouter = require('./routes/autores');
 var categoriasRouter = require('./routes/categorias');
 
 
@@ -30,6 +31,7 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/livros', livrosRouter);
+app.use('/autores', autoresRouter);
 app.use('/categorias', categoriasRouter);
 
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
