@@ -12,7 +12,8 @@
   export let id: number | null = null;
 
   let livro: LivroFormData = { 
-    id_categorias: 0, 
+    id_categorias: 0,
+    categoria: '', 
     titulo: '', 
     ano_de_publicacao: '',
     editora: '',

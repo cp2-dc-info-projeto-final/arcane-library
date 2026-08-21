@@ -8,7 +8,7 @@
     import type { ApiResponse } from '$lib/api';
     import { onMount } from 'svelte'; // ciclo de vida
     import type { Categorias } from '$lib/models/Categorias';
-	import CategoriasForm from './CategoriasForm.svelte';
+	  import CategoriasForm from './CategoriasForm.svelte';
   
     let categorias: Categorias[] = []; // lista de categorias
     let loading = true;
