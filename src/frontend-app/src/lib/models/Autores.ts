@@ -1,12 +1,11 @@
 export interface Autores {
-    nome: string;
-    id: number;
-    pseunonimo: string;
+  id: number;
+  nome: string;
+  pseunonimo: string;
+}
 
-  }
-  
 export interface AutoresFormData {
-    nome: string;
-    id: number;
-    pseunonimo: string;
-  }  
+  id?: number;
+  nome: string;
+  pseunonimo: string;
+}
