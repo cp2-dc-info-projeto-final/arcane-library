@@ -1,10 +1,9 @@
 export interface Categorias {
+    id_categorias: number;
     nome: string;
-    id: number;
+}
 
-  }
-  
 export interface CategoriasFormData {
+    id_categorias: number;
     nome: string;
-    id: number;
-  }  
+}
