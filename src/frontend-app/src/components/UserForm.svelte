@@ -4,7 +4,7 @@
   import api from '$lib/api';
   import type { ApiFieldError, ApiResponse } from '$lib/api';
   import { goto } from '$app/navigation';
-  import { ArrowLeftOutline, FloppyDiskAltOutline } from 'flowbite-svelte-icons';
+  import { ArrowLeftOutline, FloppyDiskAltOutline, PersonChalkboardOutline } from 'flowbite-svelte-icons';
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from "$lib/auth";
   import { themeStore, themes, type Season } from '$lib/themeStore';
@@ -413,7 +413,7 @@
       </Button>
       <!-- Botão salvar -->
       <Button type="submit" color="primary" disabled={loading}>
-        <FloppyDiskAltOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
+        <PersonChalkboardOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
         {id === null ? 'Cadastrar' : 'Salvar'}
       </Button> 
     </div>

@@ -3,22 +3,12 @@ var router = express.Router();
 
 const pool = require('../db/config');
 const upload = require('../middlewares/upload');
-
 const { verifyToken, isAdmin } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
-  const payload = {
-    success: true
-  };
-
-  if (message) {
-    payload.message = message;
-  }
-
-  if (typeof data !== 'undefined') {
-    payload.data = data;
-  }
-
+  const payload = { success: true };
+  if (message) payload.message = message;
+  if (typeof data !== 'undefined') payload.data = data;
   return res.status(status).json(payload);
 }
 
@@ -32,29 +22,21 @@ function sendError(res, status, message, errors = []) {
 
 /*
  * GET /
- * Buscar todos os livros
- *
- * Pode pesquisar pelo título, autor ou pseudônimo.
+ * Buscar todos os livros com filtro por busca e categorias
  */
 router.get('/', verifyToken, isAdmin, async function (req, res) {
   try {
-    const consulta = req.query.consulta
-  ? `%${req.query.consulta}%`
-  : '%';
+    const consulta = req.query.consulta ? `%${req.query.consulta}%` : '%';
+    let categoriasIds = [];
 
-let categoriasIds = [];
+    if (req.query.categorias) {
+      categoriasIds = String(req.query.categorias)
+        .split(',')
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0);
+    }
 
-if (req.query.categorias) {
-  categoriasIds = String(req.query.categorias)
-    .split(',')
-    .map(Number)
-    .filter(
-      id => Number.isInteger(id) && id > 0
-    );
-}
-
-    const result = await pool.query(
-      `
+    let queryText = `
       SELECT
         l.id,
         l.id_autor,
@@ -63,10 +45,8 @@ if (req.query.categorias) {
         l.editora,
         l.isbn,
         l.foto,
-
         a.nome AS autor,
         a.pseunonimo,
-
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -76,23 +56,25 @@ if (req.query.categorias) {
           ) FILTER (WHERE c.id_categorias IS NOT NULL),
           '[]'
         ) AS categorias
-
       FROM livro l
-
-      INNER JOIN autor a
-        ON a.id = l.id_autor
-
-      LEFT JOIN livro_categoria lc
-        ON lc.id_livro = l.id
-
-      LEFT JOIN categorias c
-        ON c.id_categorias = lc.id_categoria
-
-      WHERE
+      INNER JOIN autor a ON a.id = l.id_autor
+      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
+      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
+      WHERE (
         l.titulo ILIKE $1
         OR a.nome ILIKE $1
         OR a.pseunonimo ILIKE $1
+      )
+    `;
 
+    const queryParams = [consulta];
+
+    if (categoriasIds.length > 0) {
+      queryText += ` AND lc.id_categorias = ANY($2::bigint[])`;
+      queryParams.push(categoriasIds);
+    }
+
+    queryText += `
       GROUP BY
         l.id,
         l.id_autor,
@@ -103,39 +85,20 @@ if (req.query.categorias) {
         l.foto,
         a.nome,
         a.pseunonimo
-
       ORDER BY l.id
-      `,
-      [consulta]
-    );
+    `;
 
+    const result = await pool.query(queryText, queryParams);
     return sendSuccess(res, 200, null, result.rows);
-
   } catch (error) {
     console.error('Erro ao buscar livros:', error);
-
-    return sendError(
-      res,
-      500,
-      'Erro interno do servidor'
-    );
+    return sendError(res, 500, 'Erro interno do servidor');
   }
 });
-
 
 /*
  * POST /
  * Cadastrar novo livro
- *
- * FormData esperado:
- *
- * autor       -> ID do autor
- * categorias  -> JSON com array de IDs
- * titulo
- * ano_de_publicacao
- * editora
- * isbn
- * foto
  */
 router.post(
   '/',
@@ -143,81 +106,52 @@ router.post(
   isAdmin,
   upload.single('foto'),
   async function (req, res) {
-
     const client = await pool.connect();
 
     try {
-      const {
-        autor,
-        categorias,
-        titulo,
-        ano_de_publicacao,
-        editora,
-        isbn
-      } = req.body;
+      const id_autor = req.body.id_autor || req.body.autor;
+      const rawCategorias = req.body.id_categorias || req.body.categorias;
+      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
 
-      /*
-       * Converter categorias.
-       *
-       * Exemplo recebido:
-       *
-       * "[15,20,25]"
-       */
+      if (!id_autor) {
+        return sendError(res, 400, 'ID do autor é obrigatório.');
+      }
+
       let categoriasIds = [];
 
-if (categorias) {
-    try {
-        categoriasIds = JSON.parse(categorias);
+      if (rawCategorias) {
+        try {
+          categoriasIds =
+            typeof rawCategorias === 'string'
+              ? JSON.parse(rawCategorias)
+              : rawCategorias;
 
-        if (!Array.isArray(categoriasIds)) {
+          if (!Array.isArray(categoriasIds)) {
             return sendError(
-                res,
-                400,
-                'Categorias devem ser enviadas como uma lista.'
+              res,
+              400,
+              'Categorias devem ser enviadas como uma lista.'
             );
-        }
+          }
 
-        console.log('CATEGORIAS RECEBIDAS PELO BACKEND:', categoriasIds);
-
-        categoriasIds = categoriasIds
+          categoriasIds = categoriasIds
             .map(Number)
-            .filter(
-                (id) => Number.isInteger(id) && id > 0
-            );
+            .filter((id) => Number.isInteger(id) && id > 0);
+        } catch (error) {
+          return sendError(res, 400, 'Formato de categorias inválido.');
+        }
+      }
 
-    } catch (error) {
-        return sendError(
-            res,
-            400,
-            'Formato de categorias inválido.'
-        );
-    }
-}
-      /*
-       * Validar autor
-       */
       const autorExists = await client.query(
-        `
-        SELECT id
-        FROM autor
-        WHERE id = $1
-        `,
-        [autor]
+        `SELECT id FROM autor WHERE id = $1`,
+        [id_autor]
       );
 
       if (autorExists.rows.length === 0) {
-        return sendError(
-          res,
-          400,
-          'Autor não encontrado.'
-        );
+        return sendError(res, 400, 'Autor não encontrado.');
       }
 
-      /*
-       * Validar categorias
-       */
       if (categoriasIds.length > 0) {
-
         const categoriasExists = await client.query(
           `
           SELECT id_categorias
@@ -227,10 +161,7 @@ if (categorias) {
           [categoriasIds]
         );
 
-        if (
-          categoriasExists.rows.length !==
-          categoriasIds.length
-        ) {
+        if (categoriasExists.rows.length !== categoriasIds.length) {
           return sendError(
             res,
             400,
@@ -241,34 +172,23 @@ if (categorias) {
 
       await client.query('BEGIN');
 
-      /*
-       * Criar livro
-       */
       const livroResult = await client.query(
         `
         INSERT INTO livro (
-          id_autor,
           titulo,
           ano_de_publicacao,
+          id_autor,
           editora,
           isbn,
           foto
         )
         VALUES ($1, $2, $3, $4, $5, $6)
-
-        RETURNING
-          id,
-          id_autor,
-          titulo,
-          ano_de_publicacao,
-          editora,
-          isbn,
-          foto
+        RETURNING id, id_autor, titulo, ano_de_publicacao, editora, isbn, foto
         `,
         [
-          autor,
           titulo,
           ano_de_publicacao,
+          id_autor,
           editora,
           isbn,
           req.file?.filename || null
@@ -277,40 +197,20 @@ if (categorias) {
 
       const livro = livroResult.rows[0];
 
-      console.log(
-    'Categorias recebidas para o livro:',
-    categoriasIds
-);
-
-
-console.log('CATEGORIAS RECEBIDAS:', categoriasIds);
-
-/*
- * Relacionar categorias
- */
-for (const categoriaId of categoriasIds) {
-
-    await client.query(
-        `
-        INSERT INTO livro_categoria (
-            id_livro,
-            id_categoria
-        )
-        VALUES ($1, $2)
-        `,
-        [
-            livro.id,
-            categoriaId
-        ]
-    );
-}
+      for (const categoriaId of categoriasIds) 
+      {
+        await client.query(
+          `
+          INSERT INTO livro_categoria (id_livro, id_categorias)
+          VALUES ($1, $2)
+          `,
+          [livro.id, categoriaId]
+        );
+      }
 
       await client.query('COMMIT');
 
-      /*
-       * Buscar livro completo para devolver ao frontend
-       */
-      const livroCompleto = await pool.query(
+      const livroCompleto = await pool.query (
         `
         SELECT
           l.id,
@@ -336,15 +236,9 @@ for (const categoriaId of categoriasIds) {
 
         FROM livro l
 
-        INNER JOIN autor a
-          ON a.id = l.id_autor
-
-        LEFT JOIN livro_categoria lc
-          ON lc.id_livro = l.id
-
-        LEFT JOIN categorias c
-          ON c.id_categorias = lc.id_categoria
-
+        INNER JOIN autor a ON a.id = l.id_autor
+        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
+        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
         WHERE l.id = $1
 
         GROUP BY
@@ -367,38 +261,15 @@ for (const categoriaId of categoriasIds) {
         'Livro publicado com sucesso',
         livroCompleto.rows[0]
       );
-
-    } catch (error) {
-
+    }catch (error) {
       await client.query('ROLLBACK');
-
-      console.error(
-        'Erro ao publicar livro:',
-        error
-      );
+      console.error('Erro ao publicar livro:', error);
 
       if (error.code === '23505') {
-        return sendError(
-          res,
-          400,
-          'ISBN já existe no sistema.'
-        );
+        return sendError(res, 400, 'ISBN já existe no sistema.');
       }
 
-      if (error.code === '23514') {
-        return sendError(
-          res,
-          400,
-          'Dados inválidos. Verifique os campos e tente novamente.'
-        );
-      }
-
-      return sendError(
-        res,
-        500,
-        'Erro interno do servidor'
-      );
-
+      return sendError(res, 500, 'Erro interno do servidor');
     } finally {
       client.release();
     }
@@ -407,14 +278,13 @@ for (const categoriaId of categoriasIds) {
 
 
 /*
+
  * GET /:id
- *
- * Buscar um livro específico
+ * Buscar um livro específico por ID
  */
 router.get('/:id', verifyToken, async function (req, res) {
-
-  try {
-
+  try 
+  {
     const { id } = req.params;
 
     const result = await pool.query(
@@ -443,15 +313,9 @@ router.get('/:id', verifyToken, async function (req, res) {
 
       FROM livro l
 
-      INNER JOIN autor a
-        ON a.id = l.id_autor
-
-      LEFT JOIN livro_categoria lc
-        ON lc.id_livro = l.id
-
-      LEFT JOIN categorias c
-        ON c.id_categorias = lc.id_categoria
-
+      INNER JOIN autor a ON a.id = l.id_autor
+      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
+      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
       WHERE l.id = $1
 
       GROUP BY
@@ -469,39 +333,21 @@ router.get('/:id', verifyToken, async function (req, res) {
     );
 
     if (result.rows.length === 0) {
-      return sendError(
-        res,
-        404,
-        'Livro não encontrado'
-      );
+      return sendError(res, 404, 'Livro não encontrado');
     }
 
-    return sendSuccess(
-      res,
-      200,
-      null,
-      result.rows[0]
-    );
-
+    return sendSuccess(res, 200, null, result.rows[0]);
   } catch (error) {
-
-    console.error(
-      'Erro ao buscar livro:',
-      error
-    );
-
-    return sendError(
-      res,
-      500,
-      'Erro interno do servidor'
-    );
+    console.error('Erro ao buscar livro:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
 
 /*
+
  * PUT /:id
- *
+
  * Atualizar livro
  */
 router.put(
@@ -516,139 +362,89 @@ router.put(
     try {
 
       const { id } = req.params;
+      const id_autor = req.body.id_autor || req.body.autor;
+      const rawCategorias = req.body.id_categorias || req.body.categorias;
+      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
 
-      const {
-        autor,
-        categorias,
-        titulo,
-        ano_de_publicacao,
-        editora,
-        isbn
-      } = req.body;
+      let categoriasIds = [] ;
 
-      /*
-       * Converter categorias
-       */
-      let categoriasIds = [];
+      if (rawCategorias) {
+        try {
+          categoriasIds =
+            typeof rawCategorias === 'string'
+              ? JSON.parse(rawCategorias)
+              : rawCategorias;
 
-if (categorias) {
-    try {
-        categoriasIds = JSON.parse(categorias);
-
-        if (!Array.isArray(categoriasIds)) {
+          if (!Array.isArray(categoriasIds)) {
             return sendError(
-                res,
-                400,
-                'Categorias devem ser enviadas como uma lista.'
+              res,
+              400,
+              'Categorias devem ser enviadas como uma lista.'
             );
-        }
+          }
 
-        categoriasIds = categoriasIds
+          categoriasIds = categoriasIds
             .map(Number)
-            .filter(
-                (id) => Number.isInteger(id) && id > 0
-            );
+            .filter((id) => Number.isInteger(id) && id > 0);
+        } catch (error) {
+          return sendError(res, 400, 'Formato de categorias inválido.');
+        }
+      }
 
-    } catch (error) {
-        return sendError(
-            res,
-            400,
-            'Formato de categorias inválido.'
-        );
-    }
-}
-
-      /*
-       * Verificar livro
-       */
-      const livroExists = await client.query(
-        `
-        SELECT
-          id,
-          foto
-        FROM livro
-        WHERE id = $1
-        `,
+      const livroExists = await client.query (
+        `SELECT id, foto FROM livro WHERE id = $1`,
         [id]
       );
 
       if (livroExists.rows.length === 0) {
-        return sendError(
-          res,
-          404,
-          'Livro não encontrado'
-        );
+        return sendError(res, 404, 'Livro não encontrado');
       }
 
-      /*
-       * Verificar autor
-       */
-      const autorExists = await client.query(
-        `
-        SELECT id
-        FROM autor
-        WHERE id = $1
-        `,
-        [autor]
+      const autorExists = await client.query (
+        `SELECT id FROM autor WHERE id = $1`,
+        [id_autor]
       );
 
       if (autorExists.rows.length === 0) {
+        return sendError(res, 400, 'Autor não encontrado.');
+      }
+
+      if (categoriasIds.length === 0)
+       {
         return sendError(
           res,
           400,
-          'Autor não encontrado.'
+          'O livro deve possuir pelo menos uma categoria.'
         );
+
+      }
+
+      const categoriasExists = await client.query (
+        `
+        SELECT id_categorias
+        FROM categorias
+        WHERE id_categorias = ANY($1::bigint[])
+        `,
+        [categoriasIds]
+
+      );
+
+      if (categoriasExists.rows.length !== categoriasIds.length) {
+        return sendError(
+          res,
+          400,
+          'Uma ou mais categorias não foram encontradas.'
+        );
+
       }
 
 
-      if (categoriasIds.length === 0) {
-  return sendError(
-    res,
-    400,
-    'O livro deve possuir pelo menos uma categoria.'
-  );
-}
-
-      /*
-       * Verificar categorias
-       */
-      if (categoriasIds.length > 0) {
-
-        const categoriasExists = await client.query(
-          `
-          SELECT id_categorias
-          FROM categorias
-          WHERE id_categorias = ANY($1::bigint[])
-          `,
-          [categoriasIds]
-        );
-
-        if (
-          categoriasExists.rows.length !==
-          categoriasIds.length
-        ) {
-          return sendError(
-            res,
-            400,
-            'Uma ou mais categorias não foram encontradas.'
-          );
-        }
-      }
-
-      /*
-       * Manter foto antiga se não houver nova
-       */
       const fotoAtual = livroExists.rows[0].foto;
-
-      const fotoPath = req.file
-        ? req.file.filename
-        : fotoAtual;
+      const fotoPath = req.file ? req.file.filename : fotoAtual;
 
       await client.query('BEGIN');
 
-      /*
-       * Atualizar dados do livro
-       */
+
       await client.query(
         `
         UPDATE livro
@@ -663,58 +459,29 @@ if (categorias) {
 
         WHERE id = $7
         `,
-        [
-          autor,
-          titulo,
-          ano_de_publicacao,
-          editora,
-          isbn,
-          fotoPath,
-          id
-        ]
+        [id_autor, titulo, ano_de_publicacao, editora, isbn, fotoPath, id]
       );
 
-      /*
-       * Remover categorias antigas
-       */
+
       await client.query(
-        `
-        DELETE FROM livro_categoria
-        WHERE id_livro = $1
-        `,
+        `DELETE FROM livro_categoria WHERE id_livro = $1`,
         [id]
       );
 
-     console.log(
-    'Categorias recebidas para o livro:',
-    categoriasIds
-);
+      for (const categoriaId of categoriasIds) {
 
-/*
- * inserir categorias novas
- */
-for (const categoriaId of categoriasIds) {
-
-    await client.query(
-        `
-        INSERT INTO livro_categoria (
-            id_livro,
-            id_categoria
-        )
-        VALUES ($1, $2)
-        `,
-        [
-            id,
-            categoriaId
-        ]
-    );
-}
+        await client.query(
+          `
+          INSERT INTO livro_categoria (id_livro, id_categorias)
+          VALUES ($1, $2)
+          `,
+          [id, categoriaId]
+        );
+      }
 
       await client.query('COMMIT');
 
-      /*
-       * Buscar livro atualizado
-       */
+
       const livroAtualizado = await pool.query(
         `
         SELECT
@@ -740,16 +507,9 @@ for (const categoriaId of categoriasIds) {
           ) AS categorias
 
         FROM livro l
-
-        INNER JOIN autor a
-          ON a.id = l.id_autor
-
-        LEFT JOIN livro_categoria lc
-          ON lc.id_livro = l.id
-
-        LEFT JOIN categorias c
-          ON c.id_categorias = lc.id_categoria
-
+        INNER JOIN autor a ON a.id = l.id_autor
+        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
+        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
         WHERE l.id = $1
 
         GROUP BY
@@ -772,30 +532,15 @@ for (const categoriaId of categoriasIds) {
         'Livro atualizado com sucesso',
         livroAtualizado.rows[0]
       );
-
-    } catch (error) {
-
+    }catch (error) {
       await client.query('ROLLBACK');
-
-      console.error(
-        'Erro ao atualizar livro:',
-        error
-      );
+      console.error('Erro ao atualizar livro:', error);
 
       if (error.code === '23505') {
-        return sendError(
-          res,
-          400,
-          'ISBN já existe no sistema.'
-        );
+        return sendError(res, 400, 'ISBN já existe no sistema.');
       }
 
-      return sendError(
-        res,
-        500,
-        'Erro interno do servidor'
-      );
-
+      return sendError(res, 500, 'Erro interno do servidor');
     } finally {
       client.release();
     }
@@ -805,71 +550,29 @@ for (const categoriaId of categoriasIds) {
 
 /*
  * DELETE /:id
- *
+
  * Remover livro
  */
-router.delete(
-  '/:id',
-  verifyToken,
-  isAdmin,
-  async function (req, res) {
+router.delete('/:id', verifyToken, isAdmin, async function (req, res) {
+  try {
+    const { id } = req.params;
 
-    try {
+    const livroExists = await pool.query(
+      `SELECT id FROM livro WHERE id = $1`,
+      [id]
+    );
 
-      const { id } = req.params;
-
-      const livroExists = await pool.query(
-        `
-        SELECT id
-        FROM livro
-        WHERE id = $1
-        `,
-        [id]
-      );
-
-      if (livroExists.rows.length === 0) {
-        return sendError(
-          res,
-          404,
-          'Livro não encontrado'
-        );
-      }
-
-      /*
-       * Como livro_categoria possui
-       * ON DELETE CASCADE,
-       * as relações serão removidas
-       * automaticamente.
-       */
-      await pool.query(
-        `
-        DELETE FROM livro
-        WHERE id = $1
-        `,
-        [id]
-      );
-
-      return sendSuccess(
-        res,
-        200,
-        'Livro deletado com sucesso'
-      );
-
-    } catch (error) {
-
-      console.error(
-        'Erro ao deletar livro:',
-        error
-      );
-
-      return sendError(
-        res,
-        500,
-        'Erro interno do servidor'
-      );
+    if (livroExists.rows.length === 0) {
+      return sendError(res, 404, 'Livro não encontrado');
     }
-  }
-);
 
+    await pool.query(`DELETE FROM livro WHERE id = $1`, [id]);
+
+    return sendSuccess(res, 200, 'Livro deletado com sucesso');
+  } catch (error) {
+    console.error('Erro ao deletar livro:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
 
 module.exports = router;

@@ -338,7 +338,7 @@
       );
 
       formData.append(
-        'categorias',
+        'id_categorias',
         JSON.stringify(categoriasIds)
       );
 
@@ -795,7 +795,7 @@
 
       <Input
         id="isbn"
-        type="number"
+        type="text"
         bind:value={livro.isbn}
         placeholder="Digite o ISBN"
         required

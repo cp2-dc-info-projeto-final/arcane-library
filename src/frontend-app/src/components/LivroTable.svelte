@@ -2,12 +2,14 @@
     import { onMount } from 'svelte';
     import { Button, Table, Spinner, Modal } from 'flowbite-svelte';
     import { TrashBinOutline } from 'flowbite-svelte-icons';
+    import {type User } from "$lib/auth";
     import { goto } from '$app/navigation';
-
     import api from '$lib/api';
     import type { ApiResponse } from '$lib/api';
     import type { Livro } from '$lib/models/Livros';
 
+    let user: User | null = null;
+    let hasToken = false;
     let livros: Livro[] = [];
 
     let loading = true;
@@ -373,7 +375,6 @@
 
 <thead>
     <tr>
-        <th class="whitespace-nowrap">Capa</th>
         <th class="whitespace-nowrap">Título</th>
         <th class="whitespace-nowrap">Ano</th>
         <th class="whitespace-nowrap">Categoria</th>
@@ -388,28 +389,6 @@
                 {#each livros as livro}
 
                     <tr>
-
-                        <!-- Capa -->
-                        <td>
-                            {#if livro.foto}
-
-                                <img
-                                    src={`/uploads/${livro.foto}`}
-                                    alt={livro.titulo}
-                                    class="w-12 h-20 object-cover rounded"
-                                />
-
-                            {:else}
-
-                                <div
-                                    class="w-12 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-600"
-                                >
-                                    Sem foto
-                                </div>
-
-                            {/if}
-                        </td>
-
                         <!-- Título -->
                         <td>
                             {livro.titulo}
@@ -453,12 +432,19 @@
                         <td>
                             {livro.isbn}
                         </td>
-
+                        {#if hasToken}
+                        {#if user}
+                          {#if user.role === 'admin'}
                         <!-- Ações -->
                         <td>
-
+                    
+                               
+                           
                             <div class="flex gap-2">
-
+                               
+                        
+                                   
+                                 
                                 <!-- EDITAR -->
                                 <Button
                                     size="sm"
@@ -482,10 +468,11 @@
                                         class="w-4 h-4"
                                     />
                                 </Button>
-
+                                
                             </div>
-
+                       
                         </td>
+                        {/if}
 
                     </tr>
 
@@ -500,8 +487,10 @@
 
 </div>
 
-<!-- MODAL DE EXCLUSÃO -->
 
+<!-- MODAL DE EXCLUSÃO -->
+			
+		
 <Modal
     bind:open={abrirModalDelete}
     size="sm"
@@ -515,6 +504,7 @@
 
         <div class="flex gap-2 justify-end">
 
+        
             <Button
                 color="light"
                 onclick={cancelarDelete}
@@ -535,3 +525,4 @@
 
     </div>
 </Modal>
+

@@ -35,19 +35,29 @@ DROP TABLE IF EXISTS livro CASCADE;
 
 CREATE TABLE livro (
      id BIGINT GENERATED ALWAYS AS IDENTITY,
-     id_categorias BIGINT NOT NULL,
-     categorias BIGINT NOT NULL,
+     id_categorias BIGINT,
      titulo text NOT NULL,
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,
-     isbn int NOT NULL,
+     isbn text NOT NULL,
+     id_autor BIGINT NOT NULL,
      foto TEXT,
 
     CONSTRAINT pk_livro PRIMARY KEY(id),
     CONSTRAINT uk_livro_isbn UNIQUE (isbn),
-    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id_categorias) ON DELETE CASCADE
+    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id_categorias),
+    CONSTRAINT fk_autor FOREIGN KEY (id_autor) REFERENCES autor(id) ON DELETE CASCADE
+
 );
 
+DROP TABLE IF EXISTS livro_categoria CASCADE;
+CREATE TABLE livro_categoria (
+    id_livro BIGINT,
+    id_categorias BIGINT, 
+    PRIMARY KEY (id_categorias, id_livro),
+    CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id_categorias),
+    CONSTRAINT fk_livro FOREIGN KEY (id_livro) REFERENCES livro(id) ON DELETE CASCADE
+);
 
 DROP TABLE IF EXISTS autor CASCADE;  
 CREATE TABLE autor (
@@ -97,7 +107,12 @@ CREATE TABLE exemplar (
     PRIMARY KEY (id_exemplar),
     CONSTRAINT fk_livro FOREIGN KEY (id_livro) REFERENCES livro(id)
 );
+
 INSERT INTO usuario (foto, login, email, senha, cpf, datanasc, telefone, role) VALUES
 -- senha 123456
 ('','Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
 ('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'cliente');
+
+INSERT INTO categorias (nome) VALUES ('Romance');
+
+INSERT INTO autor (nome, pseunonimo) VALUES ('Cleberson', '');

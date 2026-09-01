@@ -23,6 +23,7 @@ export interface LivroFormData {
   categorias: number[];
   titulo: string;
   ano_de_publicacao: string;
+  autor: string;
   editora: string;
   isbn: number;
   foto?: string;
