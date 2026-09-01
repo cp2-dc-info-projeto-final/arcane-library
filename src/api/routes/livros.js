@@ -282,7 +282,7 @@ router.post(
  * GET /:id
  * Buscar um livro específico por ID
  */
-router.get('/:id', verifyToken, async function (req, res) {
+router.get('/:id', verifyToken, isAdmin, async function (req, res) {
   try 
   {
     const { id } = req.params;

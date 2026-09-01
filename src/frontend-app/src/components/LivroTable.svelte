@@ -11,7 +11,6 @@
     let user: User | null = null;
     let hasToken = false;
     let livros: Livro[] = [];
-
     let loading = true;
     let error = '';
     let consulta = '';
@@ -370,20 +369,20 @@
 
     {:else}
 
-       <div class="w-full overflow-x-auto max-w-5x5 mx-auto my-10 shadow-lg border border-gray-200 rounded-lg bg-white ">
-    <Table class="min-w-[1100px] w-full border ">
+        <div class="w-full overflow-x-auto max-w-5x5 mx-auto my-10 shadow-lg border border-gray-200 rounded-lg bg-white ">
+        <Table class="min-w-[1100px] w-full border ">
 
-<thead>
-    <tr>
-        <th class="whitespace-nowrap">Título</th>
-        <th class="whitespace-nowrap">Ano</th>
-        <th class="whitespace-nowrap">Categoria</th>
-        <th class="whitespace-nowrap">Autor</th>
-        <th class="whitespace-nowrap">Editora</th>
-        <th class="whitespace-nowrap">ISBN</th>
-        <th class="whitespace-nowrap">Ações</th>
-    </tr>
-</thead>
+            <thead>
+                <tr>
+                    <th class="whitespace-nowrap">Título</th>
+                    <th class="whitespace-nowrap">Ano</th>
+                    <th class="whitespace-nowrap">Categoria</th>
+                    <th class="whitespace-nowrap">Autor</th>
+                    <th class="whitespace-nowrap">Editora</th>
+                    <th class="whitespace-nowrap">ISBN</th>
+                    <th class="whitespace-nowrap">Ações</th>
+                </tr>
+            </thead>
             <tbody>
 
                 {#each livros as livro}
@@ -400,24 +399,24 @@
                         </td>
 
                         <!-- Categorias -->
-<td>
-    {#if livro.categorias && livro.categorias.length > 0}
-        <div class="flex flex-wrap gap-1 min-w-[160px]">
-            {#each livro.categorias as categoria}
-                <span
-                    class="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full whitespace-nowrap"
-                >
-                    {categoria.nome}
-                </span>
-            {/each}
-        </div>
-    {:else}
-        <span class="text-gray-500">
-            Sem categoria
-        </span>
-    {/if}
-</td>
-
+                        <td>
+                            {#if livro.categorias && livro.categorias.length > 0}
+                                <div class="flex flex-wrap gap-1 min-w-[160px]">
+                                    {#each livro.categorias as categoria}
+                                        <span
+                                            class="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full whitespace-nowrap"
+                                        >
+                                            {categoria.nome}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {:else}
+                                <span class="text-gray-500">
+                                    Sem categoria
+                                </span>
+                            {/if}
+                        </td>
+                    
                         <!-- Autor -->
                         <td>
                             {livro.autor}
@@ -432,50 +431,37 @@
                         <td>
                             {livro.isbn}
                         </td>
-                        {#if hasToken}
-                        {#if user}
-                          {#if user.role === 'admin'}
-                        <!-- Ações -->
-                        <td>
-                    
-                               
-                           
-                            <div class="flex gap-2">
-                               
                         
-                                   
-                                 
-                                <!-- EDITAR -->
-                                <Button
-                                    size="sm"
-                                    color="light"
-                                    onclick={() =>
-                                        goto(`/livros/edit/${livro.id}`)
-                                    }
-                                >
-                                    Editar
-                                </Button>
+                                <!-- Ações -->
+                                    <td>                     
+                                        <div class="flex gap-2">
+                                            <!-- EDITAR -->
+                                            <Button
+                                                size="sm"
+                                                color="light"
+                                                onclick={() =>
+                                                    goto(`/livros/edit/${livro.id}`)
+                                                }
+                                            >
+                                                Editar
+                                            </Button>
 
-                                <!-- EXCLUIR -->
-                                <Button
-                                    size="sm"
-                                    color="red"
-                                    onclick={() =>
-                                        abrirDelete(livro)
-                                    }
-                                >
-                                    <TrashBinOutline
-                                        class="w-4 h-4"
-                                    />
-                                </Button>
+                                            <!-- EXCLUIR -->
+                                            <Button
+                                                size="sm"
+                                                color="red"
+                                                onclick={() =>
+                                                    abrirDelete(livro)
+                                                }
+                                            >
+                                                <TrashBinOutline
+                                                    class="w-4 h-4"
+                                                />
+                                            </Button> 
+                                        </div>
+                                    </td>
                                 
-                            </div>
-                       
-                        </td>
-                        {/if}
-
                     </tr>
-
                 {/each}
 
             </tbody>
