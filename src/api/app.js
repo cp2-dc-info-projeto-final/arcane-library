@@ -11,6 +11,8 @@ var usersRouter = require('./routes/users');
 var livrosRouter = require('./routes/livros');
 var autoresRouter = require('./routes/autores');
 var categoriasRouter = require('./routes/categorias');
+var emprestimosRouter = require('./routes/emprestimos');
+
 var app = express();
 
 app.use(cors({
@@ -36,6 +38,8 @@ app.use('/users', usersRouter);
 app.use('/livros', livrosRouter);
 app.use('/autores', autoresRouter);
 app.use('/categorias', categoriasRouter);
+app.use('/emprestimos', emprestimosRouter);
+
 
 // SERVIR IMAGENS DA PASTA UPLOADS
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

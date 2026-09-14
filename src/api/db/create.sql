@@ -83,11 +83,14 @@ DROP TABLE IF EXISTS emprestimo CASCADE;
 CREATE TABLE emprestimo (
     id BIGINT GENERATED ALWAYS AS IDENTITY, 
     id_usuario BIGINT NOT NULL,
+    id_livro BIGINT NOT NULL,
     data_de_emprestimo TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_fim_emprestimo TIMESTAMP,
     status_emprestimo text NOT NULL DEFAULT 'ativo',
     CONSTRAINT pk_emprestimo PRIMARY KEY (id),
-    CONSTRAINT fk_emprestimo_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT fk_emprestimo_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+    CONSTRAINT fk_emprestimo_livro FOREIGN KEY (id_livro) REFERENCES livro(id) ON DELETE CASCADE,
+
     CONSTRAINT ck_emprestimo_status CHECK (status_emprestimo IN ('ativo', 'devolvido', 'atrasado'))
 );
 

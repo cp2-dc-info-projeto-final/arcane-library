@@ -148,7 +148,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>																								
 
 		<svelte:fragment slot="footer">
 			<Button on:click={() => (openModal = false)}>Fechar</Button>

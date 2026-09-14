@@ -96,18 +96,27 @@
 
 
 		</NavBrand>
-    <NavHamburger />
     <NavUl>
+    <NavHamburger />
       <NavLi href="/" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Início</NavLi>
-      <NavLi href="/livro_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
       <NavLi href="/about" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Sobre</NavLi>
+      {#if hasToken}
+          {#if user}
+              {#if user.role !== 'admin'}
+             
+                <NavLi href="/livro_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
+                <NavLi href="/emprestimo_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Empréstimos</NavLi>
+
+              {/if}
+          {/if}
+      {/if}
       {#if hasToken}
       <NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg"> Editar perfil</NavLi>
       {/if}
       {#if hasToken}
         {#if user} <!-- se existir usu��rio é porque conseguiu logar-->
           {#if user.role === 'admin'} <!-- só exibe menu usuários para admin-->
-
+            <NavLi href="/emprestimo" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Empréstimos Ad</NavLi>
             <NavLi href="/autores" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">✍️ Autores Ad</NavLi>
             <NavLi href="/livros" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">📖 Livros Ad</NavLi>
             <NavLi href="/categorias" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">🏷️ Categorias Ad</NavLi>
@@ -141,7 +150,7 @@
 			<ThemeModal />
 			</NavLi>
 		{/if}
-    </NavUl>
+      </NavUl>
   </Navbar>
 </div>
 

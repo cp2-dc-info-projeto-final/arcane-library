@@ -191,11 +191,9 @@ router.post(
           id_autor,
           editora,
           isbn,
-          req.foto?.filename || null
+          req.file?.filename || null
         ]
       );
-
-      console.log(req);
 
       const livro = livroResult.rows[0];
 

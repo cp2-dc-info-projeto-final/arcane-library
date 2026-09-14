@@ -863,6 +863,7 @@
 
     <input
       type="file"
+      name="foto"
       accept="image/*"
       on:change={selecionarFoto}
       class="block w-full text-sm text-gray-500"
