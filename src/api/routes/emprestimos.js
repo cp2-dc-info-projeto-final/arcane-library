@@ -38,15 +38,11 @@ router.get('/', verifyToken, isAdmin, async function (req, res) {
 
     let queryText = `
       SELECT
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
-        a.nome AS autor,
-        a.pseunonimo,
+        l.titulo AS livro,
+        u.nome AS usuário,
+        e.data_de_emprestimo,
+        e.data_fim_emprestimo,
+        e.status,
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -56,14 +52,12 @@ router.get('/', verifyToken, isAdmin, async function (req, res) {
           ) FILTER (WHERE c.id_categorias IS NOT NULL),
           '[]'
         ) AS categorias
-      FROM livro l
-      INNER JOIN autor a ON a.id = l.id_autor
-      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
+      FROM emprestimo e
+      INNER JOIN usuario u on u.id = e.id_usuario
+      INNER JOIN livro l ON l.id_livro = e.id_livro 
+
       WHERE (
-        l.titulo ILIKE $1
-        OR a.nome ILIKE $1
-        OR a.pseunonimo ILIKE $1
+        l.titulo ILIKE $1           
       )
     `;
 
@@ -76,15 +70,12 @@ router.get('/', verifyToken, isAdmin, async function (req, res) {
 
     queryText += `
       GROUP BY
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
-        a.nome,
-        a.pseunonimo
+      e.id
+      l.titulo AS livro,
+      u.nome AS usuário,
+      e.data_de_emprestimo,
+      e.data_fim_emprestimo,
+      e.status
       ORDER BY l.id
     `;
 

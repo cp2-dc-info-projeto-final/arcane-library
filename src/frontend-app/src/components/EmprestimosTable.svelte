@@ -374,12 +374,11 @@
 
             <thead>
                 <tr>
-                    <th class="whitespace-nowrap">Título</th>
-                    <th class="whitespace-nowrap">Ano</th>
-                    <th class="whitespace-nowrap">Categoria</th>
-                    <th class="whitespace-nowrap">Autor</th>
-                    <th class="whitespace-nowrap">Editora</th>
-                    <th class="whitespace-nowrap">ISBN</th>
+                    <th class="whitespace-nowrap">Livro emprestado</th>
+                    <th class="whitespace-nowrap">Usuário</th>
+                    <th class="whitespace-nowrap">Data de empréstimo</th>
+                    <th class="whitespace-nowrap">Data de devolução</th>
+                    <th class="whitespace-nowrap">Status</th>
                     <th class="whitespace-nowrap">Ações</th>
                 </tr>
             </thead>

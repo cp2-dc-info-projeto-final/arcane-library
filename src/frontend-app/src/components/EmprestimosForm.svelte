@@ -66,31 +66,15 @@
       if (!Number.isInteger(idUser) || idUser <= 0) {
         return;
       }
-
-    /*
-     * Remover categoria
-     */
-    function removerCategoria(idCategoria: number) {
-      const id = Number(idCategoria);
-  
-      livro.categorias = livro.categorias.filter(
-        (categoriaId) => Number(categoriaId) !== id
-      );
-  
-      categoriasSelecionadas = categoriasSelecionadas.filter(
-        (categoria) => Number(categoria.id_categorias) !== id
-      );
-  
-      console.log('Categoria removida:', id);
-      console.log('IDs atuais:', livro.categorias);
     }
-  
+
+
     /*
      * Selecionar autor
      */
-    function selecionarAutor(autor: Autores) {
-      autorSelecionado = autor;
-      pesquisaAutor = autor.nome;
+    function selecionarLivro(livros: Livro) {
+      livrosSelecionados = livros;
+      pesquisaUser = user.login;
       livro.id_autor = autor.id;
       livro.autor = autor.nome;
     }
