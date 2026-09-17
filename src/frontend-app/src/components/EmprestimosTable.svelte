@@ -2,61 +2,30 @@
     import { onMount } from 'svelte';
     import { Button, Table, Spinner, Modal } from 'flowbite-svelte';
     import { TrashBinOutline } from 'flowbite-svelte-icons';
-    import {type User } from "$lib/auth";
     import { goto } from '$app/navigation';
     import api from '$lib/api';
     import type { ApiResponse } from '$lib/api';
-    import type { Livro } from '$lib/models/Livros';
+    import type { Emprestimos } from '$lib/models/Emprestimos';
 
-    let user: User | null = null;
-    let hasToken = false;
-    let livros: Livro[] = [];
+    interface EmprestimoTabela extends Emprestimos {
+        usuario?: string;
+        email_usuario?: string;
+        livro?: string;
+    }
+
+    let emprestimos: EmprestimoTabela[] = [];
     let loading = true;
     let error = '';
     let consulta = '';
 
     let abrirModalDelete = false;
-    let livroParaDeletar: Livro | null = null;
-
-    interface Categoria {
-        id_categorias: number;
-        nome: string;
-    }
-
-    let categorias: Categoria[] = [];
-    let categoriasSelecionadas: number[] = [];
+    let emprestimoParaDeletar: EmprestimoTabela | null = null;
 
     onMount(async () => {
-        await carregarCategorias();
-        await filtrarLivros();
+        await filtrarEmprestimos();
     });
 
-    // =========================
-    // CARREGAR CATEGORIAS
-    // =========================
-
-    async function carregarCategorias() {
-        try {
-            const res = await api.get('/categorias');
-
-            const body = res.data as ApiResponse<Categoria[]>;
-
-            if (body?.success) {
-                categorias = body.data ?? [];
-            } else {
-                categorias = [];
-            }
-        } catch (e) {
-            console.error('Erro ao carregar categorias:', e);
-            categorias = [];
-        }
-    }
-
-    // =========================
-    // BUSCAR LIVROS EMPRESTADOS
-    // =========================
-
-    async function filtrarLivros() {
+    async function filtrarEmprestimos() {
         loading = true;
         error = '';
 
@@ -67,110 +36,66 @@
                 params.append('consulta', consulta.trim());
             }
 
-            if (categoriasSelecionadas.length > 0) {
-                params.append(
-                    'categorias',
-                    categoriasSelecionadas.join(',')
-                );
-            }
-
             const res = await api.get(
-                `/livros?${params.toString()}`
+                `/emprestimos?${params.toString()}`
             );
 
-            const body = res.data as ApiResponse<Livro[]>;
+            const body = res.data as ApiResponse<EmprestimoTabela[]>;
 
             if (body?.success) {
-                livros = body.data ?? [];
+                emprestimos = body.data ?? [];
             } else {
                 error =
                     body?.message ||
-                    'Erro ao carregar livros.';
+                    'Erro ao carregar empréstimos.';
 
-                livros = [];
+                emprestimos = [];
             }
         } catch (e: any) {
             console.error(
-                'Erro ao carregar livros:',
+                'Erro ao carregar empréstimos:',
                 e
             );
 
             const body = e.response?.data as
-                | ApiResponse<Livro[]>
+                | ApiResponse<EmprestimoTabela[]>
                 | undefined;
 
             error =
                 body?.message ||
-                'Erro ao carregar livros.';
+                'Erro ao carregar empréstimos.';
 
-            livros = [];
+            emprestimos = [];
         } finally {
             loading = false;
         }
     }
 
-    // =========================
-    // SELECIONAR CATEGORIA DO LIVRO EMPRESTADO
-    // =========================
-
-    function toggleCategoria(idCategoria: number) {
-        if (
-            categoriasSelecionadas.includes(
-                idCategoria
-            )
-        ) {
-            categoriasSelecionadas =
-                categoriasSelecionadas.filter(
-                    id => id !== idCategoria
-                );
-        } else {
-            categoriasSelecionadas = [
-                ...categoriasSelecionadas,
-                idCategoria
-            ];
-        }
-    }
-
-    // =========================
-    // LIMPAR FILTROS
-    // =========================
-
     async function limparFiltros() {
         consulta = '';
-        categoriasSelecionadas = [];
-
-        await filtrarLivros();
+        await filtrarEmprestimos();
     }
 
-    // =========================
-    // EXCLUIR LIVRO EMPRESTADO
-    // =========================
-
-    function abrirDelete(livro: Livro) {
-        console.log(
-            'Livro emprestado selecionado para excluir:',
-            livro
-        );
-
-        livroParaDeletar = livro;
+    function abrirDelete(emprestimo: EmprestimoTabela) {
+        emprestimoParaDeletar = emprestimo;
         abrirModalDelete = true;
     }
 
     function cancelarDelete() {
         abrirModalDelete = false;
-        livroParaDeletar = null;
+        emprestimoParaDeletar = null;
     }
 
     async function confirmarDelete() {
-        if (!livroParaDeletar) {
+        if (!emprestimoParaDeletar) {
             return;
         }
 
-        const id = livroParaDeletar.id;
+        const id = emprestimoParaDeletar.id;
 
         if (!id) {
             error =
-                'Não foi possível identificar o livro.';
+                'Não foi possível identificar o empréstimo.';
             return;
         }
 
@@ -178,117 +103,81 @@
         error = '';
 
         try {
-            console.log(
-                'Excluindo livro:',
-                id
-            );
-
-            const res = await api.delete(
-                `/livros/${id}`
-            );
-
-            console.log(
-                'Resposta da exclusão:',
-                res.data
-            );
+            await api.delete(`/emprestimos/${id}`);
 
             abrirModalDelete = false;
-            livroParaDeletar = null;
+            emprestimoParaDeletar = null;
 
-            await filtrarLivros();
+            await filtrarEmprestimos();
         } catch (e: any) {
             console.error(
-                'Erro ao deletar livro:',
+                'Erro ao deletar empréstimo:',
                 e
-            );
-
-            console.error(
-                'Status:',
-                e.response?.status
-            );
-
-            console.error(
-                'Resposta:',
-                e.response?.data
             );
 
             error =
                 e.response?.data?.message ||
-                'Erro ao deletar livro.';
+                'Erro ao deletar empréstimo.';
         } finally {
             loading = false;
         }
     }
+
+    function formatarData(data: string | null | undefined) {
+        if (!data) {
+            return '—';
+        }
+
+        const dataFormatada = new Date(data);
+
+        if (isNaN(dataFormatada.getTime())) {
+            return data;
+        }
+
+        return dataFormatada.toLocaleString('pt-BR');
+    }
+
+    function formatarStatus(status: string) {
+        switch (status) {
+            case 'ativo':
+                return 'Ativo';
+
+            case 'devolvido':
+                return 'Devolvido';
+
+            case 'atrasado':
+                return 'Atrasado';
+
+            default:
+                return status;
+        }
+    }
 </script>
-
-
 
 <div class="w-full max-w-6xl mx-auto px-4 mb-6">
 
-    <!-- BUSCA POR TEXTO -->
     <div class="mb-4">
         <label
             for="pesquisa"
             class="block mb-2 text-sm font-medium text-black-900"
         >
-            Buscar livros em emprestimos
+            Buscar empréstimos
         </label>
 
         <input
             type="text"
             id="pesquisa"
             bind:value={consulta}
-            placeholder="Digite o título do livro..."
+            placeholder="Digite o título do livro, usuário ou e-mail..."
             class="w-full p-2 border border-gray-300 rounded-lg"
         />
     </div>
 
-    <!-- CATEGORIAS -->
-    <div class="mb-16">
-
-        <span class="block mb-2 text-sm font-medium text-black-900">
-            Categorias
-        </span>
-
-        <div class="flex flex-wrap gap-2">
-
-            {#each categorias as categoria}
-
-                <button
-                    type="button"
-                    onclick={() =>
-                        toggleCategoria(
-                            categoria.id_categorias
-                        )
-                    }
-                    class={`px-3 py-2 rounded-lg border text-sm transition ${
-                        categoriasSelecionadas.includes(
-                            categoria.id_categorias
-                        )
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                    }`}
-                >
-                    {#if categoriasSelecionadas.includes(
-                        categoria.id_categorias
-                    )}
-                        ✓
-                    {/if}
-
-                    {categoria.nome}
-                </button>
-
-            {/each}
-
-        </div>
-    </div>
-
-    <!-- BOTÕES -->
     <div class="flex gap-2">
 
         <Button
             color="blue"
-            onclick={filtrarLivros}
+            onclick={filtrarEmprestimos}
             disabled={loading}
         >
             Buscar
@@ -304,48 +193,7 @@
 
     </div>
 
-    <!-- CATEGORIAS SELECIONADAS -->
-    {#if categoriasSelecionadas.length > 0}
-
-        <div class="mt-4">
-
-            <span class="text-sm text-black-900">
-                Categorias selecionadas:
-            </span>
-
-            <div class="flex flex-wrap gap-2 mt-2">
-
-                {#each categoriasSelecionadas as idCategoria}
-
-                    {@const categoriaSelecionada =
-                        categorias.find(
-                            categoria =>
-                                categoria.id_categorias ===
-                                idCategoria
-                        )}
-
-                    {#if categoriaSelecionada}
-
-                        <span
-                            class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full"
-                        >
-                            {categoriaSelecionada.nome}
-                        </span>
-
-                    {/if}
-
-                {/each}
-
-            </div>
-
-        </div>
-
-    {/if}
-
 </div>
-
-
-
 
 <div class="w-full max-w-6xl mx-auto px-4">
 
@@ -361,121 +209,126 @@
             <Spinner />
         </div>
 
-    {:else if livros.length === 0}
+    {:else if emprestimos.length === 0}
 
         <div class="text-center p-8 text-black-900">
-            Nenhum livro encontrado.
+            Nenhum empréstimo encontrado.
         </div>
 
     {:else}
 
-        <div class="w-full overflow-x-auto max-w-5x5 mx-auto my-10 shadow-lg border border-gray-200 rounded-lg bg-white ">
-        <Table class="min-w-[1100px] w-full border ">
+        <div class="w-full overflow-x-auto max-w-5xl mx-auto my-10 shadow-lg border border-gray-200 rounded-lg bg-white">
 
-            <thead>
-                <tr>
-                    <th class="whitespace-nowrap">Livro emprestado</th>
-                    <th class="whitespace-nowrap">Usuário</th>
-                    <th class="whitespace-nowrap">Data de empréstimo</th>
-                    <th class="whitespace-nowrap">Data de devolução</th>
-                    <th class="whitespace-nowrap">Status</th>
-                    <th class="whitespace-nowrap">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
+            <Table class="min-w-[1100px] w-full border">
 
-                {#each livros as livro}
-
+                <thead>
                     <tr>
-                        <!-- Título -->
-                        <td>
-                            {livro.titulo}
-                        </td>
+                        <th class="whitespace-nowrap">
+                            Livro emprestado
+                        </th>
 
-                        <!-- Ano -->
-                        <td>
-                            {livro.ano_de_publicacao}
-                        </td>
+                        <th class="whitespace-nowrap">
+                            Usuário
+                        </th>
 
-                        <!-- Categorias -->
-                        <td>
-                            {#if livro.categorias && livro.categorias.length > 0}
-                                <div class="flex flex-wrap gap-1 min-w-[160px]">
-                                    {#each livro.categorias as categoria}
-                                        <span
-                                            class="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full whitespace-nowrap"
-                                        >
-                                            {categoria.nome}
-                                        </span>
-                                    {/each}
-                                </div>
-                            {:else}
-                                <span class="text-gray-500">
-                                    Sem categoria
-                                </span>
-                            {/if}
-                        </td>
-                    
-                        <!-- Autor -->
-                        <td>
-                            {livro.autor}
-                        </td>
+                        <th class="whitespace-nowrap">
+                            Data de empréstimo
+                        </th>
 
-                        <!-- Editora -->
-                        <td>
-                            {livro.editora}
-                        </td>
+                        <th class="whitespace-nowrap">
+                            Data de devolução
+                        </th>
 
-                        <!-- ISBN -->
-                        <td>
-                            {livro.isbn}
-                        </td>
-                        
-                                <!-- Ações -->
-                                    <td>                     
-                                        <div class="flex gap-2">
-                                            <!-- EDITAR -->
-                                            <Button
-                                                size="sm"
-                                                color="light"
-                                                onclick={() =>
-                                                    goto(`/livros/edit/${livro.id}`)
-                                                }
-                                            >
-                                                Editar
-                                            </Button>
+                        <th class="whitespace-nowrap">
+                            Status
+                        </th>
 
-                                            <!-- EXCLUIR -->
-                                            <Button
-                                                size="sm"
-                                                color="red"
-                                                onclick={() =>
-                                                    abrirDelete(livro)
-                                                }
-                                            >
-                                                <TrashBinOutline
-                                                    class="w-4 h-4"
-                                                />
-                                            </Button> 
-                                        </div>
-                                    </td>
-                                
+                        <th class="whitespace-nowrap">
+                            Ações
+                        </th>
                     </tr>
-                {/each}
+                </thead>
 
-            </tbody>
+                <tbody>
 
-        </Table>
+                    {#each emprestimos as emprestimo}
+
+                        <tr>
+
+                            <td>
+                                {emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}
+                            </td>
+
+                            <td>
+                                {emprestimo.usuario ?? `Usuário #${emprestimo.id_usuario}`}
+                            </td>
+
+                            <td>
+                                {formatarData(
+                                    emprestimo.data_de_emprestimo
+                                )}
+                            </td>
+
+                            <td>
+                                {formatarData(
+                                    emprestimo.data_fim_emprestimo
+                                )}
+                            </td>
+
+                            <td>
+                                {formatarStatus(
+                                    emprestimo.status_emprestimo
+                                )}
+                            </td>
+
+                            <td>
+
+                                <div class="flex gap-2">
+
+                                    <Button
+                                        size="sm"
+                                        color="light"
+                                        onclick={() =>
+                                            goto(
+                                                `/emprestimos/edit/${emprestimo.id}`
+                                            )
+                                        }
+                                    >
+                                        Editar
+                                    </Button>
+
+                                    <Button
+                                        size="sm"
+                                        color="red"
+                                        onclick={() =>
+                                            abrirDelete(
+                                                emprestimo
+                                            )
+                                        }
+                                    >
+                                        <TrashBinOutline
+                                            class="w-4 h-4"
+                                        />
+                                    </Button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {/each}
+
+                </tbody>
+
+            </Table>
+
         </div>
 
     {/if}
 
 </div>
 
-
-<!-- MODAL DE EXCLUSÃO -->
-			
-		
 <Modal
     bind:open={abrirModalDelete}
     size="sm"
@@ -483,13 +336,27 @@
     <div class="p-6">
 
         <h3 class="text-lg font-semibold mb-4">
-            Deseja deletar
-            "{livroParaDeletar?.titulo}"?
+            Deseja deletar este empréstimo?
         </h3>
+
+        <p class="mb-6 text-gray-600">
+            Livro:
+            <strong>
+                {emprestimoParaDeletar?.livro ??
+                    `Livro #${emprestimoParaDeletar?.id_livro}`}
+            </strong>
+        </p>
+
+        <p class="mb-6 text-gray-600">
+            Usuário:
+            <strong>
+                {emprestimoParaDeletar?.usuario ??
+                    `Usuário #${emprestimoParaDeletar?.id_usuario}`}
+            </strong>
+        </p>
 
         <div class="flex gap-2 justify-end">
 
-        
             <Button
                 color="light"
                 onclick={cancelarDelete}
@@ -510,4 +377,3 @@
 
     </div>
 </Modal>
-

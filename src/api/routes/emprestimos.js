@@ -2,13 +2,19 @@ var express = require('express');
 var router = express.Router();
 
 const pool = require('../db/config');
-const upload = require('../middlewares/upload');
 const { verifyToken, isAdmin } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
-  if (message) payload.message = message;
-  if (typeof data !== 'undefined') payload.data = data;
+
+  if (message) {
+    payload.message = message;
+  }
+
+  if (typeof data !== 'undefined') {
+    payload.data = data;
+  }
+
   return res.status(status).json(payload);
 }
 
@@ -20,548 +26,316 @@ function sendError(res, status, message, errors = []) {
   });
 }
 
-/*
- * GET /
- * Buscar todos os livros com filtro por busca e categorias
- */
 router.get('/', verifyToken, isAdmin, async function (req, res) {
   try {
-    const consulta = req.query.consulta ? `%${req.query.consulta}%` : '%';
-    let categoriasIds = [];
+    const consulta = req.query.consulta
+      ? `%${req.query.consulta}%`
+      : '%';
 
-    if (req.query.categorias) {
-      categoriasIds = String(req.query.categorias)
-        .split(',')
-        .map(Number)
-        .filter((id) => Number.isInteger(id) && id > 0);
-    }
-
-    let queryText = `
+    const query = `
       SELECT
+        e.id,
+        e.id_usuario,
+        u.login AS usuario,
+        e.id_livro,
         l.titulo AS livro,
-        u.nome AS usuário,
         e.data_de_emprestimo,
         e.data_fim_emprestimo,
-        e.status,
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id_categorias', c.id_categorias,
-              'nome', c.nome
-            )
-          ) FILTER (WHERE c.id_categorias IS NOT NULL),
-          '[]'
-        ) AS categorias
+        e.status_emprestimo
       FROM emprestimo e
-      INNER JOIN usuario u on u.id = e.id_usuario
-      INNER JOIN livro l ON l.id_livro = e.id_livro 
-
-      WHERE (
-        l.titulo ILIKE $1           
-      )
+      INNER JOIN usuario u
+        ON u.id = e.id_usuario
+      INNER JOIN livro l
+        ON l.id = e.id_livro
+      WHERE
+        u.login ILIKE $1
+        OR u.email ILIKE $1
+        OR l.titulo ILIKE $1
+      ORDER BY e.id
     `;
 
-    const queryParams = [consulta];
+    const result = await pool.query(query, [consulta]);
 
-    if (categoriasIds.length > 0) {
-      queryText += ` AND lc.id_categorias = ANY($2::bigint[])`;
-      queryParams.push(categoriasIds);
-    }
-
-    queryText += `
-      GROUP BY
-      e.id
-      l.titulo AS livro,
-      u.nome AS usuário,
-      e.data_de_emprestimo,
-      e.data_fim_emprestimo,
-      e.status
-      ORDER BY l.id
-    `;
-
-    const result = await pool.query(queryText, queryParams);
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
-    console.error('Erro ao buscar livros:', error);
+    console.error('Erro ao buscar empréstimos:', error);
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
-/*
- * POST /
- * Cadastrar novo livro
- */
-router.post(
-  '/',
-  verifyToken,
-  isAdmin,
-  upload.single('foto'),
-  async function (req, res) {
-    const client = await pool.connect();
+router.post('/', verifyToken, isAdmin, async function (req, res) {
+  const client = await pool.connect();
 
-    try {
-      const id_autor = req.body.id_autor || req.body.autor;
-      const rawCategorias = req.body.id_categorias || req.body.categorias;
-      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
+  try {
+    const {
+      id_usuario,
+      id_livro,
+      data_de_emprestimo,
+      data_fim_emprestimo,
+      status_emprestimo
+    } = req.body;
 
-      if (!id_autor) {
-        return sendError(res, 400, 'ID do autor é obrigatório.');
-      }
-
-      let categoriasIds = [];
-
-      if (rawCategorias) {
-        try {
-          categoriasIds =
-            typeof rawCategorias === 'string'
-              ? JSON.parse(rawCategorias)
-              : rawCategorias;
-
-          if (!Array.isArray(categoriasIds)) {
-            return sendError(
-              res,
-              400,
-              'Categorias devem ser enviadas como uma lista.'
-            );
-          }
-
-          categoriasIds = categoriasIds
-            .map(Number)
-            .filter((id) => Number.isInteger(id) && id > 0);
-        } catch (error) {
-          return sendError(res, 400, 'Formato de categorias inválido.');
-        }
-      }
-
-      const autorExists = await client.query(
-        `SELECT id FROM autor WHERE id = $1`,
-        [id_autor]
-      );
-
-      if (autorExists.rows.length === 0) {
-        return sendError(res, 400, 'Autor não encontrado.');
-      }
-
-      if (categoriasIds.length > 0) {
-        const categoriasExists = await client.query(
-          `
-          SELECT id_categorias
-          FROM categorias
-          WHERE id_categorias = ANY($1::bigint[])
-          `,
-          [categoriasIds]
-        );
-
-        if (categoriasExists.rows.length !== categoriasIds.length) {
-          return sendError(
-            res,
-            400,
-            'Uma ou mais categorias não foram encontradas.'
-          );
-        }
-      }
-
-      await client.query('BEGIN');
-
-      const livroResult = await client.query(
-        `
-        INSERT INTO livro (
-          titulo,
-          ano_de_publicacao,
-          id_autor,
-          editora,
-          isbn,
-          foto
-        )
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, id_autor, titulo, ano_de_publicacao, editora, isbn, foto
-        `,
-        [
-          titulo,
-          ano_de_publicacao,
-          id_autor,
-          editora,
-          isbn,
-          req.file?.filename || null
-        ]
-      );
-
-      const livro = livroResult.rows[0];
-
-      for (const categoriaId of categoriasIds) 
-      {
-        await client.query(
-          `
-          INSERT INTO livro_categoria (id_livro, id_categorias)
-          VALUES ($1, $2)
-          `,
-          [livro.id, categoriaId]
-        );
-      }
-
-      await client.query('COMMIT');
-
-      const livroCompleto = await pool.query (
-        `
-        SELECT
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
-
-          a.nome AS autor,
-          a.pseunonimo,
-
-          COALESCE(
-            json_agg(
-              DISTINCT jsonb_build_object(
-                'id_categorias', c.id_categorias,
-                'nome', c.nome
-              )
-            ) FILTER (WHERE c.id_categorias IS NOT NULL),
-            '[]'
-          ) AS categorias
-
-        FROM livro l
-
-        INNER JOIN autor a ON a.id = l.id_autor
-        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-        WHERE l.id = $1
-
-        GROUP BY
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
-          a.nome,
-          a.pseunonimo
-        `,
-        [livro.id]
-      );
-
-      return sendSuccess(
-        res,
-        201,
-        'Livro publicado com sucesso',
-        livroCompleto.rows[0]
-      );
-    }catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Erro ao publicar livro:', error);
-
-      if (error.code === '23505') {
-        return sendError(res, 400, 'ISBN já existe no sistema.');
-      }
-
-      return sendError(res, 500, 'Erro interno do servidor');
-    } finally {
-      client.release();
+    if (!id_usuario) {
+      return sendError(res, 400, 'ID do usuário é obrigatório.');
     }
+
+    if (!id_livro) {
+      return sendError(res, 400, 'ID do livro é obrigatório.');
+    }
+
+    const usuarioExists = await client.query(
+      `SELECT id FROM usuario WHERE id = $1`,
+      [id_usuario]
+    );
+
+    if (usuarioExists.rows.length === 0) {
+      return sendError(res, 400, 'Usuário não encontrado.');
+    }
+
+    const livroExists = await client.query(
+      `SELECT id FROM livro WHERE id = $1`,
+      [id_livro]
+    );
+
+    if (livroExists.rows.length === 0) {
+      return sendError(res, 400, 'Livro não encontrado.');
+    }
+
+    const statusFinal = status_emprestimo || 'ativo';
+
+    if (!['ativo', 'devolvido', 'atrasado'].includes(statusFinal)) {
+      return sendError(res, 400, 'Status de empréstimo inválido.');
+    }
+
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `
+        INSERT INTO emprestimo (
+          id_usuario,
+          id_livro,
+          data_de_emprestimo,
+          data_fim_emprestimo,
+          status_emprestimo
+        )
+        VALUES (
+          $1,
+          $2,
+          COALESCE($3, CURRENT_TIMESTAMP),
+          $4,
+          $5
+        )
+        RETURNING
+          id,
+          id_usuario,
+          id_livro,
+          data_de_emprestimo,
+          data_fim_emprestimo,
+          status_emprestimo
+      `,
+      [
+        id_usuario,
+        id_livro,
+        data_de_emprestimo || null,
+        data_fim_emprestimo || null,
+        statusFinal
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    return sendSuccess(
+      res,
+      201,
+      'Empréstimo cadastrado com sucesso',
+      result.rows[0]
+    );
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Erro ao cadastrar empréstimo:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  } finally {
+    client.release();
   }
-);
+});
 
-
-/*
-
- * GET /:id
- * Buscar um livro específico por ID
- */
 router.get('/:id', verifyToken, isAdmin, async function (req, res) {
-  try 
-  {
+  try {
     const { id } = req.params;
 
     const result = await pool.query(
       `
-      SELECT
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
-
-        a.nome AS autor,
-        a.pseunonimo,
-
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id_categorias', c.id_categorias,
-              'nome', c.nome
-            )
-          ) FILTER (WHERE c.id_categorias IS NOT NULL),
-          '[]'
-        ) AS categorias
-
-      FROM livro l
-
-      INNER JOIN autor a ON a.id = l.id_autor
-      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-      WHERE l.id = $1
-
-      GROUP BY
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
-        a.nome,
-        a.pseunonimo
+        SELECT
+          e.id,
+          e.id_usuario,
+          u.login AS usuario,
+          u.email AS email_usuario,
+          e.id_livro,
+          l.titulo AS livro,
+          e.data_de_emprestimo,
+          e.data_fim_emprestimo,
+          e.status_emprestimo
+        FROM emprestimo e
+        INNER JOIN usuario u
+          ON u.id = e.id_usuario
+        INNER JOIN livro l
+          ON l.id = e.id_livro
+        WHERE e.id = $1
       `,
       [id]
     );
 
     if (result.rows.length === 0) {
-      return sendError(res, 404, 'Livro não encontrado');
+      return sendError(res, 404, 'Empréstimo não encontrado.');
     }
 
     return sendSuccess(res, 200, null, result.rows[0]);
   } catch (error) {
-    console.error('Erro ao buscar livro:', error);
+    console.error('Erro ao buscar empréstimo:', error);
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
+router.put('/:id', verifyToken, isAdmin, async function (req, res) {
+  const client = await pool.connect();
 
-/*
+  try {
+    const { id } = req.params;
 
- * PUT /:id
+    const {
+      id_usuario,
+      id_livro,
+      data_de_emprestimo,
+      data_fim_emprestimo,
+      status_emprestimo
+    } = req.body;
 
- * Atualizar livro
- */
-router.put(
-  '/:id',
-  verifyToken,
-  isAdmin,
-  upload.single('foto'),
-  async function (req, res) {
+    const emprestimoExists = await client.query(
+      `SELECT id FROM emprestimo WHERE id = $1`,
+      [id]
+    );
 
-    const client = await pool.connect();
-
-    try {
-
-      const { id } = req.params;
-      const id_autor = req.body.id_autor || req.body.autor;
-      const rawCategorias = req.body.id_categorias || req.body.categorias;
-      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
-
-      let categoriasIds = [] ;
-
-      if (rawCategorias) {
-        try {
-          categoriasIds =
-            typeof rawCategorias === 'string'
-              ? JSON.parse(rawCategorias)
-              : rawCategorias;
-
-          if (!Array.isArray(categoriasIds)) {
-            return sendError(
-              res,
-              400,
-              'Categorias devem ser enviadas como uma lista.'
-            );
-          }
-
-          categoriasIds = categoriasIds
-            .map(Number)
-            .filter((id) => Number.isInteger(id) && id > 0);
-        } catch (error) {
-          return sendError(res, 400, 'Formato de categorias inválido.');
-        }
-      }
-
-      const livroExists = await client.query (
-        `SELECT id, foto FROM livro WHERE id = $1`,
-        [id]
-      );
-
-      if (livroExists.rows.length === 0) {
-        return sendError(res, 404, 'Livro não encontrado');
-      }
-
-      const autorExists = await client.query (
-        `SELECT id FROM autor WHERE id = $1`,
-        [id_autor]
-      );
-
-      if (autorExists.rows.length === 0) {
-        return sendError(res, 400, 'Autor não encontrado.');
-      }
-
-      if (categoriasIds.length === 0)
-       {
-        return sendError(
-          res,
-          400,
-          'O livro deve possuir pelo menos uma categoria.'
-        );
-
-      }
-
-      const categoriasExists = await client.query (
-        `
-        SELECT id_categorias
-        FROM categorias
-        WHERE id_categorias = ANY($1::bigint[])
-        `,
-        [categoriasIds]
-
-      );
-
-      if (categoriasExists.rows.length !== categoriasIds.length) {
-        return sendError(
-          res,
-          400,
-          'Uma ou mais categorias não foram encontradas.'
-        );
-
-      }
-
-
-      const fotoAtual = livroExists.rows[0].foto;
-      const fotoPath = req.file ? req.file.filename : fotoAtual;
-
-      await client.query('BEGIN');
-
-
-      await client.query(
-        `
-        UPDATE livro
-
-        SET
-          id_autor = $1,
-          titulo = $2,
-          ano_de_publicacao = $3,
-          editora = $4,
-          isbn = $5,
-          foto = $6
-
-        WHERE id = $7
-        `,
-        [id_autor, titulo, ano_de_publicacao, editora, isbn, fotoPath, id]
-      );
-
-
-      await client.query(
-        `DELETE FROM livro_categoria WHERE id_livro = $1`,
-        [id]
-      );
-
-      for (const categoriaId of categoriasIds) {
-
-        await client.query(
-          `
-          INSERT INTO livro_categoria (id_livro, id_categorias)
-          VALUES ($1, $2)
-          `,
-          [id, categoriaId]
-        );
-      }
-
-      await client.query('COMMIT');
-
-
-      const livroAtualizado = await pool.query(
-        `
-        SELECT
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
-
-          a.nome AS autor,
-          a.pseunonimo,
-
-          COALESCE(
-            json_agg(
-              DISTINCT jsonb_build_object(
-                'id_categorias', c.id_categorias,
-                'nome', c.nome
-              )
-            ) FILTER (WHERE c.id_categorias IS NOT NULL),
-            '[]'
-          ) AS categorias
-
-        FROM livro l
-        INNER JOIN autor a ON a.id = l.id_autor
-        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-        WHERE l.id = $1
-
-        GROUP BY
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
-          a.nome,
-          a.pseunonimo
-        `,
-        [id]
-      );
-
-      return sendSuccess(
-        res,
-        200,
-        'Livro atualizado com sucesso',
-        livroAtualizado.rows[0]
-      );
-    }catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Erro ao atualizar livro:', error);
-
-      if (error.code === '23505') {
-        return sendError(res, 400, 'ISBN já existe no sistema.');
-      }
-
-      return sendError(res, 500, 'Erro interno do servidor');
-    } finally {
-      client.release();
+    if (emprestimoExists.rows.length === 0) {
+      return sendError(res, 404, 'Empréstimo não encontrado.');
     }
+
+    if (!id_usuario) {
+      return sendError(res, 400, 'ID do usuário é obrigatório.');
+    }
+
+    const usuarioExists = await client.query(
+      `SELECT id FROM usuario WHERE id = $1`,
+      [id_usuario]
+    );
+
+    if (usuarioExists.rows.length === 0) {
+      return sendError(res, 400, 'Usuário não encontrado.');
+    }
+
+    if (!id_livro) {
+      return sendError(res, 400, 'ID do livro é obrigatório.');
+    }
+
+    const livroExists = await client.query(
+      `SELECT id FROM livro WHERE id = $1`,
+      [id_livro]
+    );
+
+    if (livroExists.rows.length === 0) {
+      return sendError(res, 400, 'Livro não encontrado.');
+    }
+
+    if (!['ativo', 'devolvido', 'atrasado'].includes(status_emprestimo)) {
+      return sendError(res, 400, 'Status de empréstimo inválido.');
+    }
+
+    await client.query('BEGIN');
+
+    await client.query(
+      `
+        UPDATE emprestimo
+        SET
+          id_usuario = $1,
+          id_livro = $2,
+          data_de_emprestimo = $3,
+          data_fim_emprestimo = $4,
+          status_emprestimo = $5
+        WHERE id = $6
+      `,
+      [
+        id_usuario,
+        id_livro,
+        data_de_emprestimo,
+        data_fim_emprestimo || null,
+        status_emprestimo,
+        id
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    const atualizado = await pool.query(
+      `
+        SELECT
+          e.id,
+          e.id_usuario,
+          u.login AS usuario,
+          u.email AS email_usuario,
+          e.id_livro,
+          l.titulo AS livro,
+          e.data_de_emprestimo,
+          e.data_fim_emprestimo,
+          e.status_emprestimo
+        FROM emprestimo e
+        INNER JOIN usuario u
+          ON u.id = e.id_usuario
+        INNER JOIN livro l
+          ON l.id = e.id_livro
+        WHERE e.id = $1
+      `,
+      [id]
+    );
+
+    return sendSuccess(
+      res,
+      200,
+      'Empréstimo atualizado com sucesso',
+      atualizado.rows[0]
+    );
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Erro ao atualizar empréstimo:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  } finally {
+    client.release();
   }
-);
+});
 
-
-/*
- * DELETE /:id
-
- * Remover livro
- */
 router.delete('/:id', verifyToken, isAdmin, async function (req, res) {
   try {
     const { id } = req.params;
 
-    const livroExists = await pool.query(
-      `SELECT id FROM livro WHERE id = $1`,
+    const emprestimoExists = await pool.query(
+      `SELECT id FROM emprestimo WHERE id = $1`,
       [id]
     );
 
-    if (livroExists.rows.length === 0) {
-      return sendError(res, 404, 'Livro não encontrado');
+    if (emprestimoExists.rows.length === 0) {
+      return sendError(res, 404, 'Empréstimo não encontrado.');
     }
 
-    await pool.query(`DELETE FROM livro WHERE id = $1`, [id]);
+    await pool.query(
+      `DELETE FROM emprestimo WHERE id = $1`,
+      [id]
+    );
 
-    return sendSuccess(res, 200, 'Livro deletado com sucesso');
+    return sendSuccess(
+      res,
+      200,
+      'Empréstimo deletado com sucesso'
+    );
   } catch (error) {
-    console.error('Erro ao deletar livro:', error);
+    console.error('Erro ao deletar empréstimo:', error);
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
