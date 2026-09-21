@@ -119,7 +119,7 @@
     hasToken = getToken() !== null;
 
     try {
-      const res = await api.get('/usuarios');
+      const res = await api.get('/users');
       const body = res.data as ApiResponse<User[]>;
 
       if (body?.success && body.data) {
@@ -234,7 +234,7 @@
       if (
         emprestimos.data_fim_emprestimo &&
         new Date(emprestimos.data_fim_emprestimo) <
-          new Date(emprestimos.data_de_emprestimo)
+        new Date(emprestimos.data_de_emprestimo)
       ) {
         error =
           'A data de fim do empréstimo não pode ser anterior à data de empréstimo.';
@@ -256,8 +256,7 @@
         id_usuario: Number(emprestimos.id_usuario),
         id_livro: Number(emprestimos.id_livro),
         data_de_emprestimo: emprestimos.data_de_emprestimo,
-        data_fim_emprestimo:
-          emprestimos.data_fim_emprestimo || null,
+        data_fim_emprestimo: emprestimos.data_fim_emprestimo || null,
         status_emprestimo: emprestimos.status_emprestimo
       };
 
@@ -462,7 +461,7 @@
 
   <Input
     id="data_de_emprestimo"
-    type="datetime-local"
+    type="date"
     bind:value={emprestimos.data_de_emprestimo}
     required
     class="mt-1"
@@ -483,18 +482,20 @@
 
   <Input
     id="data_fim_emprestimo"
-    type="datetime-local"
+    type="date"
     bind:value={emprestimos.data_fim_emprestimo}
     class="mt-1"
     disabled={loading}
   />
+</div>
+
 
   {#if errorOf('data_fim_emprestimo')}
     <div class="mt-1 text-sm text-red-500">
       {errorOf('data_fim_emprestimo')}
     </div>
   {/if}
-</div>
+
 
 <div>
   <Label for="status_emprestimo">

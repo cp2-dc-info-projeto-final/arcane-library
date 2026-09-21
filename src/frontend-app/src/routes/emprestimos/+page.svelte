@@ -49,7 +49,7 @@
 
             <button
                 class="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold shadow transition"
-                onclick={() => goto('/emprestimo/new')}
+                onclick={() => goto('/emprestimos/new')}
             >
                 <UserAddOutline class="w-5 h-5" />
                 Adicionar

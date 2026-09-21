@@ -9,10 +9,10 @@
 </script>
 
 <svelte:head>
-    <title>Editar Livro | Arcane Library</title>
+    <title>Editar empréstimo | Arcane Library</title>
     <meta
         name="description"
-        content="Editar livro da Arcane Library"
+        content="Editar empréstimo da Arcane Library"
     />
 </svelte:head>
 
