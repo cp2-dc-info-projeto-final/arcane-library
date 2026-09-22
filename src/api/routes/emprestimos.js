@@ -39,8 +39,8 @@ router.get('/', verifyToken, isAdmin, async function (req, res) {
         u.login AS usuario,
         e.id_livro,
         l.titulo AS livro,
-        e.data_de_emprestimo,
-        e.data_fim_emprestimo,
+        TO_CHAR(e.data_de_emprestimo, 'YYYY-MM-DD') as data_de_emprestimo,
+        TO_CHAR(e.data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
         e.status_emprestimo
       FROM emprestimo e
       INNER JOIN usuario u
@@ -130,7 +130,7 @@ router.post('/', verifyToken, isAdmin, async function (req, res) {
           id_usuario,
           id_livro,
           data_de_emprestimo,
-          data_fim_emprestimo,
+          TO_CHAR(data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
           status_emprestimo
       `,
       [
@@ -172,8 +172,8 @@ router.get('/:id', verifyToken, isAdmin, async function (req, res) {
           u.email AS email_usuario,
           e.id_livro,
           l.titulo AS livro,
-          e.data_de_emprestimo,
-          e.data_fim_emprestimo,
+          TO_CHAR(e.data_de_emprestimo, 'YYYY-MM-DD') as data_de_emprestimo,
+          TO_CHAR(e.data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
           e.status_emprestimo
         FROM emprestimo e
         INNER JOIN usuario u
@@ -283,8 +283,8 @@ router.put('/:id', verifyToken, isAdmin, async function (req, res) {
           u.email AS email_usuario,
           e.id_livro,
           l.titulo AS livro,
-          e.data_de_emprestimo,
-          e.data_fim_emprestimo,
+          e.TO_CHAR(data_de_emprestimo, 'YYYY-MM-DD') as data_de_emprestimo,
+          e.TO_CHAR(data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
           e.status_emprestimo
         FROM emprestimo e
         INNER JOIN usuario u
