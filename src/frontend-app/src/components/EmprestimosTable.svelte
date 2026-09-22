@@ -129,11 +129,6 @@
         }
 
         const dataFormatada = new Date(data);
-
-        if (isNaN(dataFormatada.getTime())) {
-            return data;
-        }
-
         return dataFormatada.toLocaleString('pt-BR');
     }
 
@@ -217,113 +212,74 @@
 
     {:else}
 
-        <div class="w-full overflow-x-auto max-w-5xl mx-auto my-10 shadow-lg border border-gray-200 rounded-lg bg-white">
+        <!-- Alterado 'mx-auto' para 'ml-0 mr-auto' e adicionado 'inline-block align-top' -->
+<div class="w-full max-w-5xl ml-0 mr-auto my-10 inline-block align-top shadow-lg border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <table class="w-full table-fixed md:table-auto border-collapse">
+        
+        <!-- Cabeçalho -->
+        <thead class="hidden md:table-header-group bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Livro emprestado</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuário</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data de empréstimo</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Data de devolução</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Ações</th>
+            </tr>
+        </thead>
 
-            <Table class="min-w-[1100px] w-full border">
+        <!-- Corpo da Tabela -->
+        <tbody class="block md:table-row-group divide-y divide-gray-200">
+            {#each emprestimos as emprestimo}
+                <tr class="block md:table-row p-4 mb-4 md:p-0 md:mb-0 bg-white border-b md:border-b-0 last:border-b-0 shadow-sm md:shadow-none rounded-lg md:rounded-none border md:border-transparent max-w-full">
+                    
+                    <!-- Livro -->
+                    <td class="block md:table-cell py-2 md:py-4 px-4 md:px-6 text-sm text-gray-900 break-words max-w-full before:content-['Livro:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <span class="font-medium md:font-normal block md:inline">{emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}</span>
+                    </td>
 
-                <thead>
-                    <tr>
-                        <th class="whitespace-nowrap">
-                            Livro emprestado
-                        </th>
+                    <!-- Usuário -->
+                    <td class="block md:table-cell py-2 md:py-4 px-4 md:px-6 text-sm text-gray-700 break-words max-w-full before:content-['Usuário:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <span class="block md:inline">{emprestimo.usuario ?? `Usuário #${emprestimo.id_usuario}`}</span>
+                    </td>
 
-                        <th class="whitespace-nowrap">
-                            Usuário
-                        </th>
+                    <!-- Data Empréstimo -->
+                    <td class="block md:table-cell py-2 md:py-4 px-4 md:px-6 text-sm text-gray-600 before:content-['Data_de_Empréstimo:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <span class="block md:inline">{formatarData(emprestimo.data_de_emprestimo)}</span>
+                    </td>
 
-                        <th class="whitespace-nowrap">
-                            Data de empréstimo
-                        </th>
+                    <!-- Data Devolução -->
+                    <td class="block md:table-cell py-2 md:py-4 px-4 md:px-6 text-sm text-gray-600 before:content-['Data_de_Devolução:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <span class="block md:inline">{formatarData(emprestimo.data_fim_emprestimo)}</span>
+                    </td>
 
-                        <th class="whitespace-nowrap">
-                            Data de devolução
-                        </th>
+                    <!-- Status -->
+                    <td class="block md:table-cell py-2 md:py-4 px-4 md:px-6 text-sm before:content-['Status:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <span class="inline-block pt-1 md:pt-0">
+                            {formatarStatus(emprestimo.status_emprestimo)}
+                        </span>
+                    </td>
 
-                        <th class="whitespace-nowrap">
-                            Status
-                        </th>
+                     
+                    <!-- Ações  TEM ALGO FALTANDO AQUI                    -->
+                    
+                    <td class="block md:table-cell py-3 md:py-4 px-4 md:px-6 text-sm before:content-['Ações:'] before:font-semibold before:text-gray-500 before:block before:text-xs before:uppercase md:before:hidden">
+                        <div class="flex flex-wrap md:flex-nowrap gap-2 mt-1 md:mt-0">
+                            <Button size="sm" color="light" onclick={() => goto(`/emprestimos/edit/${emprestimo.id}`)}>
+                                Editar
+                            </Button>
+                            <Button size="sm" color="red" onclick={() => abrirDelete(emprestimo)}>
+                                <TrashBinOutline class="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </td>
 
-                        <th class="whitespace-nowrap">
-                            Ações
-                        </th>
-                    </tr>
-                </thead>
+                </tr>
+            {/each}
+        </tbody>
 
-                <tbody>
-
-                    {#each emprestimos as emprestimo}
-
-                        <tr>
-
-                            <td>
-                                {emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}
-                            </td>
-
-                            <td>
-                                {emprestimo.usuario ?? `Usuário #${emprestimo.id_usuario}`}
-                            </td>
-
-                            <td>
-                                {formatarData(
-                                    emprestimo.data_de_emprestimo
-                                )}
-                            </td>
-
-                            <td>
-                                {formatarData(
-                                    emprestimo.data_fim_emprestimo
-                                )}
-                            </td>
-
-                            <td>
-                                {formatarStatus(
-                                    emprestimo.status_emprestimo
-                                )}
-                            </td>
-
-                            <td>
-
-                                <div class="flex gap-2">
-
-                                    <Button
-                                        size="sm"
-                                        color="light"
-                                        onclick={() =>
-                                            goto(
-                                                `/emprestimos/edit/${emprestimo.id}`
-                                            )
-                                        }
-                                    >
-                                        Editar
-                                    </Button>
-
-                                    <Button
-                                        size="sm"
-                                        color="red"
-                                        onclick={() =>
-                                            abrirDelete(
-                                                emprestimo
-                                            )
-                                        }
-                                    >
-                                        <TrashBinOutline
-                                            class="w-4 h-4"
-                                        />
-                                    </Button>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    {/each}
-
-                </tbody>
-
-            </Table>
-
-        </div>
+    </table>
+</div>
 
     {/if}
 

@@ -122,7 +122,7 @@
         <TableHeadCell class="w-16">ID</TableHeadCell>
         <TableHeadCell class="w-32">Nome</TableHeadCell>
         <TableHeadCell class="w-32">Pseudônimo</TableHeadCell>
-        <TableHeadCell class="w-24"></TableHeadCell>
+        <TableHeadCell class="w-24">Opções</TableHeadCell>
       </TableHead>
       <TableBody>
         {#each autores as autor}
