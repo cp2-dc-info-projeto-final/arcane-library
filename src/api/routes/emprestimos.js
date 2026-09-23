@@ -283,8 +283,8 @@ router.put('/:id', verifyToken, isAdmin, async function (req, res) {
           u.email AS email_usuario,
           e.id_livro,
           l.titulo AS livro,
-          e.TO_CHAR(data_de_emprestimo, 'YYYY-MM-DD') as data_de_emprestimo,
-          e.TO_CHAR(data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
+          TO_CHAR(e.data_de_emprestimo, 'YYYY-MM-DD') as data_de_emprestimo,
+          TO_CHAR(e.data_fim_emprestimo, 'YYYY-MM-DD') as data_fim_emprestimo,
           e.status_emprestimo
         FROM emprestimo e
         INNER JOIN usuario u

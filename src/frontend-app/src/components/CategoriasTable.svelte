@@ -111,86 +111,49 @@
       
     </div>
     
-    <!-- Tabela para telas médias/grandes -->
-    <div class="hidden xl:block">
-      <!-- Tabela de categorias -->
-      <Table class="w-full max-w-5xl mx-auto my-8 shadow-lg border border-gray-200 rounded-lg">
-        <TableHead>
-          <TableHeadCell class="w-16">ID</TableHeadCell>
-          <TableHeadCell class="w-32">Nome</TableHeadCell>
-          <TableHeadCell class="w-24"></TableHeadCell> <!-- coluna para editar/remover -->
-        </TableHead>
-        <TableBody>
-          {#each categorias as categoria}
-            <TableBodyRow>
-              <TableBodyCell>{categoria.id_categorias}</TableBodyCell>
-              <TableBodyCell>{categoria.nome}</TableBodyCell>
-              <TableBodyCell>
-                <!-- Botão editar -->
-                <button
-                  class="p-2 rounded border border-primary-200 hover:border-primary-400 transition bg-transparent"
-                  title="Editar"
-                  on:click={() => goto(`/categorias/edit/${categoria.id_categorias}`)}
-                >
-                  <UserEditOutline class="w-5 h-5 text-primary-500" />
-                </button>
-                <!-- Botão remover -->
-                <button
-                  title="Remover"
-                  class="p-2 rounded border border-red-100 hover:border-red-300 transition bg-transparent"
-                  on:click={() => openConfirm(categoria.id_categorias)}
-                  disabled={deletingId === categoria.id || loading}
-                >
-                  <TrashBinOutline class="w-5 h-5 text-red-400" />
-                </button>
-              </TableBodyCell>
-            </TableBodyRow>
-          {/each}
-        </TableBody>
-      </Table>
-    </div>
-    <!-- Cards para telas pequenas -->
-    <div class="block xl:hidden">
-      <div class="flex flex-col items-center gap-4 my-8 max-w-3xl mx-auto md:grid md:grid-cols-2">
-        {#each categorias as categoria}
-          <!-- Card de categorias -->
-          <Card class="max-w-sm w-full p-0 overflow-hidden shadow-lg border border-green-200">
-            <div class="px-4 pt-4 pb-2 bg-green-100 text-left flex items-center justify-between">
-              <div>
-                <div class="text-lg font-semibold text-gray-800 text-left">{categoria.nome}</div>
-                <div class="text-xs text-gray-400 text-left">ID: {categoria.id_categorias}</div>
-              </div>
-              <div class="flex gap-2">
-                <!-- Botão editar -->
-                <button
-                  class="p-2 rounded border border-primary-200 hover:border-primary-400 transition bg-transparent"
-                  title="Editar"
-                  on:click={() => goto(`/categorias/edit/${categoria.id_categorias}`)}
-                >
-                  <UserEditOutline class="w-5 h-5 text-primary-500" />
-                </button>
-                <!-- Botão remover -->
-                <button
-                  title="Remover"
-                  class="p-2 rounded border border-red-100 hover:border-red-300 transition bg-transparent"
-                  on:click={() => openConfirm(categoria.id_categorias)}
-                  disabled={deletingId === categoria.id_categorias || loading}
-                >
-                  <TrashBinOutline class="w-5 h-5 text-red-400" />
-                </button>
-              </div>
-            </div>
-            <div class="px-4 pb-4 pt-2 flex flex-col gap-2 text-left">
-              <div class="flex items-center gap-2 text-left">
-                <!-- Ícone de email -->
-                <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 12A4 4 0 1 0 8 12a4 4 0 0 0 8 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14v7m-7-7v7m14-7v7"/></svg>
-                <span class="text-gray-700 text-sm">{categoria.nome}</span>
-              </div>
-            </div>
-          </Card>
-        {/each}
+    <!-- O contêiner fica alinhado à esquerda (ml-0 mr-auto) e não centralizado -->
+<div class="w-full max-w-3xl ml-0 mr-auto my-8">
+  <!-- Lista vertical idêntica em qualquer monitor -->
+  <div class="flex flex-col items-center gap-4">
+    {#each categorias as categoria}
+      <!-- Card de categoria -->
+      <div class="max-w-sm w-full p-0 overflow-hidden shadow-lg border border-green-200 rounded-lg bg-white">
+        <div class="px-4 pt-4 pb-2 bg-green-100 text-left flex items-center justify-between">
+          <div>
+            <div class="text-lg font-semibold text-gray-800 text-left">{categoria.nome}</div>
+            <div class="text-xs text-gray-400 text-left">ID: {categoria.id_categorias}</div>
+          </div>
+          <div class="flex gap-2">
+            <!-- Botão editar -->
+            <button
+              class="p-2 rounded border border-primary-200 hover:border-primary-400 transition bg-transparent"
+              title="Editar"
+              on:click={() => goto(`/categorias/edit/${categoria.id_categorias}`)}
+            >
+              <UserEditOutline class="w-5 h-5 text-primary-500" />
+            </button>
+            <!-- Botão remover -->
+            <button
+              title="Remover"
+              class="p-2 rounded border border-red-100 hover:border-red-300 transition bg-transparent"
+              on:click={() => openConfirm(categoria.id_categorias)}
+              disabled={deletingId === categoria.id_categorias || loading}
+            >
+              <TrashBinOutline class="w-5 h-5 text-red-400" />
+            </button>
+          </div>
+        </div>
+        <div class="px-4 pb-4 pt-2 flex flex-col gap-2 text-left">
+          <div class="flex items-center gap-2 text-left">
+            <!-- Ícone (mantido o mesmo do users) -->
+            <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 12A4 4 0 1 0 8 12a4 4 0 0 0 8 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14v7m-7-7v7m14-7v7"/></svg>
+            <span class="text-gray-700 text-sm break-all">{categoria.nome}</span>
+          </div>
+        </div>
       </div>
-    </div>
+    {/each}
+  </div>
+</div>
   {/if}
   
   <!-- Modal de confirmação -->
