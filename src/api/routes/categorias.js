@@ -58,7 +58,7 @@ router.post('/', verifyToken, isAdmin, async function(req, res) {
 
 
 /* GET parametrizado - Buscar categoria por nome */
-router.get('/:id', verifyToken, async function(req, res) {
+router.get('/:id', verifyToken, isAdmin, async function(req, res) {
   console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
     const { nome } = req.body;

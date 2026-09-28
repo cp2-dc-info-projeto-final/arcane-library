@@ -1,6 +1,4 @@
-
-
-<script lang="ts">
+   <script lang="ts">
 	import '../app.css';
 	import Menu from '../components/Menu.svelte';
 	import { onMount } from 'svelte';
