@@ -58,7 +58,7 @@ router.post('/', verifyToken, isAdmin, async function(req, res) {
 });
 
 /* GET - Buscar autor por ID */
-router.get('/:id', verifyToken, async function(req, res) {
+router.get('/:id', verifyToken, isAdmin, async function(req, res) {
   try {
     const result = await pool.query(
       "SELECT id, nome, pseunonimo FROM autor WHERE id = $1",

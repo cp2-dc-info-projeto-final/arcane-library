@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import { logout, getCurrentUser, getToken, type User } from "$lib/auth";
   import { goto } from "$app/navigation";
-  import { ArrowRightToBracketOutline } from "flowbite-svelte-icons";
+  import { ArrowRightToBracketOutline, EditOutline } from "flowbite-svelte-icons";
   import { page } from "$app/stores";
   import { themeStore, themes, type Season } from "$lib/themeStore";
 	import CategoriasForm from './CategoriasForm.svelte';
@@ -96,8 +96,9 @@
 
 
 		</NavBrand>
+    <NavHamburger/>
     <NavUl>
-    <NavHamburger />
+    
       <NavLi href="/" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Início</NavLi>
       <NavLi href="/about" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Sobre</NavLi>
       {#if hasToken}
@@ -105,13 +106,13 @@
               {#if user.role !== 'admin'}
              
                 <NavLi href="/livro_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Livros</NavLi>
-                <NavLi href="/emprestimo_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Empréstimos</NavLi>
+                <NavLi href="/emprestimos_users" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Empréstimos</NavLi>
 
               {/if}
           {/if}
       {/if}
       {#if hasToken}
-      <NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg"> Editar perfil</NavLi>
+      <EditOutline class="shrink-0 h-6 w-6"/><NavLi href="/editar_perfil" class="text-base sm:text-lg font-bold px-4 py-2 !text-black hover:!text-yellow-200 hover:opacity-100 focus:!text-yellow-100 focus:opacity-100 transition-all rounded-lg">Perfil</NavLi>
       {/if}
       {#if hasToken}
         {#if user} <!-- se existir usu��rio é porque conseguiu logar-->
