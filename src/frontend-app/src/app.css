@@ -6,137 +6,1112 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+
+/* =========================================================
+   ARCANE LIBRARY
+   SISTEMA DE CORES
+   ========================================================= */
+
 @theme {
-  --color-primary-50: #fff5f2;
-  --color-primary-100: #fff1ee;
-  --color-primary-200: #ffe4de;
-  --color-primary-300: #ffd5cc;
-  --color-primary-400: #ffbcad;
-  --color-primary-500: #fe795d;
-  --color-primary-600: #ef562f;
-  --color-primary-700: #eb4f27;
-  --color-primary-800: #cc4522;
-  --color-primary-900: #a5371b;
 
-  --color-secondary-50: #f0f9ff;
-  --color-secondary-100: #e0f2fe;
-  --color-secondary-200: #bae6fd;
-  --color-secondary-300: #7dd3fc;
-  --color-secondary-400: #38bdf8;
-  --color-secondary-500: #0ea5e9;
-  --color-secondary-600: #0284c7;
-  --color-secondary-700: #0369a1;
-  --color-secondary-800: #075985;
-  --color-secondary-900: #0c4a6e;
+  /* -------------------------------------------------------
+     DOURADO — COR PRINCIPAL
+     ------------------------------------------------------- */
 
-  --font-family-serif: 'Baskerville Old Face', 'Baskerville', Georgia, serif;
+  --color-primary-50: #faf6ec;
+  --color-primary-100: #f4ead5;
+  --color-primary-200: #e9d6ad;
+  --color-primary-300: #dec083;
+  --color-primary-400: #d3b06b;
+  --color-primary-500: #c9a45c;
+  --color-primary-600: #b58d45;
+  --color-primary-700: #967237;
+  --color-primary-800: #75572c;
+  --color-primary-900: #57401f;
+
+
+  /* -------------------------------------------------------
+     AZUL-MARINHO
+     ------------------------------------------------------- */
+
+  --color-secondary-50: #f5f7fa;
+  --color-secondary-100: #e8edf2;
+  --color-secondary-200: #cbd5df;
+  --color-secondary-300: #a8b6c5;
+  --color-secondary-400: #718398;
+  --color-secondary-500: #3d5065;
+  --color-secondary-600: #2c4055;
+  --color-secondary-700: #203449;
+  --color-secondary-800: #15283c;
+  --color-secondary-900: #0d1b2a;
+
+
+  /* -------------------------------------------------------
+     FONTE
+     ------------------------------------------------------- */
+
+  --font-family-serif:
+    'Baskerville Old Face',
+    'Baskerville',
+    Georgia,
+    serif;
 }
+
+
+/* Fontes / arquivos do Flowbite */
 
 @source "../node_modules/flowbite-svelte/dist";
 @source "../node_modules/flowbite-svelte-icons/dist";
 
+
+/* =========================================================
+   VARIÁVEIS GERAIS
+   ========================================================= */
+
+:root {
+
+  /* Tema claro */
+
+  --arcane-light-bg: #f4efe4;
+  --arcane-light-bg-secondary: #ebe2d1;
+  --arcane-light-card: #fffaf0;
+
+  --arcane-light-text: #10243a;
+  --arcane-light-text-secondary: #526171;
+
+  --arcane-light-border: #d6c6a5;
+
+  --arcane-gold: #c9a45c;
+  --arcane-gold-light: #e4c77a;
+  --arcane-gold-dark: #967237;
+
+
+  /* Tema escuro */
+
+  --arcane-dark-bg: #080d14;
+  --arcane-dark-bg-secondary: #101923;
+  --arcane-dark-card: #1b1512;
+
+  --arcane-dark-text: #f1e9d6;
+  --arcane-dark-text-secondary: #9fa7ae;
+
+  --arcane-dark-border: #51432e;
+
+
+  /* Madeira */
+
+  --arcane-wood: #302019;
+  --arcane-wood-dark: #1b1512;
+}
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
 @layer base {
-  /* desativar o botão cancelar do Chrome */
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+
+  body {
+
+    margin: 0;
+
+    font-family:
+      'Baskerville Old Face',
+      'Baskerville',
+      Georgia,
+      serif;
+
+    background-color: var(--arcane-light-bg);
+
+    color: var(--arcane-light-text);
+
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease;
+  }
+
+
+  body,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  button,
+  input,
+  textarea,
+  select {
+
+    font-family:
+      'Baskerville Old Face',
+      'Baskerville',
+      Georgia,
+      serif;
+  }
+
+
+  /* Chrome - remove botão cancelar de search */
+
   input[type="search"]::-webkit-search-cancel-button {
     display: none;
   }
 
-  /* Aplicar Baskerville Old Face ao projeto */
-  body, h1, h2 {
-    font-family: 'Baskerville Old Face', 'Baskerville', Georgia, serif;
+
+  /* Seleção de texto */
+
+  ::selection {
+    background: var(--arcane-gold);
+    color: #080d14;
   }
 }
 
-/* Desativa animação dos placeholders do Flowbite-Svelte */
-.animate-pulse, .animate-shimmer {
+
+/* =========================================================
+   REMOVE ANIMAÇÕES INDESEJADAS DO FLOWBITE
+   ========================================================= */
+
+.animate-pulse,
+.animate-shimmer {
   animation: none !important;
 }
 
 
-/* TEMAS SAZONAIS - BACKGROUNDS */
+/* =========================================================
+   MAIN
+   ========================================================= */
 
-/* Primavera - Verde e Rosa */
-:global(.theme-spring) {
-  --color-primary-500: #10b981;
-  --color-secondary-500: #fbbf24;
-  --color-accent-500: #ec4899;
-  --bg-light: #f0fdf4;
-  --bg-dark: #064e3b;
-  --accent-light: #fce7f3;
-}
+/*
+   IMPORTANTE:
 
-:global(.theme-spring main) {
-  background: linear-gradient(135deg, #f0fdf4 0%, #fce7f3 100%);
-  transition: background 0.5s ease;
-}
+   O MAIN NÃO RECEBE MAIS IMAGEM NEM DEGRADÊ.
 
-:global(.theme-spring.dark main) {
-  background: linear-gradient(135deg, #064e3b 0%, #831843 100%);
-}
-
-/* Verão - Âmbar e Ciano */
-:global(.theme-summer) {
-  --color-primary-500: #f59e0b;
-  --color-secondary-500: #06b6d4;
-  --color-accent-500: #f97316;
-  --bg-light: #fffbeb;
-  --bg-dark: #78350f;
-  --accent-light: #cffafe;
-}
-
-:global(.theme-summer main) {
-  background: linear-gradient(135deg, #fffbeb 0%, #cffafe 100%);
-  transition: background 0.5s ease;
-}
-
-:global(.theme-summer.dark main) {
-  background: linear-gradient(135deg, #78350f 0%, #164e63 100%);
-}
-
-/* Outono - Vermelho e Laranja */
-:global(.theme-autumn) {
-  --color-primary-500: #dc2626;
-  --color-secondary-500: #f97316;
-  --color-accent-500: #b45309;
-  --bg-light: #fef2f2;
-  --bg-dark: #7c2d12;
-  --accent-light: #fed7aa;
-}
-
-:global(.theme-autumn main) {
-  background: linear-gradient(135deg, #fef2f2 0%, #fed7aa 100%);
-  transition: background 0.5s ease;
-}
-
-:global(.theme-autumn.dark main) {
-  background: linear-gradient(135deg, #7c2d12 0%, #92400e 100%);
-}
-
-/* Inverno - Azul e Índigo */
-:global(.theme-winter) {
-  --color-primary-500: #0ea5e9;
-  --color-secondary-500: #60a5fa;
-  --color-accent-500: #818cf8;
-  --bg-light: #f0f9ff;
-  --bg-dark: #0c2d6b;
-  --accent-light: #e0e7ff;
-}
-
-:global(.theme-winter main) {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-  transition: background 0.5s ease;
-}
-
-:global(.theme-winter.dark main) {
-  background: linear-gradient(135deg, #0c2d6b 0%, #312e81 100%);
-}
-
-/* Transições suaves */
-body {
-  transition: background-color 0.3s ease, color 0.3s ease;
-  font-family: 'Baskerville Old Face', 'Baskerville', Georgia, serif;
-}
+   A imagem da biblioteca fica somente no .library-hero.
+*/
 
 main {
-  transition: background 0.5s ease;
+
+  background-color: var(--arcane-light-bg);
+
+  color: var(--arcane-light-text);
+
+  transition:
+    background-color 0.5s ease,
+    color 0.5s ease;
+}
+
+
+/* Tema escuro */
+
+.dark main {
+
+  background-color: var(--arcane-dark-bg);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+/*
+   A imagem fica SOMENTE aqui.
+
+   Coloque:
+
+   static/images/library-light.jpg
+   static/images/library-dark.jpg
+*/
+
+
+.library-hero {
+
+  position: relative;
+
+  min-height: 500px;
+
+  display: flex;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  background-image:
+
+    linear-gradient(
+      90deg,
+      rgba(8, 13, 20, 0.90) 0%,
+      rgba(8, 13, 20, 0.60) 40%,
+      rgba(8, 13, 20, 0.20) 75%,
+      rgba(8, 13, 20, 0.10) 100%
+    ),
+
+    url("/images/library-dark.jpg");
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+
+  color: #f1e9d6;
+}
+
+
+/* =========================================================
+   HERO — TEMA CLARO
+   ========================================================= */
+
+.light .library-hero,
+html:not(.dark) .library-hero {
+
+  background-image:
+
+    linear-gradient(
+      90deg,
+      rgba(244, 239, 228, 0.94) 0%,
+      rgba(244, 239, 228, 0.72) 35%,
+      rgba(244, 239, 228, 0.25) 70%,
+      rgba(244, 239, 228, 0.05) 100%
+    ),
+
+    url("/images/library-light.jpg");
+
+  color: #10243a;
+}
+
+
+/* =========================================================
+   HERO — CONTEÚDO
+   ========================================================= */
+
+.library-hero-content {
+
+  position: relative;
+
+  z-index: 2;
+
+  max-width: 650px;
+
+  padding: 80px 6%;
+}
+
+
+.library-hero-title {
+
+  font-size: clamp(3rem, 6vw, 6rem);
+
+  line-height: 0.95;
+
+  letter-spacing: 0.08em;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+}
+
+
+.library-hero-subtitle {
+
+  margin-top: 20px;
+
+  max-width: 500px;
+
+  font-size: 1.2rem;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   BOTÃO PRINCIPAL
+   ========================================================= */
+
+.arcane-button {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 25px;
+
+  padding: 13px 25px;
+
+  border: 1px solid var(--arcane-gold);
+
+  border-radius: 4px;
+
+  background: var(--arcane-gold);
+
+  color: #080d14;
+
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+
+.arcane-button:hover {
+
+  background: var(--arcane-gold-light);
+
+  border-color: var(--arcane-gold-light);
+
+  transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   BOTÃO OUTLINE
+   ========================================================= */
+
+.arcane-button-outline {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 12px 24px;
+
+  border: 1px solid var(--arcane-gold);
+
+  border-radius: 4px;
+
+  background: transparent;
+
+  color: var(--arcane-gold);
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+
+.arcane-button-outline:hover {
+
+  background: var(--arcane-gold);
+
+  color: #080d14;
+}
+
+
+/* =========================================================
+   SEÇÕES
+   ========================================================= */
+
+.books-section {
+
+  background: var(--arcane-light-bg);
+
+  color: var(--arcane-light-text);
+
+  padding: 70px 5%;
+
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+
+.dark .books-section {
+
+  background: var(--arcane-dark-bg);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   TÍTULOS DAS SEÇÕES
+   ========================================================= */
+
+.arcane-section-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 20px;
+
+  margin-bottom: 30px;
+
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+
+  color: var(--arcane-light-text);
+}
+
+
+.dark .arcane-section-title {
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* Linha dourada */
+
+.arcane-section-title::after {
+
+  content: "";
+
+  display: block;
+
+  width: 80px;
+
+  height: 1px;
+
+  background: var(--arcane-gold);
+}
+
+
+/* =========================================================
+   ÁREA DE CATEGORIAS
+   ========================================================= */
+
+.categories-panel {
+
+  background: var(--arcane-light-card);
+
+  border: 1px solid var(--arcane-light-border);
+
+  border-radius: 5px;
+
+  padding: 25px;
+
+  color: var(--arcane-light-text);
+
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    color 0.4s ease;
+}
+
+
+.dark .categories-panel {
+
+  background: var(--arcane-dark-card);
+
+  border-color: var(--arcane-dark-border);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   CATEGORIA ATIVA
+   ========================================================= */
+
+.category-active {
+
+  background: var(--arcane-gold);
+
+  color: #080d14;
+
+  border-radius: 4px;
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+
+.category-active:hover {
+
+  background: var(--arcane-gold-light);
+}
+
+
+/* =========================================================
+   CARDS DE LIVROS
+   ========================================================= */
+
+.book-card {
+
+  position: relative;
+
+  overflow: hidden;
+
+  background: var(--arcane-light-card);
+
+  border: 1px solid var(--arcane-light-border);
+
+  border-radius: 5px;
+
+  color: var(--arcane-light-text);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.4s ease;
+}
+
+
+.book-card:hover {
+
+  transform: translateY(-5px);
+
+  border-color: var(--arcane-gold);
+
+  box-shadow:
+    0 10px 30px rgba(16, 36, 58, 0.12);
+}
+
+
+/* Cards no escuro */
+
+.dark .book-card {
+
+  background: var(--arcane-dark-card);
+
+  border-color: var(--arcane-dark-border);
+
+  color: var(--arcane-dark-text);
+}
+
+
+.dark .book-card:hover {
+
+  border-color: var(--arcane-gold);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================================================
+   CAPA DO LIVRO
+   ========================================================= */
+
+.book-cover {
+
+  width: 100%;
+
+  aspect-ratio: 2 / 3;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+
+/* =========================================================
+   INFORMAÇÕES DO LIVRO
+   ========================================================= */
+
+.book-info {
+
+  padding: 18px;
+}
+
+
+.book-title {
+
+  font-size: 1.2rem;
+
+  font-weight: 700;
+
+  color: var(--arcane-light-text);
+}
+
+
+.dark .book-title {
+
+  color: var(--arcane-dark-text);
+}
+
+
+.book-author {
+
+  margin-top: 5px;
+
+  font-size: 0.95rem;
+
+  color: var(--arcane-light-text-secondary);
+}
+
+
+.dark .book-author {
+
+  color: var(--arcane-dark-text-secondary);
+}
+
+
+/* =========================================================
+   TAGS / GÊNEROS
+   ========================================================= */
+
+.book-tag {
+
+  display: inline-block;
+
+  margin-top: 10px;
+
+  padding: 4px 10px;
+
+  border-radius: 20px;
+
+  background: #eee5d3;
+
+  color: #75572c;
+
+  font-size: 0.75rem;
+
+  font-weight: 700;
+}
+
+
+.dark .book-tag {
+
+  background: #302019;
+
+  color: var(--arcane-gold-light);
+}
+
+
+/* =========================================================
+   PREÇO
+   ========================================================= */
+
+.book-price {
+
+  margin-top: 10px;
+
+  color: var(--arcane-gold-dark);
+
+  font-weight: 700;
+}
+
+
+.dark .book-price {
+
+  color: var(--arcane-gold-light);
+}
+
+
+/* =========================================================
+   ESTRELAS / AVALIAÇÃO
+   ========================================================= */
+
+.book-rating {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 8px;
+
+  color: var(--arcane-gold);
+}
+
+
+/* =========================================================
+   BARRA DE NAVEGAÇÃO
+   ========================================================= */
+
+.arcane-navbar {
+
+  background: #fffaf0;
+
+  border-bottom: 1px solid var(--arcane-light-border);
+
+  color: var(--arcane-light-text);
+
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease;
+}
+
+
+.dark .arcane-navbar {
+
+  background: #080d14;
+
+  border-color: var(--arcane-dark-border);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* Links */
+
+.arcane-navbar a {
+
+  color: inherit;
+
+  transition:
+    color 0.2s ease;
+}
+
+
+.arcane-navbar a:hover {
+
+  color: var(--arcane-gold);
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.arcane-logo {
+
+  color: var(--arcane-light-text);
+
+  font-weight: 700;
+
+  letter-spacing: 0.15em;
+}
+
+
+.dark .arcane-logo {
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.arcane-search {
+
+  background: #fffaf0;
+
+  border: 1px solid var(--arcane-light-border);
+
+  color: var(--arcane-light-text);
+
+  border-radius: 5px;
+
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+
+.arcane-search:focus {
+
+  border-color: var(--arcane-gold);
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgba(201, 164, 92, 0.15);
+}
+
+
+.dark .arcane-search {
+
+  background: #101923;
+
+  border-color: var(--arcane-dark-border);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+input,
+textarea,
+select {
+
+  background-color: var(--arcane-light-card);
+
+  color: var(--arcane-light-text);
+
+  border-color: var(--arcane-light-border);
+}
+
+
+.dark input,
+.dark textarea,
+.dark select {
+
+  background-color: var(--arcane-dark-card);
+
+  color: var(--arcane-dark-text);
+
+  border-color: var(--arcane-dark-border);
+}
+
+
+input:focus,
+textarea:focus,
+select:focus {
+
+  border-color: var(--arcane-gold);
+
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgba(201, 164, 92, 0.15);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.arcane-footer {
+
+  padding: 50px 5%;
+
+  background: #ebe2d1;
+
+  border-top: 1px solid var(--arcane-light-border);
+
+  color: var(--arcane-light-text);
+
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+
+.dark .arcane-footer {
+
+  background: #080d14;
+
+  border-color: var(--arcane-dark-border);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   QUOTES
+   ========================================================= */
+
+.arcane-quote {
+
+  font-style: italic;
+
+  color: var(--arcane-light-text-secondary);
+
+  line-height: 1.8;
+}
+
+
+.dark .arcane-quote {
+
+  color: var(--arcane-dark-text-secondary);
+}
+
+
+/* =========================================================
+   LINHAS DECORATIVAS
+   ========================================================= */
+
+.arcane-divider {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  margin: 25px 0;
+}
+
+
+.arcane-divider::before,
+.arcane-divider::after {
+
+  content: "";
+
+  height: 1px;
+
+  flex: 1;
+
+  background: var(--arcane-gold);
+}
+
+
+.arcane-divider-icon {
+
+  color: var(--arcane-gold);
+
+  font-size: 1.2rem;
+}
+
+
+
+
+/* =========================================================
+   DARK MODE GLOBAL
+   ========================================================= */
+
+.dark {
+
+  color-scheme: dark;
+}
+
+
+.dark body {
+
+  background-color: var(--arcane-dark-bg);
+
+  color: var(--arcane-dark-text);
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+
+  width: 9px;
+
+  height: 9px;
+}
+
+
+::-webkit-scrollbar-track {
+
+  background: #101923;
+}
+
+
+::-webkit-scrollbar-thumb {
+
+  background: #51432e;
+
+  border-radius: 10px;
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+
+  background: var(--arcane-gold);
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .library-hero {
+
+    min-height: 600px;
+
+    background-position: center;
+  }
+
+
+  .library-hero-content {
+
+    padding: 60px 25px;
+  }
+
+
+  .library-hero-title {
+
+    font-size: 3rem;
+  }
+
+
+  .books-section {
+
+    padding: 45px 20px;
+  }
+
+
+  .arcane-section-title {
+
+    font-size: 2rem;
+  }
+}
+
+
+/* =========================================================
+   TELAS MUITO PEQUENAS
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .library-hero {
+
+    min-height: 550px;
+
+    background-position: 60% center;
+  }
+
+
+  .library-hero-content {
+
+    padding: 45px 20px;
+  }
+
+
+  .library-hero-title {
+
+    font-size: 2.5rem;
+
+    letter-spacing: 0.05em;
+  }
+
+
+  .library-hero-subtitle {
+
+    font-size: 1rem;
+  }
+
+
+  .arcane-button {
+
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   TRANSIÇÕES
+   ========================================================= */
+
+body,
+main,
+.arcane-navbar,
+.books-section,
+.book-card,
+.categories-panel,
+.arcane-footer,
+.arcane-search {
+
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease;
 }
