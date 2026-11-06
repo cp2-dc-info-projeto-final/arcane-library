@@ -2,7 +2,7 @@ export interface User {
   id: number;
   foto: string;
   login: string;
-  cpf: number;
+  cpf: string;
   datanasc: number;
   telefone: number;
   email: string;
@@ -13,7 +13,7 @@ export interface UserFormData {
   id: number;
   foto: string;
   login: string;
-  cpf: number;
+  cpf: string;
   datanasc: number;
   telefone: number;
   email: string;

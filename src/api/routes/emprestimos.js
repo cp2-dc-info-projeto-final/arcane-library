@@ -158,7 +158,40 @@ router.post('/', verifyToken, isAdmin, async function (req, res) {
     client.release();
   }
 });
+router.get('/meus', verifyToken, async function (req, res) {
+  try {
+    const idUsuario = req.user.id;
 
+    const query = `
+      SELECT
+        e.id,
+        e.id_usuario,
+        e.id_livro,
+        l.titulo AS livro,
+        TO_CHAR(e.data_de_emprestimo, 'YYYY-MM-DD') AS data_de_emprestimo,
+        TO_CHAR(e.data_fim_emprestimo, 'YYYY-MM-DD') AS data_fim_emprestimo,
+        e.status_emprestimo
+      FROM emprestimo e
+      INNER JOIN livro l
+        ON l.id = e.id_livro
+      WHERE e.id_usuario = $1
+      ORDER BY e.id DESC
+    `;
+
+    const result = await pool.query(query, [idUsuario]);
+
+    return sendSuccess(
+      res,
+      200,
+      'Empréstimos do usuário encontrados',
+      result.rows
+    );
+
+  } catch (error) {
+    console.error('Erro ao buscar empréstimos do usuário:', error);
+    return sendError(res, 500, 'Erro interno do servidor');
+  }
+});
 router.get('/:id', verifyToken, isAdmin, async function (req, res) {
   try {
     const { id } = req.params;

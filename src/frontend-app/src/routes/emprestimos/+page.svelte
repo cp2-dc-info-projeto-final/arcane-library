@@ -44,7 +44,7 @@
                 tag="h2"
                 class="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white"
             >
-                Emprestimo
+                Empréstimos
             </Heading>
 
             <button

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import EmprestimosTable from '../../components/EmprestimosTable.svelte';
-  </script>
-  
-  <EmprestimosTable />
-  
+  import EmprestimosUserTable from '../../components/EmprestimoUserTable.svelte';
+</script>
+
+<EmprestimosUserTable />

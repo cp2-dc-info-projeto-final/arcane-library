@@ -24,7 +24,7 @@ function sendError(res, status, message, errors = []) {
  * GET /
  * Buscar todos os livros com filtro por busca e categorias
  */
-router.get('/', verifyToken, isAdmin, async function (req, res) {
+router.get('/', verifyToken,  async function (req, res) {
   try {
     const consulta = req.query.consulta ? `%${req.query.consulta}%` : '%';
     let categoriasIds = [];

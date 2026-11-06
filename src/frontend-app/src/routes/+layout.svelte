@@ -19,9 +19,9 @@
 
 	<main class="flex theme-background flex-col items-center justify-center min-h-screen w-full">
 		<Menu /> 
-		<div class="w-full max-w-3xl px-4 md:px-8">
+		<div class="w-full px-0 pt-20">
 			{@render children()}
-		</div>
+		  </div>
 	</main>
 
 
