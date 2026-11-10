@@ -1,14 +1,15 @@
+
 var express = require('express');
 var router = express.Router();
 const pool = require('../db/config');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { verifyToken, isAdmin } = require('../middlewares/auth');
 
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
+
   if (message) payload.message = message;
   if (typeof data !== 'undefined') payload.data = data;
+
   return res.status(status).json(payload);
 }
 
@@ -20,54 +21,84 @@ function sendError(res, status, message, errors = []) {
   });
 }
 
-/* GET - Buscar todos as categorias */
-// requer usuário autenticado como admin
-router.get('/', verifyToken, isAdmin, async function(req, res) {
+/* GET - Buscar todas as categorias
+   Qualquer usuário autenticado pode consultar */
+router.get('/', verifyToken, async function(req, res) {
   try {
-    const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query("SELECT id_categorias, nome FROM categorias WHERE nome LIKE $1 ORDER BY id_categorias", [consulta]);
+    const consulta = req.query.consulta
+      ? '%' + req.query.consulta + '%'
+      : '%';
+
+    const result = await pool.query(
+      `SELECT id_categorias, nome
+       FROM categorias
+       WHERE nome LIKE $1
+       ORDER BY nome ASC`,
+      [consulta]
+    );
+
     return sendSuccess(res, 200, null, result.rows);
   } catch (error) {
-    console.error('Erro ao buscar  Categoria:', error);
+    console.error('Erro ao buscar categorias:', error);
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
-/* POST - Criar nova Categoria */
+/* POST - Criar nova categoria
+   Somente administradores */
 router.post('/', verifyToken, isAdmin, async function(req, res) {
   try {
     const { nome } = req.body;
-    
-    console.log(req.body);
+
+    if (!nome || !nome.trim()) {
+      return sendError(res, 400, 'O nome da categoria é obrigatório');
+    }
+
     const result = await pool.query(
-      "INSERT INTO categorias (nome) VALUES ($1) RETURNING id_categorias, nome",
-      [nome]
+      `INSERT INTO categorias (nome)
+       VALUES ($1)
+       RETURNING id_categorias, nome`,
+      [nome.trim()]
     );
 
-    return sendSuccess(res, 201, 'Categoria criada com sucesso', result.rows[0]);
+    return sendSuccess(
+      res,
+      201,
+      'Categoria criada com sucesso',
+      result.rows[0]
+    );
   } catch (error) {
     console.error('Erro ao criar categoria:', error);
-    // Verificar se é erro de constraint
+
     if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
+      return sendError(
+        res,
+        400,
+        'Dados inválidos. Verifique os campos e tente novamente.'
+      );
     }
+
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
-
-
-/* GET parametrizado - Buscar categoria por nome */
+/* GET parametrizado - Buscar categoria por ID
+   Mantido restrito aos administradores */
 router.get('/:id', verifyToken, isAdmin, async function(req, res) {
-  console.log("ENTROUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
   try {
-    const { nome } = req.body;
-    const result = await pool.query("SELECT id_categorias, nome FROM categorias WHERE id_categorias = $1", [req.params.id]);
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT id_categorias, nome
+       FROM categorias
+       WHERE id_categorias = $1`,
+      [id]
+    );
 
     if (result.rows.length === 0) {
-      return sendError(res, 404, 'Categoria não encontrado');
+      return sendError(res, 404, 'Categoria não encontrada');
     }
-    console.log(result.rows[0]);
+
     return sendSuccess(res, 200, null, result.rows[0]);
   } catch (error) {
     console.error('Erro ao buscar categoria:', error);
@@ -75,49 +106,81 @@ router.get('/:id', verifyToken, isAdmin, async function(req, res) {
   }
 });
 
-/* PUT - Atualizar categoria */
+/* PUT - Atualizar categoria
+   Somente administradores */
 router.put('/:id', verifyToken, isAdmin, async function(req, res) {
-  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
   try {
     const { id } = req.params;
     const { nome } = req.body;
-    
-    let query, params;
-    
-      query = "UPDATE categorias SET nome = $1 WHERE id_categorias = $2 RETURNING id_categorias, nome";
-      params = [nome, id];
-    const result = await pool.query(query, params);
-    
-    return sendSuccess(res, 200, 'Categoria atualizada com sucesso', result.rows[0]);
+
+    if (!nome || !nome.trim()) {
+      return sendError(res, 400, 'O nome da categoria é obrigatório');
+    }
+
+    const result = await pool.query(
+      `UPDATE categorias
+       SET nome = $1
+       WHERE id_categorias = $2
+       RETURNING id_categorias, nome`,
+      [nome.trim(), id]
+    );
+
+    if (result.rows.length === 0) {
+      return sendError(res, 404, 'Categoria não encontrada');
+    }
+
+    return sendSuccess(
+      res,
+      200,
+      'Categoria atualizada com sucesso',
+      result.rows[0]
+    );
   } catch (error) {
     console.error('Erro ao atualizar categoria:', error);
-    // Verificar se é erro de constraint
+
     if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
+      return sendError(
+        res,
+        400,
+        'Dados inválidos. Verifique os campos e tente novamente.'
+      );
     }
+
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
-/* DELETE - Remover categoria */
+/* DELETE - Remover categoria
+   Somente administradores */
 router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
   try {
     const { id } = req.params;
-    
-    // Verificar se a categoria existe
-    const categoriasExists = await pool.query('SELECT id_categorias FROM categorias WHERE id_categorias = $1', [id]);
+
+    const categoriasExists = await pool.query(
+      `SELECT id_categorias
+       FROM categorias
+       WHERE id_categorias = $1`,
+      [id]
+    );
+
     if (categoriasExists.rows.length === 0) {
       return sendError(res, 404, 'Categoria não encontrada');
     }
-    
-    await pool.query('DELETE FROM categorias WHERE id_categorias = $1', [id]);
-    
-    return sendSuccess(res, 200, 'Categoria deletada com sucesso');
+
+    await pool.query(
+      'DELETE FROM categorias WHERE id_categorias = $1',
+      [id]
+    );
+
+    return sendSuccess(
+      res,
+      200,
+      'Categoria deletada com sucesso'
+    );
   } catch (error) {
     console.error('Erro ao deletar categoria:', error);
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
-
 
 module.exports = router;

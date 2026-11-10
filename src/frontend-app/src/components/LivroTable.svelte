@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { Button, Spinner, Modal } from 'flowbite-svelte';
     import { TrashBinOutline, UserEditOutline } from 'flowbite-svelte-icons';
+    import { type User, getCurrentUser } from '$lib/auth';
     import { goto } from '$app/navigation';
     import api from '$lib/api';
     import type { ApiResponse } from '$lib/api';
@@ -15,7 +16,7 @@
 
     let livros: Livro[] = [];
     let categorias: Categoria[] = [];
-
+    let user: User | null = null;
     let loading = true;
     let deleting = false;
     let error = '';
@@ -23,14 +24,25 @@
 
     let abrirModalDelete = false;
     let livroParaDeletar: Livro | null = null;
-
     let categoriasSelecionadas: number[] = [];
 
     onMount(async () => {
+        await carregarUsuario();
         await carregarCategorias();
         await filtrarLivros();
     });
 
+    // CARREGAR USUÁRIO AUTENTICADO
+    async function carregarUsuario() {
+        try {
+            user = await getCurrentUser();
+        } catch (e) {
+            console.error('Erro ao carregar usuário:', e);
+            user = null;
+        }
+    }
+
+    // CARREGAR CATEGORIAS
     async function carregarCategorias() {
         try {
             const res = await api.get('/categorias');
@@ -43,6 +55,7 @@
         }
     }
 
+    // FILTRAR LIVROS
     async function filtrarLivros() {
         loading = true;
         error = '';
@@ -55,10 +68,14 @@
             }
 
             if (categoriasSelecionadas.length > 0) {
-                params.set('categorias', categoriasSelecionadas.join(','));
+                params.set(
+                    'categorias',
+                    categoriasSelecionadas.join(',')
+                );
             }
 
             const query = params.toString();
+
             const res = await api.get(
                 query ? `/livros?${query}` : '/livros'
             );
@@ -68,13 +85,16 @@
             if (body?.success) {
                 livros = body.data ?? [];
             } else {
-                error = body?.message || 'Não foi possível carregar os livros.';
+                error = body?.message ||
+                    'Não foi possível carregar os livros.';
                 livros = [];
             }
         } catch (e: any) {
             console.error('Erro ao carregar livros:', e);
 
-            const body = e.response?.data as ApiResponse<Livro[]> | undefined;
+            const body = e.response?.data as
+                ApiResponse<Livro[]> | undefined;
+
             error = body?.message || 'Erro ao carregar os livros.';
             livros = [];
         } finally {
@@ -82,27 +102,37 @@
         }
     }
 
+    // SELECIONAR CATEGORIA
     function toggleCategoria(idCategoria: number) {
         if (categoriasSelecionadas.includes(idCategoria)) {
-            categoriasSelecionadas = categoriasSelecionadas.filter(
-                id => id !== idCategoria
-            );
+            categoriasSelecionadas =
+                categoriasSelecionadas.filter(
+                    id => id !== idCategoria
+                );
         } else {
-            categoriasSelecionadas = [...categoriasSelecionadas, idCategoria];
+            categoriasSelecionadas = [
+                ...categoriasSelecionadas,
+                idCategoria
+            ];
         }
     }
 
+    // LIMPAR FILTROS
     async function limparFiltros() {
         consulta = '';
         categoriasSelecionadas = [];
         await filtrarLivros();
     }
 
+    // ABRIR MODAL DE EXCLUSÃO
     function abrirDelete(livro: Livro) {
+        if (user?.role !== 'admin') return;
+
         livroParaDeletar = livro;
         abrirModalDelete = true;
     }
 
+    // CANCELAR EXCLUSÃO
     function cancelarDelete() {
         if (deleting) return;
 
@@ -110,7 +140,14 @@
         livroParaDeletar = null;
     }
 
+    // CONFIRMAR EXCLUSÃO
     async function confirmarDelete() {
+        if (user?.role !== 'admin') {
+            abrirModalDelete = false;
+            livroParaDeletar = null;
+            return;
+        }
+
         if (!livroParaDeletar || deleting) return;
 
         const id = livroParaDeletar.id;
@@ -128,7 +165,8 @@
             const body = res.data as ApiResponse<null>;
 
             if (body && body.success === false) {
-                error = body.message || 'Não foi possível excluir o livro.';
+                error = body.message ||
+                    'Não foi possível excluir o livro.';
                 return;
             }
 
@@ -157,6 +195,7 @@
 </svelte:head>
 
 <div class="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+
     <!-- CABEÇALHO -->
     <header class="space-y-4">
         <div class="flex items-center gap-3">
@@ -176,7 +215,7 @@
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        d="M12 7v14m0-14C10.5 5.5 8.5 5 5 5v14c3.5 0 5.5.5 7 2m0-14c1.5-1.5 3.5-2 7-2v14c-3.5 0-5.5.5-7 2"
+                        d="M12 7v14m0-14C10.5 5.5 8.5 5 5 5v14c3.5 0 5.5.5 7 2m0-14c1.5-1.5 3.5-2 7-2v14c-3.5 0-5.5-.5-7 2"
                     />
                 </svg>
             </div>
@@ -185,6 +224,7 @@
                 <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
                     Acervo de livros
                 </h1>
+
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Descubra histórias, explore categorias e gerencie seu acervo.
                 </p>
@@ -198,7 +238,11 @@
                        text-violet-800 dark:bg-violet-950 dark:text-violet-300"
             >
                 <span class="h-2 w-2 rounded-full bg-violet-500"></span>
-                {livros.length} {livros.length === 1 ? 'livro encontrado' : 'livros encontrados'}
+
+                {livros.length}
+                {livros.length === 1
+                    ? 'livro encontrado'
+                    : 'livros encontrados'}
             </span>
 
             {#if categoriasSelecionadas.length > 0}
@@ -207,7 +251,9 @@
                            font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300"
                 >
                     {categoriasSelecionadas.length}
-                    {categoriasSelecionadas.length === 1 ? 'categoria selecionada' : 'categorias selecionadas'}
+                    {categoriasSelecionadas.length === 1
+                        ? 'categoria selecionada'
+                        : 'categorias selecionadas'}
                 </span>
             {/if}
         </div>
@@ -259,6 +305,7 @@
             </div>
         </div>
 
+        <!-- CATEGORIAS -->
         <div>
             <div class="mb-3 flex items-center justify-between gap-3">
                 <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">
@@ -302,9 +349,14 @@
                                     viewBox="0 0 24 24"
                                     aria-hidden="true"
                                 >
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m5 12 4 4L19 6"
+                                    />
                                 </svg>
                             {/if}
+
                             {categoria.nome}
                         </button>
                     {/each}
@@ -316,8 +368,11 @@
             {/if}
         </div>
 
-        <div class="flex flex-col gap-2 border-t border-gray-100 pt-4
-                    dark:border-gray-700 sm:flex-row">
+        <!-- BOTÕES DE FILTRO -->
+        <div
+            class="flex flex-col gap-2 border-t border-gray-100 pt-4
+                   dark:border-gray-700 sm:flex-row"
+        >
             <Button
                 type="submit"
                 color="purple"
@@ -380,6 +435,7 @@
             aria-live="polite"
         >
             <Spinner color="purple" size="8" />
+
             <p class="text-sm text-gray-500 dark:text-gray-400">
                 Carregando acervo...
             </p>
@@ -439,6 +495,7 @@
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">
                     Livros do acervo
                 </h2>
+
                 <span class="text-sm text-gray-500 dark:text-gray-400">
                     {livros.length} resultado(s)
                 </span>
@@ -491,6 +548,7 @@
 
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     Registro #{livro.id}
+
                                     {#if livro.ano_de_publicacao}
                                         <span class="mx-1">·</span>
                                         {livro.ano_de_publicacao}
@@ -498,44 +556,48 @@
                                 </p>
                             </div>
 
+                            <!-- AÇÕES EXCLUSIVAS DO ADMINISTRADOR -->
                             <div class="flex shrink-0 items-center gap-1.5">
-                                <button
-                                    type="button"
-                                    aria-label={`Editar ${livro.titulo}`}
-                                    title="Editar livro"
-                                    onclick={() => goto(`/livros/edit/${livro.id}`)}
-                                    class="inline-flex h-9 w-9 items-center justify-center
-                                           rounded-lg border border-violet-200 bg-white
-                                           text-violet-700 transition hover:bg-violet-100
-                                           focus:outline-none focus:ring-2 focus:ring-violet-300
-                                           dark:border-violet-900 dark:bg-gray-800
-                                           dark:text-violet-300 dark:hover:bg-violet-950"
-                                >
-                                    <UserEditOutline class="h-4 w-4" />
-                                </button>
+                                {#if user?.role === 'admin'}
+                                    <button
+                                        type="button"
+                                        aria-label={`Editar ${livro.titulo}`}
+                                        title="Editar livro"
+                                        onclick={() => goto(`/livros/edit/${livro.id}`)}
+                                        class="inline-flex h-9 w-9 items-center justify-center
+                                               rounded-lg border border-violet-200 bg-white
+                                               text-violet-700 transition hover:bg-violet-100
+                                               focus:outline-none focus:ring-2 focus:ring-violet-300
+                                               dark:border-violet-900 dark:bg-gray-800
+                                               dark:text-violet-300 dark:hover:bg-violet-950"
+                                    >
+                                        <UserEditOutline class="h-4 w-4" />
+                                    </button>
 
-                                <button
-                                    type="button"
-                                    aria-label={`Remover ${livro.titulo}`}
-                                    title="Remover livro"
-                                    onclick={() => abrirDelete(livro)}
-                                    disabled={deleting}
-                                    class="inline-flex h-9 w-9 items-center justify-center
-                                           rounded-lg border border-red-200 bg-white
-                                           text-red-600 transition hover:bg-red-50
-                                           focus:outline-none focus:ring-2 focus:ring-red-200
-                                           disabled:cursor-not-allowed disabled:opacity-50
-                                           dark:border-red-900 dark:bg-gray-800
-                                           dark:text-red-400 dark:hover:bg-red-950"
-                                >
-                                    <TrashBinOutline class="h-4 w-4" />
-                                </button>
+                                    <button
+                                        type="button"
+                                        aria-label={`Remover ${livro.titulo}`}
+                                        title="Remover livro"
+                                        onclick={() => abrirDelete(livro)}
+                                        disabled={deleting}
+                                        class="inline-flex h-9 w-9 items-center justify-center
+                                               rounded-lg border border-red-200 bg-white
+                                               text-red-600 transition hover:bg-red-50
+                                               focus:outline-none focus:ring-2 focus:ring-red-200
+                                               disabled:cursor-not-allowed disabled:opacity-50
+                                               dark:border-red-900 dark:bg-gray-800
+                                               dark:text-red-400 dark:hover:bg-red-950"
+                                    >
+                                        <TrashBinOutline class="h-4 w-4" />
+                                    </button>
+                                {/if}
                             </div>
                         </div>
 
                         <!-- INFORMAÇÕES -->
                         <div class="flex flex-1 flex-col gap-4 p-4">
-                            <!-- Categorias -->
+
+                            <!-- CATEGORIAS -->
                             <div>
                                 <p
                                     class="mb-2 text-xs font-semibold uppercase
@@ -570,7 +632,7 @@
 
                             <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
 
-                            <!-- Autor -->
+                            <!-- AUTOR -->
                             <div class="flex min-w-0 items-start gap-3">
                                 <div
                                     class="mt-0.5 flex h-8 w-8 shrink-0 items-center
@@ -597,13 +659,14 @@
                                     <p class="text-xs text-gray-400 dark:text-gray-500">
                                         Autor
                                     </p>
+
                                     <p class="break-words text-sm font-medium text-gray-800 dark:text-gray-200">
                                         {livro.autor || 'Não informado'}
                                     </p>
                                 </div>
                             </div>
 
-                            <!-- Editora -->
+                            <!-- EDITORA -->
                             <div class="flex min-w-0 items-start gap-3">
                                 <div
                                     class="mt-0.5 flex h-8 w-8 shrink-0 items-center
@@ -630,6 +693,7 @@
                                     <p class="text-xs text-gray-400 dark:text-gray-500">
                                         Editora
                                     </p>
+
                                     <p class="break-words text-sm font-medium text-gray-800 dark:text-gray-200">
                                         {livro.editora || 'Não informada'}
                                     </p>
@@ -663,6 +727,7 @@
                                     <p class="text-xs text-gray-400 dark:text-gray-500">
                                         ISBN
                                     </p>
+
                                     <p class="break-all text-sm font-medium text-gray-800 dark:text-gray-200">
                                         {livro.isbn || 'Não informado'}
                                     </p>
@@ -676,61 +741,66 @@
     {/if}
 </div>
 
-<!-- MODAL DE EXCLUSÃO -->
-<Modal bind:open={abrirModalDelete} size="sm">
-    <div class="p-6">
-        <div
-            class="mb-4 flex h-12 w-12 items-center justify-center
-                   rounded-xl bg-red-100 text-red-600
-                   dark:bg-red-950 dark:text-red-400"
-        >
-            <TrashBinOutline class="h-6 w-6" />
-        </div>
+<!-- MODAL DE EXCLUSÃO: SOMENTE ADMINISTRADORES -->
+{#if user?.role === 'admin'}
+    <Modal bind:open={abrirModalDelete} size="sm">
+        <div class="p-6">
+            <div
+                class="mb-4 flex h-12 w-12 items-center justify-center
+                       rounded-xl bg-red-100 text-red-600
+                       dark:bg-red-950 dark:text-red-400"
+            >
+                <TrashBinOutline class="h-6 w-6" />
+            </div>
 
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-            Excluir livro?
-        </h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                Excluir livro?
+            </h3>
 
-        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-            Você está prestes a excluir
-            <strong class="text-gray-900 dark:text-white">
-                {livroParaDeletar?.titulo}
-            </strong>.
-            Essa ação pode não ser reversível.
-        </p>
+            <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                Você está prestes a excluir
 
-        {#if error}
-            <p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-                {error}
+                <strong class="text-gray-900 dark:text-white">
+                    {livroParaDeletar?.titulo}
+                </strong>.
+
+                Essa ação pode não ser reversível.
             </p>
-        {/if}
 
-        <div class="mt-6 flex flex-col-reverse justify-end gap-2 sm:flex-row">
-            <Button
-                color="light"
-                onclick={cancelarDelete}
-                disabled={deleting}
-            >
-                Cancelar
-            </Button>
+            {#if error}
+                <p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                    {error}
+                </p>
+            {/if}
 
-            <Button
-                color="red"
-                onclick={confirmarDelete}
-                disabled={deleting}
-            >
-                {#if deleting}
-                    <span class="flex items-center gap-2">
-                        <span
-                            class="h-4 w-4 animate-spin rounded-full
-                                   border-2 border-white/40 border-t-white"
-                        ></span>
-                        Excluindo...
-                    </span>
-                {:else}
-                    Confirmar exclusão
-                {/if}
-            </Button>
+            <div class="mt-6 flex flex-col-reverse justify-end gap-2 sm:flex-row">
+                <Button
+                    color="light"
+                    onclick={cancelarDelete}
+                    disabled={deleting}
+                >
+                    Cancelar
+                </Button>
+
+                <Button
+                    color="red"
+                    onclick={confirmarDelete}
+                    disabled={deleting}
+                >
+                    {#if deleting}
+                        <span class="flex items-center gap-2">
+                            <span
+                                class="h-4 w-4 animate-spin rounded-full
+                                       border-2 border-white/40 border-t-white"
+                            ></span>
+
+                            Excluindo...
+                        </span>
+                    {:else}
+                        Confirmar exclusão
+                    {/if}
+                </Button>
+            </div>
         </div>
-    </div>
-</Modal>
+    </Modal>
+{/if}

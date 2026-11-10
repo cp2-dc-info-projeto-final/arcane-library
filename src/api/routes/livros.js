@@ -1,14 +1,21 @@
-var express = require('express');
-var router = express.Router();
+
+const express = require('express');
+const router = express.Router();
 
 const pool = require('../db/config');
 const upload = require('../middlewares/upload');
 const { verifyToken, isAdmin } = require('../middlewares/auth');
 
+// ==========================================
+// RESPOSTAS PADRONIZADAS
+// ==========================================
+
 function sendSuccess(res, status, message, data) {
   const payload = { success: true };
+
   if (message) payload.message = message;
   if (typeof data !== 'undefined') payload.data = data;
+
   return res.status(status).json(payload);
 }
 
@@ -20,46 +27,83 @@ function sendError(res, status, message, errors = []) {
   });
 }
 
-/*
- * GET /
- * Buscar todos os livros com filtro por busca e categorias
- */
-router.get('/', verifyToken,  async function (req, res) {
+// ==========================================
+// VALIDAÇÕES AUXILIARES
+// ==========================================
+
+function isValidId(id) {
+  return /^[1-9]\d*$/.test(String(id));
+}
+
+function parseCategorias(rawCategorias) {
+  if (!rawCategorias) return [];
+
+  const categorias = typeof rawCategorias === 'string'
+    ? JSON.parse(rawCategorias)
+    : rawCategorias;
+
+  if (!Array.isArray(categorias)) {
+    throw new Error('Categorias devem ser enviadas como uma lista.');
+  }
+
+  return categorias.map(String).filter(isValidId);
+}
+
+// ==========================================
+// CONSULTA COMPLETA DO LIVRO
+// ==========================================
+
+const livroSelect = `
+  SELECT
+    l.id,
+    l.id_autor,
+    l.titulo,
+    l.ano_de_publicacao,
+    l.editora,
+    l.isbn,
+    l.foto,
+    a.nome AS autor,
+    a.pseunonimo,
+
+    COALESCE(
+      json_agg(
+        DISTINCT jsonb_build_object(
+          'id_categorias', c.id_categorias,
+          'nome', c.nome
+        )
+      ) FILTER (WHERE c.id_categorias IS NOT NULL),
+      '[]'
+    ) AS categorias
+
+  FROM livro l
+
+  INNER JOIN autor a ON a.id = l.id_autor
+  LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
+  LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
+`;
+
+// ==========================================
+// GET /
+// Buscar todos os livros
+// ==========================================
+
+router.get('/', verifyToken, async function (req, res) {
   try {
-    const consulta = req.query.consulta ? `%${req.query.consulta}%` : '%';
+    const consulta = req.query.consulta
+      ? `%${req.query.consulta}%`
+      : '%';
+
     let categoriasIds = [];
 
     if (req.query.categorias) {
       categoriasIds = String(req.query.categorias)
         .split(',')
-        .map(Number)
-        .filter((id) => Number.isInteger(id) && id > 0);
+        .filter(isValidId);
     }
 
     let queryText = `
-      SELECT
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
-        a.nome AS autor,
-        a.pseunonimo,
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id_categorias', c.id_categorias,
-              'nome', c.nome
-            )
-          ) FILTER (WHERE c.id_categorias IS NOT NULL),
-          '[]'
-        ) AS categorias
-      FROM livro l
-      INNER JOIN autor a ON a.id = l.id_autor
-      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
+      ${livroSelect}
+
       WHERE (
         l.titulo ILIKE $1
         OR a.nome ILIKE $1
@@ -70,7 +114,10 @@ router.get('/', verifyToken,  async function (req, res) {
     const queryParams = [consulta];
 
     if (categoriasIds.length > 0) {
-      queryText += ` AND lc.id_categorias = ANY($2::bigint[])`;
+      queryText += `
+        AND lc.id_categorias = ANY($2::BIGINT[])
+      `;
+
       queryParams.push(categoriasIds);
     }
 
@@ -85,65 +132,75 @@ router.get('/', verifyToken,  async function (req, res) {
         l.foto,
         a.nome,
         a.pseunonimo
+
       ORDER BY l.id
     `;
 
     const result = await pool.query(queryText, queryParams);
+
     return sendSuccess(res, 200, null, result.rows);
+
   } catch (error) {
     console.error('Erro ao buscar livros:', error);
+
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
-/*
- * POST /
- * Cadastrar novo livro
- */
+// ==========================================
+// POST /
+// Cadastrar novo livro
+// ==========================================
+
 router.post(
   '/',
   verifyToken,
   isAdmin,
   upload.single('foto'),
   async function (req, res) {
+
     const client = await pool.connect();
+    let transactionStarted = false;
 
     try {
       const id_autor = req.body.id_autor || req.body.autor;
       const rawCategorias = req.body.id_categorias || req.body.categorias;
-      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
 
-      if (!id_autor) {
-        return sendError(res, 400, 'ID do autor é obrigatório.');
+      const {
+        titulo,
+        ano_de_publicacao,
+        editora,
+        isbn
+      } = req.body;
+
+      // Validar dados obrigatórios
+
+      if (!titulo || !id_autor) {
+        return sendError(res, 400, 'Título e autor são obrigatórios.');
       }
 
-      let categoriasIds = [];
-
-      if (rawCategorias) {
-        try {
-          categoriasIds =
-            typeof rawCategorias === 'string'
-              ? JSON.parse(rawCategorias)
-              : rawCategorias;
-
-          if (!Array.isArray(categoriasIds)) {
-            return sendError(
-              res,
-              400,
-              'Categorias devem ser enviadas como uma lista.'
-            );
-          }
-
-          categoriasIds = categoriasIds
-            .map(Number)
-            .filter((id) => Number.isInteger(id) && id > 0);
-        } catch (error) {
-          return sendError(res, 400, 'Formato de categorias inválido.');
-        }
+      if (!isValidId(id_autor)) {
+        return sendError(res, 400, 'ID do autor inválido.');
       }
+
+      // Processar categorias
+
+      let categoriasIds;
+
+      try {
+        categoriasIds = parseCategorias(rawCategorias);
+      } catch (error) {
+        return sendError(res, 400, error.message);
+      }
+
+      // Verificar autor
 
       const autorExists = await client.query(
-        `SELECT id FROM autor WHERE id = $1`,
+        `
+        SELECT id
+        FROM autor
+        WHERE id = $1::BIGINT
+        `,
         [id_autor]
       );
 
@@ -151,12 +208,14 @@ router.post(
         return sendError(res, 400, 'Autor não encontrado.');
       }
 
+      // Verificar categorias
+
       if (categoriasIds.length > 0) {
         const categoriasExists = await client.query(
           `
           SELECT id_categorias
           FROM categorias
-          WHERE id_categorias = ANY($1::bigint[])
+          WHERE id_categorias = ANY($1::BIGINT[])
           `,
           [categoriasIds]
         );
@@ -170,7 +229,16 @@ router.post(
         }
       }
 
+      // Iniciar transação
+
       await client.query('BEGIN');
+      transactionStarted = true;
+
+      // Nome da imagem enviada pelo Multer
+
+      const foto = req.file ? req.file.filename : null;
+
+      // Inserir livro
 
       const livroResult = await client.query(
         `
@@ -183,7 +251,15 @@ router.post(
           foto
         )
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, id_autor, titulo, ano_de_publicacao, editora, isbn, foto
+
+        RETURNING
+          id,
+          id_autor,
+          titulo,
+          ano_de_publicacao,
+          editora,
+          isbn,
+          foto
         `,
         [
           titulo,
@@ -191,19 +267,21 @@ router.post(
           id_autor,
           editora,
           isbn,
-          req.foto?.filename || null
+          foto
         ]
       );
 
-      console.log(req);
-
       const livro = livroResult.rows[0];
 
-      for (const categoriaId of categoriasIds) 
-      {
+      // Associar categorias
+
+      for (const categoriaId of categoriasIds) {
         await client.query(
           `
-          INSERT INTO livro_categoria (id_livro, id_categorias)
+          INSERT INTO livro_categoria (
+            id_livro,
+            id_categorias
+          )
           VALUES ($1, $2)
           `,
           [livro.id, categoriaId]
@@ -211,37 +289,15 @@ router.post(
       }
 
       await client.query('COMMIT');
+      transactionStarted = false;
 
-      const livroCompleto = await pool.query (
+      // Buscar livro completo
+
+      const livroCompleto = await pool.query(
         `
-        SELECT
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
+        ${livroSelect}
 
-          a.nome AS autor,
-          a.pseunonimo,
-
-          COALESCE(
-            json_agg(
-              DISTINCT jsonb_build_object(
-                'id_categorias', c.id_categorias,
-                'nome', c.nome
-              )
-            ) FILTER (WHERE c.id_categorias IS NOT NULL),
-            '[]'
-          ) AS categorias
-
-        FROM livro l
-
-        INNER JOIN autor a ON a.id = l.id_autor
-        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-        WHERE l.id = $1
+        WHERE l.id = $1::BIGINT
 
         GROUP BY
           l.id,
@@ -263,62 +319,52 @@ router.post(
         'Livro publicado com sucesso',
         livroCompleto.rows[0]
       );
-    }catch (error) {
-      await client.query('ROLLBACK');
+
+    } catch (error) {
+      if (transactionStarted) {
+        await client.query('ROLLBACK');
+      }
+
       console.error('Erro ao publicar livro:', error);
 
       if (error.code === '23505') {
-        return sendError(res, 400, 'ISBN já existe no sistema.');
+        return sendError(res, 409, 'ISBN já existe no sistema.');
+      }
+
+      if (error.code === '23503') {
+        return sendError(res, 400, 'Autor ou categoria inválida.');
+      }
+
+      if (error.code === '23514') {
+        return sendError(res, 400, 'Dados inválidos.');
       }
 
       return sendError(res, 500, 'Erro interno do servidor');
+
     } finally {
       client.release();
     }
   }
 );
 
+// ==========================================
+// GET /:id
+// Buscar livro por ID
+// ==========================================
 
-/*
-
- * GET /:id
- * Buscar um livro específico por ID
- */
-router.get('/:id', verifyToken, isAdmin, async function (req, res) {
-  try 
-  {
+router.get('/:id', verifyToken, async function (req, res) {
+  try {
     const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return sendError(res, 400, 'ID do livro inválido.');
+    }
 
     const result = await pool.query(
       `
-      SELECT
-        l.id,
-        l.id_autor,
-        l.titulo,
-        l.ano_de_publicacao,
-        l.editora,
-        l.isbn,
-        l.foto,
+      ${livroSelect}
 
-        a.nome AS autor,
-        a.pseunonimo,
-
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id_categorias', c.id_categorias,
-              'nome', c.nome
-            )
-          ) FILTER (WHERE c.id_categorias IS NOT NULL),
-          '[]'
-        ) AS categorias
-
-      FROM livro l
-
-      INNER JOIN autor a ON a.id = l.id_autor
-      LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-      LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-      WHERE l.id = $1
+      WHERE l.id = $1::BIGINT
 
       GROUP BY
         l.id,
@@ -335,23 +381,23 @@ router.get('/:id', verifyToken, isAdmin, async function (req, res) {
     );
 
     if (result.rows.length === 0) {
-      return sendError(res, 404, 'Livro não encontrado');
+      return sendError(res, 404, 'Livro não encontrado.');
     }
 
     return sendSuccess(res, 200, null, result.rows[0]);
+
   } catch (error) {
     console.error('Erro ao buscar livro:', error);
+
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });
 
+// ==========================================
+// PUT /:id
+// Atualizar livro
+// ==========================================
 
-/*
-
- * PUT /:id
-
- * Atualizar livro
- */
 router.put(
   '/:id',
   verifyToken,
@@ -360,50 +406,76 @@ router.put(
   async function (req, res) {
 
     const client = await pool.connect();
+    let transactionStarted = false;
 
     try {
-
       const { id } = req.params;
+
       const id_autor = req.body.id_autor || req.body.autor;
       const rawCategorias = req.body.id_categorias || req.body.categorias;
-      const { titulo, ano_de_publicacao, editora, isbn } = req.body;
 
-      let categoriasIds = [] ;
+      const {
+        titulo,
+        ano_de_publicacao,
+        editora,
+        isbn
+      } = req.body;
 
-      if (rawCategorias) {
-        try {
-          categoriasIds =
-            typeof rawCategorias === 'string'
-              ? JSON.parse(rawCategorias)
-              : rawCategorias;
+      // Validar IDs
 
-          if (!Array.isArray(categoriasIds)) {
-            return sendError(
-              res,
-              400,
-              'Categorias devem ser enviadas como uma lista.'
-            );
-          }
-
-          categoriasIds = categoriasIds
-            .map(Number)
-            .filter((id) => Number.isInteger(id) && id > 0);
-        } catch (error) {
-          return sendError(res, 400, 'Formato de categorias inválido.');
-        }
+      if (!isValidId(id)) {
+        return sendError(res, 400, 'ID do livro inválido.');
       }
 
-      const livroExists = await client.query (
-        `SELECT id, foto FROM livro WHERE id = $1`,
+      if (!isValidId(id_autor)) {
+        return sendError(res, 400, 'ID do autor inválido.');
+      }
+
+      if (!titulo) {
+        return sendError(res, 400, 'Título é obrigatório.');
+      }
+
+      // Processar categorias
+
+      let categoriasIds;
+
+      try {
+        categoriasIds = parseCategorias(rawCategorias);
+      } catch (error) {
+        return sendError(res, 400, error.message);
+      }
+
+      if (categoriasIds.length === 0) {
+        return sendError(
+          res,
+          400,
+          'O livro deve possuir pelo menos uma categoria.'
+        );
+      }
+
+      // Verificar livro e recuperar foto atual
+
+      const livroExists = await client.query(
+        `
+        SELECT id, foto
+        FROM livro
+        WHERE id = $1::BIGINT
+        `,
         [id]
       );
 
       if (livroExists.rows.length === 0) {
-        return sendError(res, 404, 'Livro não encontrado');
+        return sendError(res, 404, 'Livro não encontrado.');
       }
 
-      const autorExists = await client.query (
-        `SELECT id FROM autor WHERE id = $1`,
+      // Verificar autor
+
+      const autorExists = await client.query(
+        `
+        SELECT id
+        FROM autor
+        WHERE id = $1::BIGINT
+        `,
         [id_autor]
       );
 
@@ -411,24 +483,15 @@ router.put(
         return sendError(res, 400, 'Autor não encontrado.');
       }
 
-      if (categoriasIds.length === 0)
-       {
-        return sendError(
-          res,
-          400,
-          'O livro deve possuir pelo menos uma categoria.'
-        );
+      // Verificar categorias
 
-      }
-
-      const categoriasExists = await client.query (
+      const categoriasExists = await client.query(
         `
         SELECT id_categorias
         FROM categorias
-        WHERE id_categorias = ANY($1::bigint[])
+        WHERE id_categorias = ANY($1::BIGINT[])
         `,
         [categoriasIds]
-
       );
 
       if (categoriasExists.rows.length !== categoriasIds.length) {
@@ -437,15 +500,22 @@ router.put(
           400,
           'Uma ou mais categorias não foram encontradas.'
         );
-
       }
 
+      // Preservar foto antiga se não houver novo upload
 
       const fotoAtual = livroExists.rows[0].foto;
-      const fotoPath = req.file ? req.file.filename : fotoAtual;
+
+      const foto = req.file
+        ? req.file.filename
+        : fotoAtual;
+
+      // Iniciar transação
 
       await client.query('BEGIN');
+      transactionStarted = true;
 
+      // Atualizar livro
 
       await client.query(
         `
@@ -459,22 +529,38 @@ router.put(
           isbn = $5,
           foto = $6
 
-        WHERE id = $7
+        WHERE id = $7::BIGINT
         `,
-        [id_autor, titulo, ano_de_publicacao, editora, isbn, fotoPath, id]
+        [
+          id_autor,
+          titulo,
+          ano_de_publicacao,
+          editora,
+          isbn,
+          foto,
+          id
+        ]
       );
 
+      // Remover associações antigas
 
       await client.query(
-        `DELETE FROM livro_categoria WHERE id_livro = $1`,
+        `
+        DELETE FROM livro_categoria
+        WHERE id_livro = $1::BIGINT
+        `,
         [id]
       );
 
-      for (const categoriaId of categoriasIds) {
+      // Inserir novas associações
 
+      for (const categoriaId of categoriasIds) {
         await client.query(
           `
-          INSERT INTO livro_categoria (id_livro, id_categorias)
+          INSERT INTO livro_categoria (
+            id_livro,
+            id_categorias
+          )
           VALUES ($1, $2)
           `,
           [id, categoriaId]
@@ -482,37 +568,15 @@ router.put(
       }
 
       await client.query('COMMIT');
+      transactionStarted = false;
 
+      // Buscar livro atualizado
 
       const livroAtualizado = await pool.query(
         `
-        SELECT
-          l.id,
-          l.id_autor,
-          l.titulo,
-          l.ano_de_publicacao,
-          l.editora,
-          l.isbn,
-          l.foto,
+        ${livroSelect}
 
-          a.nome AS autor,
-          a.pseunonimo,
-
-          COALESCE(
-            json_agg(
-              DISTINCT jsonb_build_object(
-                'id_categorias', c.id_categorias,
-                'nome', c.nome
-              )
-            ) FILTER (WHERE c.id_categorias IS NOT NULL),
-            '[]'
-          ) AS categorias
-
-        FROM livro l
-        INNER JOIN autor a ON a.id = l.id_autor
-        LEFT JOIN livro_categoria lc ON lc.id_livro = l.id
-        LEFT JOIN categorias c ON c.id_categorias = lc.id_categorias
-        WHERE l.id = $1
+        WHERE l.id = $1::BIGINT
 
         GROUP BY
           l.id,
@@ -534,45 +598,73 @@ router.put(
         'Livro atualizado com sucesso',
         livroAtualizado.rows[0]
       );
-    }catch (error) {
-      await client.query('ROLLBACK');
+
+    } catch (error) {
+      if (transactionStarted) {
+        await client.query('ROLLBACK');
+      }
+
       console.error('Erro ao atualizar livro:', error);
 
       if (error.code === '23505') {
-        return sendError(res, 400, 'ISBN já existe no sistema.');
+        return sendError(res, 409, 'ISBN já existe no sistema.');
+      }
+
+      if (error.code === '23503') {
+        return sendError(res, 400, 'Autor ou categoria inválida.');
+      }
+
+      if (error.code === '23514') {
+        return sendError(res, 400, 'Dados inválidos.');
       }
 
       return sendError(res, 500, 'Erro interno do servidor');
+
     } finally {
       client.release();
     }
   }
 );
 
+// ==========================================
+// DELETE /:id
+// Remover livro
+// ==========================================
 
-/*
- * DELETE /:id
-
- * Remover livro
- */
 router.delete('/:id', verifyToken, isAdmin, async function (req, res) {
   try {
     const { id } = req.params;
 
+    if (!isValidId(id)) {
+      return sendError(res, 400, 'ID do livro inválido.');
+    }
+
     const livroExists = await pool.query(
-      `SELECT id FROM livro WHERE id = $1`,
+      `
+      SELECT id
+      FROM livro
+      WHERE id = $1::BIGINT
+      `,
       [id]
     );
 
     if (livroExists.rows.length === 0) {
-      return sendError(res, 404, 'Livro não encontrado');
+      return sendError(res, 404, 'Livro não encontrado.');
     }
 
-    await pool.query(`DELETE FROM livro WHERE id = $1`, [id]);
+    await pool.query(
+      `
+      DELETE FROM livro
+      WHERE id = $1::BIGINT
+      `,
+      [id]
+    );
 
     return sendSuccess(res, 200, 'Livro deletado com sucesso');
+
   } catch (error) {
     console.error('Erro ao deletar livro:', error);
+
     return sendError(res, 500, 'Erro interno do servidor');
   }
 });

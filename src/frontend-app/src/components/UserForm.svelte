@@ -115,25 +115,19 @@ function validarCPF(cpf: string): boolean {
 }
 
 
-  function atualizarCPF(valor: string) {
-    user.cpf = aplicarMascara(valor);
-    limparErroCampo('cpf');
+function atualizarCPF(valor: string) {
+  user.cpf = aplicarMascara(valor);
+  limparErroCampo('cpf');
 
-    const digitos = user.cpf.replace(/\D/g, '');
+  const digitos = user.cpf.replace(/\D/g, '');
 
-    if (!digitos.length) {
-      
-      errosCustomizados.cpf = '';
-    } else if (digitos.length < 11) {
-      
-
-      errosCustomizados.cpf = 'O CPF deve conter 11 dígitos.';
-    } else {
-      
-
-      errosCustomizados.cpf = validarCPF(digitos) ? '' : 'CPF inválido.';
-    }
-  }
+  errosCustomizados = {
+    ...errosCustomizados,
+    cpf: digitos.length > 0 && digitos.length < 11
+      ? 'O CPF deve conter 11 dígitos.'
+      : ''
+  };
+}
 
   function atualizarTelefone(valor: string) {
     let telefone = valor.replace(/\D/g, '').slice(0, 11);
@@ -171,6 +165,10 @@ function validarCPF(cpf: string): boolean {
     }
 
     fotoFile = file;
+    console.log('Arquivo guardado:', fotoFile);
+    console.log('Nome:', fotoFile.name);
+    console.log('Tipo:', fotoFile.type);
+    console.log('Tamanho:', fotoFile.size);
     error = '';
 
     const reader = new FileReader();
@@ -192,8 +190,8 @@ function validarCPF(cpf: string): boolean {
   onMount(async () => {
     hasToken = getToken() !== null;
 
-    if (id === null) return;
-
+    if (id === null && me !== 'true') return;
+    
     loading = true;
     error = '';
 
@@ -208,7 +206,9 @@ function validarCPF(cpf: string): boolean {
                   cpf: aplicarMascara(String(body.data.cpf ?? '')),
                   senha: ''
                };
-
+              fotoPerfil = body.data.foto
+              ? `http://localhost:3000/uploads/${body.data.foto}`
+              : '';
           errosCustomizados = {
             ...errosCustomizados,
             cpf: ''
@@ -233,19 +233,16 @@ function validarCPF(cpf: string): boolean {
   // de uma mensagem de erro armazenada anteriormente.
   const cpfLimpo = String(user.cpf ?? '').replace(/\D/g, '');
 
-  if (!validarCPF(cpfLimpo)) {
+  if (cpfLimpo.length !== 11) {
     errosCustomizados = {
       ...errosCustomizados,
-      cpf: cpfLimpo.length !== 11
-        ? 'O CPF deve conter 11 dígitos.'
-        : 'CPF inválido.'
+      cpf: 'O CPF deve conter 11 dígitos.'
     };
 
     error = 'Corrija o CPF antes de continuar.';
     return;
   }
 
-  // Limpa eventual erro anterior.
   errosCustomizados = {
     ...errosCustomizados,
     cpf: ''
@@ -301,9 +298,29 @@ function validarCPF(cpf: string): boolean {
       formData.append('role', user.role);
     }
 
-    if (fotoFile) {
-      formData.append('foto', fotoFile);
+        if (fotoFile instanceof File) {
+      formData.append('foto', fotoFile, fotoFile.name);
     }
+
+    console.log('========== ENVIO DO USUÁRIO ==========');
+    console.log('Arquivo selecionado:', fotoFile);
+    console.log('Arquivo no FormData:', formData.get('foto'));
+    console.log('Todos os campos enviados:');
+
+    formData.forEach((value, key) => {
+      console.log(
+        key,
+        value instanceof File
+          ? {
+              nome: value.name,
+              tipo: value.type,
+              tamanho: value.size
+            }
+          : value
+      );
+    });
+
+    console.log('======================================');
 
     const res = editando
       ? await api.put(targetRoute, formData)

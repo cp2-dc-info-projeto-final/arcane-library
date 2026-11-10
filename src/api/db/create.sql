@@ -113,7 +113,7 @@ CREATE TABLE exemplar (
 
 INSERT INTO usuario (foto, login, email, senha, cpf, datanasc, telefone, role) VALUES
 -- senha 123456
-('','Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
+('','Guiguizinho', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
 ('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'cliente');
 
 INSERT INTO categorias (nome) VALUES ('Romance');

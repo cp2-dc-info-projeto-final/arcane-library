@@ -1,8 +1,3 @@
-export interface CategoriaLivro {
-  id_categorias: number;
-  nome: string;
-}
-
 export interface Livro {
   id: number;
   id_autor: number;
@@ -11,6 +6,9 @@ export interface Livro {
   editora: string;
   isbn: number;
   foto?: string;
+
+  sinopse?: string;
+  arquivo?: string;
 
   autor: string;
   pseunonimo?: string;
@@ -27,4 +25,6 @@ export interface LivroFormData {
   editora: string;
   isbn: number;
   foto?: string;
+  sinopse?: string;
+  arquivo?: string;
 }

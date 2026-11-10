@@ -1,4 +1,10 @@
-import axios, { type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
+
+import axios, {
+  type AxiosResponse,
+  type AxiosError,
+  type InternalAxiosRequestConfig
+} from 'axios';
+
 import { removeToken } from './auth';
 
 export interface ApiFieldError {
@@ -21,26 +27,29 @@ export interface ApiFailure {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
-// Cria uma instância global do axios para API backend na porta 3000
+// Instância global do Axios
 const api = axios.create({
   baseURL: 'http://localhost:3000',
-  withCredentials: true, // Útil para CORS com cookies/sessão
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
 
 // Interceptor para adicionar automaticamente o token Bearer
 api.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
       const token = sessionStorage.getItem('auth_token');
+
       if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.set(
+          'Authorization',
+          `Bearer ${token}`
+        );
       }
     }
+
     return config;
   },
   (error: AxiosError) => {
@@ -48,18 +57,21 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para lidar com respostas 401 (token expirado)
+// Interceptor para lidar com respostas 401
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      // Token inválido ou expirado, remover usando função centralizada
+    if (
+      error.response?.status === 401 &&
+      typeof window !== 'undefined'
+    ) {
       removeToken();
-      // Redirecionar para login se não estiver na página de login
+
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
+
     return Promise.reject(error);
   }
 );

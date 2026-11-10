@@ -15,6 +15,12 @@ var emprestimosRouter = require('./routes/emprestimos');
 
 var app = express();
 
+
+app.use(
+    '/uploads',
+    express.static(path.join(__dirname, 'src', 'uploads'))
+);
+
 app.use(cors({
   origin: [
     'http://localhost',
@@ -39,11 +45,6 @@ app.use('/livros', livrosRouter);
 app.use('/autores', autoresRouter);
 app.use('/categorias', categoriasRouter);
 app.use('/emprestimos', emprestimosRouter);
-
-
-// SERVIR IMAGENS DA PASTA UPLOADS
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 app.use(function(req, res, next) {
   next(createError(404));
