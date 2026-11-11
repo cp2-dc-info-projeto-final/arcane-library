@@ -13,6 +13,8 @@ CREATE TABLE usuario (
     
     -- Constraints
     CONSTRAINT pk_usuario PRIMARY KEY (id),
+    CONSTRAINT uk_usuario_telefone UNIQUE (telefone),
+    CONSTRAINT uk_usuario_cpf UNIQUE (cpf),
     CONSTRAINT uk_usuario_login UNIQUE (login), -- unicidade
     CONSTRAINT uk_usuario_email UNIQUE (email), -- unicidade
     CONSTRAINT ck_usuario_login_length CHECK (length(login) >= 3 AND length(login) <= 50), -- comprimento
@@ -40,7 +42,7 @@ CREATE TABLE livro (
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,
      isbn text NOT NULL,
-     id_autor BIGINT NOT NULL,
+     id_autor BIGINT,
      foto TEXT,
 
     CONSTRAINT pk_livro PRIMARY KEY(id),
@@ -113,9 +115,18 @@ CREATE TABLE exemplar (
 
 INSERT INTO usuario (foto, login, email, senha, cpf, datanasc, telefone, role) VALUES
 -- senha 123456
-('','Guiguizinho', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'admin'),
-('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','','01/01/2009','', 'cliente');
+('','Guiguizinho', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','14','01/01/2009','22', 'admin'),
+('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','13','01/01/2009','21', 'cliente');
 
 INSERT INTO categorias (nome) VALUES ('Romance');
+INSERT INTO categorias (nome) VALUES ('Fiquissao');
+INSERT INTO categorias (nome) VALUES ('Comedia');
+INSERT INTO categorias (nome) VALUES ('Tehor');
+INSERT INTO categorias (nome) VALUES ('Piada');
+INSERT INTO categorias (nome) VALUES ('Meigo');
+
 
 INSERT INTO autor (nome, pseunonimo) VALUES ('Cleberson', '');
+INSERT INTO autor (nome, pseunonimo) VALUES ('Felipe meu brother', '');
+INSERT INTO autor (nome, pseunonimo) VALUES ('Só queria ser amado', '');
+INSERT INTO autor (nome, pseunonimo) VALUES ('a felicidade corre de mim', '');

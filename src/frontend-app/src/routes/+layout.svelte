@@ -1,37 +1,56 @@
-   <script lang="ts">
+
+<script lang="ts">
 	import '../app.css';
 	import Menu from '../components/Menu.svelte';
 	import { onMount } from 'svelte';
 	import { themeStore, applyTheme } from '$lib/themeStore';
-	import type { Season } from '$lib/themeStore';
-
+  
 	let { children } = $props();
-	let currentTheme: Season;
-
+  
 	onMount(() => {
-		themeStore.subscribe((theme) => {
-			currentTheme = theme;
-			applyTheme(theme);
-		});
+	  const unsubscribe = themeStore.subscribe((theme) => {
+		applyTheme(theme);
+	  });
+  
+	  return unsubscribe;
 	});
-</script>
-
-
-	<main class="flex theme-background flex-col items-center justify-center min-h-screen w-full">
-		<Menu /> 
-		<div class="w-full px-0 pt-20">
-			{@render children()}
-		  </div>
-	</main>
-
-
-
-<style>
+  </script>
+  
+  <main class="theme-background min-h-screen w-full">
+	<Menu />
+  
+	<div class="page-content">
+	  {@render children()}
+	</div>
+  </main>
+  
+  <style>
+	:global(html),
+	:global(body) {
+	  width: 100%;
+	  min-height: 100%;
+	  margin: 0;
+	}
+  
 	:global(html) {
-		transition: background 0.5s ease;
+	  transition: background 0.5s ease;
 	}
-
-	:global(main) {
-		transition: background 0.5s ease;
+  
+	:global(body) {
+	  overflow-x: hidden;
 	}
-</style>
+  
+	main {
+	  width: 100%;
+	  min-height: 100vh;
+	  transition: background 0.5s ease;
+	}
+  
+	.page-content {
+	  width: 100%;
+	  min-width: 0;
+	  padding-top: 80px;
+	  box-sizing: border-box;
+	}
+  </style>
+  
