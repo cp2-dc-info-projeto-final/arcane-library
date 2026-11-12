@@ -7,7 +7,7 @@ export interface Livro {
   isbn: number;
   foto?: string;
 
-  sinopse?: string;
+  sinopse: string | null;
   arquivo?: string;
 
   autor: string;
@@ -25,6 +25,6 @@ export interface LivroFormData {
   editora: string;
   isbn: number;
   foto?: string;
-  sinopse?: string;
+  sinopse: string | null;
   arquivo?: string;
 }

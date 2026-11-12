@@ -25,9 +25,9 @@
       lado: 'esquerda'
     },
     {
-      nome: 'Judce',
+      nome: 'João Miguel (@Judce_)',
       descricao:
-        'Opa! Eu sou o João Miguel, um tricolor de coração aspirante a programador, apaixonado por futebol e vôlei, multi-instrumentista e louco por Charlie Brown Jr., Belchior e Engenheiros do Hawaii! E Chuck Berry é o rei do rock.',
+        'Opa! Eu sou o João Miguel, um tricolor de coração aspirante a programador, apaixonado por futebol e vôlei, multi-instrumentista e louco por Charlie Brown Jr, Belchior e Engenheiros do Hawaii! E Chuck Berry é o rei do rock.',
       foto: '/images/judce.jpg',
       alt: 'Foto do João Miguel',
       lado: 'direita'

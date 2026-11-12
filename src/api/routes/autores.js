@@ -1,128 +1,190 @@
-var express = require('express');
-var router = express.Router();
+
+const express = require('express');
+const router = express.Router();
 const pool = require('../db/config');
+const upload = require('../middlewares/upload');
 const { verifyToken, isAdmin } = require('../middlewares/auth');
 
-function sendSuccess(res, status, message, data) {
-  const payload = { success: true };
-  if (message) payload.message = message;
-  if (typeof data !== 'undefined') payload.data = data;
-  return res.status(status).json(payload);
+function sendSuccess(res, data, message = 'Operação realizada com sucesso.') {
+    return res.json({
+        success: true,
+        message,
+        data
+    });
 }
 
 function sendError(res, status, message, errors = []) {
-  return res.status(status).json({
-    success: false,
-    message,
-    errors
-  });
+    return res.status(status).json({
+        success: false,
+        message,
+        errors
+    });
 }
 
-/* GET - Buscar todos os autores */
-router.get('/', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const consulta = req.query.consulta ? '%'+req.query.consulta+'%' : '%';
-    const result = await pool.query(
-      "SELECT id, nome, pseunonimo FROM autor WHERE nome LIKE $1 ORDER BY id",
-      [consulta]
-    );
-    return sendSuccess(res, 200, null, result.rows);
-  } catch (error) {
-    console.error('Erro ao buscar autores:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
+// LISTAR AUTORES
+router.get('/', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const consulta = req.query.consulta
+            ? `%${req.query.consulta.trim()}%`
+            : '%';
+
+        const result = await pool.query(
+            `SELECT id, nome, pseunonimo, foto, sinopse
+             FROM autor
+             WHERE nome ILIKE $1
+                OR pseunonimo ILIKE $1
+             ORDER BY nome`,
+            [consulta]
+        );
+
+        return sendSuccess(res, result.rows);
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, 'Erro ao listar autores.');
+    }
 });
 
-/* POST - Criar novo autor */
-router.post('/', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const { nome, pseunonimo } = req.body;
-    
-    if (!nome || nome.trim() === '') {
-      return sendError(res, 400, 'O nome do autor é obrigatório');
-    }
+// CADASTRAR AUTOR
+router.post('/', verifyToken, isAdmin, upload.single('foto'), async (req, res) => {
+    try {
+        const { nome, pseunonimo, sinopse } = req.body;
 
-    const result = await pool.query(
-      "INSERT INTO autor (nome, pseunonimo) VALUES ($1, $2) RETURNING id, nome, pseunonimo",
-      [nome, pseunonimo || null]
-    );
+        if (!nome || !nome.trim()) {
+            return sendError(res, 400, 'O nome do autor é obrigatório.', [
+                { field: 'nome', message: 'Informe o nome do autor.' }
+            ]);
+        }
 
-    return sendSuccess(res, 201, 'Autor criado com sucesso', result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao criar autor:', error);
-    if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
+        const foto = req.file ? req.file.filename : null;
+
+        const result = await pool.query(
+            `INSERT INTO autor (nome, pseunonimo, foto, sinopse)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, nome, pseunonimo, foto, sinopse`,
+            [
+                nome.trim(),
+                pseunonimo || null,
+                foto,
+                sinopse || null
+            ]
+        );
+
+        return sendSuccess(res, result.rows[0], 'Autor cadastrado com sucesso.');
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, 'Erro ao cadastrar autor.');
     }
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
 });
 
-/* GET - Buscar autor por ID */
-router.get('/:id', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const result = await pool.query(
-      "SELECT id, nome, pseunonimo FROM autor WHERE id = $1",
-      [req.params.id]
-    );
+// BUSCAR AUTOR INDIVIDUAL E SUAS OBRAS
+router.get('/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
 
-    if (result.rows.length === 0) {
-      return sendError(res, 404, 'Autor não encontrado');
+        const result = await pool.query(
+            `SELECT
+                a.id,
+                a.nome,
+                a.pseunonimo,
+                a.foto,
+                a.sinopse,
+                COALESCE(
+                    (
+                        SELECT json_agg(
+                            json_build_object(
+                                'id', l.id,
+                                'id_autor', l.id_autor,
+                                'titulo', l.titulo,
+                                'sinopse', l.sinopse,
+                                'ano_de_publicacao', l.ano_de_publicacao,
+                                'editora', l.editora,
+                                'isbn', l.isbn,
+                                'foto', l.foto
+                            )
+                            ORDER BY l.titulo
+                        )
+                        FROM livro l
+                        WHERE l.id_autor = a.id
+                    ),
+                    '[]'::json
+                ) AS obras
+             FROM autor a
+             WHERE a.id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return sendError(res, 404, 'Autor não encontrado.');
+        }
+
+        return sendSuccess(res, result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, 'Erro ao buscar autor.');
     }
-
-    return sendSuccess(res, 200, null, result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao buscar autor:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
 });
 
-/* PUT - Atualizar autor */
-router.put('/:id', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const { id } = req.params;
-    const { nome, pseunonimo } = req.body;
+// EDITAR AUTOR
+router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, pseunonimo, sinopse } = req.body;
 
-    if (!nome || nome.trim() === '') {
-      return sendError(res, 400, 'O nome do autor é obrigatório');
+        if (!nome || !nome.trim()) {
+            return sendError(res, 400, 'O nome do autor é obrigatório.', [
+                { field: 'nome', message: 'Informe o nome do autor.' }
+            ]);
+        }
+
+        const foto = req.file ? req.file.filename : null;
+
+        const result = await pool.query(
+            `UPDATE autor
+             SET nome = $1,
+                 pseunonimo = $2,
+                 sinopse = $3,
+                 foto = COALESCE($4, foto)
+             WHERE id = $5
+             RETURNING id, nome, pseunonimo, foto, sinopse`,
+            [
+                nome.trim(),
+                pseunonimo || null,
+                sinopse || null,
+                foto,
+                id
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return sendError(res, 404, 'Autor não encontrado.');
+        }
+
+        return sendSuccess(res, result.rows[0], 'Autor atualizado com sucesso.');
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, 'Erro ao atualizar autor.');
     }
-
-    const result = await pool.query(
-      "UPDATE autor SET nome = $1, pseunonimo = $2 WHERE id = $3 RETURNING id, nome, pseunonimo",
-      [nome, pseunonimo || null, id]
-    );
-
-    if (result.rows.length === 0) {
-      return sendError(res, 404, 'Autor não encontrado');
-    }
-
-    return sendSuccess(res, 200, 'Autor atualizado com sucesso', result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar autor:', error);
-    if (error.code === '23514') {
-      return sendError(res, 400, 'Dados inválidos. Verifique os campos e tente novamente.');
-    }
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
 });
 
-/* DELETE - Remover autor */
-router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
-  try {
-    const { id } = req.params;
+// EXCLUIR AUTOR
+router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
 
-    // Verificar se o autor existe
-    const autorExists = await pool.query('SELECT id FROM autor WHERE id = $1', [id]);
-    if (autorExists.rows.length === 0) {
-      return sendError(res, 404, 'Autor não encontrado');
+        const result = await pool.query(
+            'DELETE FROM autor WHERE id = $1 RETURNING id',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return sendError(res, 404, 'Autor não encontrado.');
+        }
+
+        return sendSuccess(res, result.rows[0], 'Autor excluído com sucesso.');
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, 'Erro ao excluir autor.');
     }
-
-    await pool.query('DELETE FROM autor WHERE id = $1', [id]);
-
-    return sendSuccess(res, 200, 'Autor deletado com sucesso');
-  } catch (error) {
-    console.error('Erro ao deletar autor:', error);
-    return sendError(res, 500, 'Erro interno do servidor');
-  }
 });
 
 module.exports = router;

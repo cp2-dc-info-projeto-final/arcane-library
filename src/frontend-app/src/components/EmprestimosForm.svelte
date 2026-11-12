@@ -45,7 +45,6 @@
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    
 
     return `${year}-${month}-${day}`;
   }
@@ -112,6 +111,7 @@
   onMount(async () => {
     hasToken = getToken() !== null;
 
+    // CARREGAR USUÁRIOS
     try {
       const res = await api.get('/users');
       const body = res.data as ApiResponse<User[]>;
@@ -126,6 +126,7 @@
       console.error('Erro ao carregar usuários:', e);
     }
 
+    // CARREGAR LIVROS
     try {
       const res = await api.get('/livros');
       const body = res.data as ApiResponse<Livro[]>;
@@ -140,6 +141,7 @@
       console.error('Erro ao carregar livros:', e);
     }
 
+    // CARREGAR EMPRÉSTIMO PARA EDIÇÃO
     if (id !== null) {
       loading = true;
 
@@ -171,7 +173,7 @@
           if (userSelecionado) {
             pesquisaUser = userSelecionado.login;
           } else if (emprestimoData.id_usuario) {
-            pesquisaUser = emprestimoData.id_usuario;
+            pesquisaUser = String(emprestimoData.id_usuario);
           }
 
           livroSelecionado =
@@ -182,7 +184,7 @@
           if (livroSelecionado) {
             pesquisaLivro = livroSelecionado.titulo;
           } else if (emprestimoData.id_livro) {
-            pesquisaLivro = emprestimoData.id_livro;
+            pesquisaLivro = String(emprestimoData.id_livro);
           }
         } else {
           error = body?.message || 'Erro ao carregar empréstimo.';
@@ -192,9 +194,7 @@
           | ApiResponse<Emprestimos>
           | undefined;
 
-        error =
-          body?.message ||
-          'Erro ao carregar empréstimo.';
+        error = body?.message || 'Erro ao carregar empréstimo.';
       } finally {
         loading = false;
       }
@@ -267,39 +267,24 @@
         res = await api.put(targetRoute, dados);
       }
 
-      const body =
-        res.data as ApiResponse<Emprestimos>;
+      const body = res.data as ApiResponse<Emprestimos>;
 
       if (!body?.success) {
-        error =
-          body?.message ||
-          'Erro ao salvar empréstimo.';
-
-        fieldErrors =
-          body?.errors || [];
-
+        error = body?.message || 'Erro ao salvar empréstimo.';
+        fieldErrors = body?.errors || [];
         return;
       }
 
       goto('/emprestimos');
     } catch (e: any) {
-      console.error(
-        'Erro ao salvar empréstimo:',
-        e
-      );
-
-      console.error(
-        'Resposta do backend:',
-        e.response?.data
-      );
+      console.error('Erro ao salvar empréstimo:', e);
+      console.error('Resposta do backend:', e.response?.data);
 
       error =
         e.response?.data?.message ||
         'Erro ao salvar empréstimo.';
 
-      fieldErrors =
-        e.response?.data?.errors ||
-        [];
+      fieldErrors = e.response?.data?.errors || [];
     } finally {
       loading = false;
     }
@@ -311,232 +296,251 @@
 </script>
 
 <Card class="max-w-2xl mx-auto mt-10 p-0 overflow-hidden shadow-lg border border-gray-200 rounded-lg">
+
   <form
     class="flex flex-col gap-6 p-6"
     on:submit|preventDefault={handleSubmit}
   >
+
     <Heading tag="h3" class="mb-2 text-center">
       {id === null ? 'Cadastrar Empréstimo' : 'Editar Empréstimo'}
     </Heading>
 
+    {#if error}
+      <div class="text-red-500 text-center">
+        {error}
+      </div>
+    {/if}
 
-{#if error}
-  <div class="text-red-500 text-center">
-    {error}
-  </div>
-{/if}
+    <!-- USUÁRIO -->
 
-<div>
-  <Label for="usuario">
-    Usuário
-  </Label>
+    <div>
+      <Label for="usuario">
+        Usuário
+      </Label>
 
-  <Input
-    id="usuario"
-    bind:value={pesquisaUser}
-    placeholder="Pesquisar usuário..."
-    class="mt-1"
-    disabled={loading}
-  />
+      <Input
+        id="usuario"
+        bind:value={pesquisaUser}
+        placeholder="Pesquisar usuário..."
+        class="mt-1"
+        disabled={loading}
+      />
 
-  {#if pesquisaUser && !userSelecionado}
-    <div class="mt-1 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
-      {#if usersFiltrados.length > 0}
-        {#each usersFiltrados as user}
+      {#if pesquisaUser && !userSelecionado}
+        <div class="mt-1 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
+          {#if usersFiltrados.length > 0}
+            {#each usersFiltrados as user}
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 hover:bg-gray-100"
+                on:click={() => selecionarUser(user)}
+              >
+                <div style="color: #000 !important;">
+                  {user.login}
+                </div>
+
+                {#if user.email}
+                  <div class="text-sm text-gray-500">
+                    {user.email}
+                  </div>
+                {/if}
+              </button>
+            {/each}
+          {:else}
+            <div class="px-3 py-2 text-gray-500">
+              Nenhum usuário encontrado.
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if userSelecionado}
+        <div class="mt-2 text-sm text-gray-600">
+          Usuário selecionado:
+
+          <strong style="color: #000 !important;">
+            {userSelecionado.login}
+          </strong>
+
           <button
             type="button"
-            class="w-full text-left px-3 py-2 hover:bg-gray-100"
-            on:click={() => selecionarUser(user)}
+            class="ml-2 text-red-500"
+            on:click={limparUser}
           >
-            <div>{user.login}</div>
-
-            {#if user.email}
-              <div class="text-sm text-gray-500">
-                {user.email}
-              </div>
-            {/if}
+            ×
           </button>
-        {/each}
-      {:else}
-        <div class="px-3 py-2 text-gray-500">
-          Nenhum usuário encontrado.
+        </div>
+      {/if}
+
+      {#if errorOf('id_usuario')}
+        <div class="mt-1 text-sm text-red-500">
+          {errorOf('id_usuario')}
         </div>
       {/if}
     </div>
-  {/if}
 
-  {#if userSelecionado}
-    <div class="mt-2 text-sm text-gray-600">
-      Usuário selecionado:
-      <strong>{userSelecionado.login}</strong>
+    <!-- LIVRO -->
 
-      <button
-        type="button"
-        class="ml-2 text-red-500"
-        on:click={limparUser}
-      >
-        ×
-      </button>
-    </div>
-  {/if}
+    <div>
+      <Label for="livro">
+        Livro
+      </Label>
 
-  {#if errorOf('id_usuario')}
-    <div class="mt-1 text-sm text-red-500">
-      {errorOf('id_usuario')}
-    </div>
-  {/if}
-</div>
+      <Input
+        id="livro"
+        bind:value={pesquisaLivro}
+        placeholder="Pesquisar livro..."
+        class="mt-1"
+        disabled={loading}
+      />
 
-<div>
-  <Label for="livro">
-    Livro
-  </Label>
+      {#if pesquisaLivro && !livroSelecionado}
+        <div class="mt-1 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
+          {#if livrosFiltrados.length > 0}
+            {#each livrosFiltrados as livro}
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 hover:bg-gray-100"
+                on:click={() => selecionarLivro(livro)}
+              >
+                <div>{livro.titulo}</div>
 
-  <Input
-    id="livro"
-    bind:value={pesquisaLivro}
-    placeholder="Pesquisar livro..."
-    class="mt-1"
-    disabled={loading}
-  />
+                {#if livro.editora}
+                  <div class="text-sm text-gray-500">
+                    {livro.editora}
+                  </div>
+                {/if}
+              </button>
+            {/each}
+          {:else}
+            <div class="px-3 py-2 text-gray-500">
+              Nenhum livro encontrado.
+            </div>
+          {/if}
+        </div>
+      {/if}
 
-  {#if pesquisaLivro && !livroSelecionado}
-    <div class="mt-1 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
-      {#if livrosFiltrados.length > 0}
-        {#each livrosFiltrados as livro}
+      {#if livroSelecionado}
+        <div class="mt-2 text-sm text-gray-600">
+          Livro selecionado:
+
+          <strong>
+            {livroSelecionado.titulo}
+          </strong>
+
           <button
             type="button"
-            class="w-full text-left px-3 py-2 hover:bg-gray-100"
-            on:click={() => selecionarLivro(livro)}
+            class="ml-2 text-red-500"
+            on:click={limparLivro}
           >
-            <div>{livro.titulo}</div>
-
-            {#if livro.editora}
-              <div class="text-sm text-gray-500">
-                {livro.editora}
-              </div>
-            {/if}
+            ×
           </button>
-        {/each}
-      {:else}
-        <div class="px-3 py-2 text-gray-500">
-          Nenhum livro encontrado.
+        </div>
+      {/if}
+
+      {#if errorOf('id_livro')}
+        <div class="mt-1 text-sm text-red-500">
+          {errorOf('id_livro')}
         </div>
       {/if}
     </div>
-  {/if}
 
-  {#if livroSelecionado}
-    <div class="mt-2 text-sm text-gray-600">
-      Livro selecionado:
-      <strong>{livroSelecionado.titulo}</strong>
+    <!-- DATA DE EMPRÉSTIMO -->
 
-      <button
-        type="button"
-        class="ml-2 text-red-500"
-        on:click={limparLivro}
+    <div>
+      <Label for="data_de_emprestimo">
+        Data de Empréstimo
+      </Label>
+
+      <Input
+        id="data_de_emprestimo"
+        type="date"
+        maxlength="10"
+        bind:value={emprestimos.data_de_emprestimo}
+        required
+        class="mt-1"
+        disabled={loading}
+      />
+
+      {#if errorOf('data_de_emprestimo')}
+        <div class="mt-1 text-sm text-red-500">
+          {errorOf('data_de_emprestimo')}
+        </div>
+      {/if}
+    </div>
+
+    <!-- DATA DE FIM -->
+
+    <div>
+      <Label for="data_fim_emprestimo">
+        Data de Fim do Empréstimo
+      </Label>
+
+      <Input
+        id="data_fim_emprestimo"
+        type="date"
+        maxlength="10"
+        bind:value={emprestimos.data_fim_emprestimo}
+        class="mt-1"
+        disabled={loading}
+      />
+
+      {#if errorOf('data_fim_emprestimo')}
+        <div class="mt-1 text-sm text-red-500">
+          {errorOf('data_fim_emprestimo')}
+        </div>
+      {/if}
+    </div>
+
+    <!-- STATUS -->
+
+    <div>
+      <Label for="status_emprestimo">
+        Status do Empréstimo
+      </Label>
+
+      <select
+        id="status_emprestimo"
+        bind:value={emprestimos.status_emprestimo}
+        class="mt-1 block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+        disabled={loading}
+        required
       >
-        ×
-      </button>
+        <option value="ativo">Ativo</option>
+        <option value="devolvido">Devolvido</option>
+        <option value="atrasado">Atrasado</option>
+      </select>
+
+      {#if errorOf('status_emprestimo')}
+        <div class="mt-1 text-sm text-red-500">
+          {errorOf('status_emprestimo')}
+        </div>
+      {/if}
     </div>
-  {/if}
 
-  {#if errorOf('id_livro')}
-    <div class="mt-1 text-sm text-red-500">
-      {errorOf('id_livro')}
+    <!-- BOTÕES -->
+
+    <div class="flex gap-4 justify-end mt-4">
+      <Button
+        color="light"
+        type="button"
+        onclick={handleCancel}
+        disabled={loading}
+      >
+        <ArrowLeftOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
+        Cancelar
+      </Button>
+
+      <Button
+        type="submit"
+        color="primary"
+        disabled={loading}
+      >
+        <FloppyDiskAltOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
+        {id === null ? 'Cadastrar' : 'Salvar'}
+      </Button>
     </div>
-  {/if}
-</div>
-
-<div>
-  <Label for="data_de_emprestimo">
-    Data de Empréstimo
-  </Label>
-
-  <Input
-    id="data_de_emprestimo"
-    type="date"
-    maxlenght="10"
-    bind:value={emprestimos.data_de_emprestimo}
-    required
-    class="mt-1"
-    disabled={loading}
-  />
-
-  {#if errorOf('data_de_emprestimo')}
-    <div class="mt-1 text-sm text-red-500">
-      {errorOf('data_de_emprestimo')}
-    </div>
-  {/if}
-</div>
-
-<div>
-  <Label for="data_fim_emprestimo">
-    Data de Fim do Empréstimo
-  </Label>
-
-  <Input
-    id="data_fim_emprestimo"
-    type="date"
-    maxlenght="10"
-    bind:value={emprestimos.data_fim_emprestimo}
-    class="mt-1"
-    disabled={loading}
-  />
-</div>
-
-
-  {#if errorOf('data_fim_emprestimo')}
-    <div class="mt-1 text-sm text-red-500">
-      {errorOf('data_fim_emprestimo')}
-    </div>
-  {/if}
-
-
-<div>
-  <Label for="status_emprestimo">
-    Status do Empréstimo
-  </Label>
-
-  <select
-    id="status_emprestimo"
-    bind:value={emprestimos.status_emprestimo}
-    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-    disabled={loading}
-    required
-  >
-    <option value="ativo">Ativo</option>
-    <option value="devolvido">Devolvido</option>
-    <option value="atrasado">Atrasado</option>
-  </select>
-
-  {#if errorOf('status_emprestimo')}
-    <div class="mt-1 text-sm text-red-500">
-      {errorOf('status_emprestimo')}
-    </div>
-  {/if}
-</div>
-
-<div class="flex gap-4 justify-end mt-4">
-  <Button
-    color="light"
-    type="button"
-    onclick={handleCancel}
-    disabled={loading}
-  >
-    <ArrowLeftOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
-    Cancelar
-  </Button>
-
-  <Button
-    type="submit"
-    color="primary"
-    disabled={loading}
-  >
-    <FloppyDiskAltOutline class="inline w-5 h-5 mr-2 align-text-bottom" />
-    {id === null ? 'Cadastrar' : 'Salvar'}
-  </Button>
-</div>
 
   </form>
 </Card>

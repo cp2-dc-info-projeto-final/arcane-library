@@ -148,7 +148,7 @@
 
             <li>
               <a href="/emprestimos_users" class="arcane-nav-link">
-                <img src="/images/emprestimo.png" class="nav-icon" alt="" />
+                <img src="/images/emprestimo.png" class="nav-icon emprestimo-icon" alt="" />
                 Empréstimos
               </a>
             </li>
@@ -166,7 +166,7 @@
 
             <li>
               <a href="/emprestimos" class="arcane-nav-link">
-                <img src="/images/emprestimo.png" class="nav-icon" alt="" />
+                <img src="/images/emprestimo.png" class="nav-icon emprestimo-icon" alt="" />
                 Empréstimos Ad
               </a>
             </li>
@@ -258,6 +258,18 @@
 </header>
 
 <style>
+/* TEMA CLARO */
+/* ÍCONE DE EMPRÉSTIMOS - TEMA CLARO */
+.emprestimo-icon {
+  filter: brightness(0);
+  transition: filter 0.3s ease;
+}
+
+/* ÍCONE DE EMPRÉSTIMOS - TEMA ESCURO */
+:global(.dark) .emprestimo-icon {
+  filter: brightness(0) invert(1);
+}
+
   /* =====================================
      NAVBAR PRINCIPAL
   ===================================== */

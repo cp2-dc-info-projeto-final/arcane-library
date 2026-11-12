@@ -12,6 +12,7 @@ var livrosRouter = require('./routes/livros');
 var autoresRouter = require('./routes/autores');
 var categoriasRouter = require('./routes/categorias');
 var emprestimosRouter = require('./routes/emprestimos');
+var comentariosRouter = require('./routes/comentarios');
 
 var app = express();
 
@@ -45,6 +46,7 @@ app.use('/livros', livrosRouter);
 app.use('/autores', autoresRouter);
 app.use('/categorias', categoriasRouter);
 app.use('/emprestimos', emprestimosRouter);
+app.use('/comentarios', comentariosRouter);
 
 app.use(function(req, res, next) {
   next(createError(404));

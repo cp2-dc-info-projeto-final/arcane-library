@@ -24,7 +24,7 @@ CREATE TABLE usuario (
 );
 
 DROP TABLE IF EXISTS categorias CASCADE;
- 
+
 CREATE TABLE categorias (
     id_categorias BIGINT GENERATED ALWAYS AS IDENTITY,
     nome text NOT NULL,
@@ -39,6 +39,7 @@ CREATE TABLE livro (
      id BIGINT GENERATED ALWAYS AS IDENTITY,
      id_categorias BIGINT,
      titulo text NOT NULL,
+     sinopse text NOT NULL,
      ano_de_publicacao text NOT NULL,
      editora text NOT NULL,
      isbn text NOT NULL,
@@ -55,7 +56,8 @@ CREATE TABLE livro (
 DROP TABLE IF EXISTS livro_categoria CASCADE;
 CREATE TABLE livro_categoria (
     id_livro BIGINT,
-    id_categorias BIGINT, 
+    id_categorias BIGINT,
+
     PRIMARY KEY (id_categorias, id_livro),
     CONSTRAINT fk_categorias FOREIGN KEY (id_categorias) REFERENCES categorias(id_categorias),
     CONSTRAINT fk_livro FOREIGN KEY (id_livro) REFERENCES livro(id) ON DELETE CASCADE
@@ -115,18 +117,37 @@ CREATE TABLE exemplar (
 
 INSERT INTO usuario (foto, login, email, senha, cpf, datanasc, telefone, role) VALUES
 -- senha 123456
-('','Guiguizinho', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','14','01/01/2009','22', 'admin'),
-('','Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','13','01/01/2009','21', 'cliente');
-
-INSERT INTO categorias (nome) VALUES ('Romance');
-INSERT INTO categorias (nome) VALUES ('Fiquissao');
-INSERT INTO categorias (nome) VALUES ('Comedia');
-INSERT INTO categorias (nome) VALUES ('Tehor');
-INSERT INTO categorias (nome) VALUES ('Piada');
-INSERT INTO categorias (nome) VALUES ('Meigo');
+('', 'Gui', 'gui@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','142.387.648-42','2026-11-12','(85)93154-3429', 'admin'),
+('', 'Biel', 'biel@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK','135.615.732-54','2026-11-12','(21)91452-3161', 'cliente'),
+('', 'Manu', 'manu@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK', '123.456.789-67', '2026-11-12', '(21)96451-3287', 'cliente'),
+('', 'Capitão', 'joaopedrosantos@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK', '361.842.159-30', '2026-11-12', '(92)99773-9747', 'cliente'),
+('', 'Judce', 'judcejudce@gmail.com', '$2a$12$PA7QHgIxNC8YO6.Og2IVTuVu55N4DHP3C95XtDyQ7BgsDc98nemtK', '105.437.460-03', '2026-11-12', '(28)96932-7323', 'cliente');
 
 
-INSERT INTO autor (nome, pseunonimo) VALUES ('Cleberson', '');
-INSERT INTO autor (nome, pseunonimo) VALUES ('Felipe meu brother', '');
-INSERT INTO autor (nome, pseunonimo) VALUES ('Só queria ser amado', '');
-INSERT INTO autor (nome, pseunonimo) VALUES ('a felicidade corre de mim', '');
+INSERT INTO categorias (nome) VALUES 
+('Romance'),
+('Fiquissão'),
+('Comédia'),
+('Tehor'),
+('Piada'),
+('Meigo'),
+('Classíco'),
+('Suxpenci');
+
+
+INSERT INTO autor (nome, pseunonimo) VALUES 
+ ('Cleberson', 'Cleitinho do grau'),
+ ('Só queria ser amado', ''),
+ ('A felicidade corre de mim', ''),
+ ('Machado de Assis', 'Manassés'),
+ ('Arthur Conan Doyle', ''),
+ ('Jane Austen', ''),
+ ('Franz Kafka', '');
+
+INSERT INTO livro (foto, titulo, id_categorias, sinopse, ano_de_publicacao, editora, isbn, id_autor) VALUES
+('', 'Fala Manu', 1, 'A manu falou', '20-08-2022', 'Cleberson and cia', '403943942',1),
+('', 'Fala Manuu', 2, 'A manu falou', '20-08-2022', 'Cleberson and cia', '403943941',2),
+('', 'Fala Manuuu', 3, 'A manu falou', '20-08-2022', 'Cleberson and cia', '403943949',3),
+('', 'Fala Manuuuu', 4, 'A manu falou', '20-08-2022', 'Cleberson and cia', '403943948',4),
+('', 'Fala Manuuuuu', 5, 'A manu falou', '20-08-2022', 'Cleberson and cia', '403943947',2);
+

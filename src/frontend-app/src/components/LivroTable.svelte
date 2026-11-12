@@ -1,6 +1,5 @@
-
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { Button, Spinner, Modal } from 'flowbite-svelte';
     import { TrashBinOutline, UserEditOutline } from 'flowbite-svelte-icons';
     import { type User, getCurrentUser } from '$lib/auth';
@@ -8,6 +7,8 @@
     import api from '$lib/api';
     import type { ApiResponse } from '$lib/api';
     import type { Livro } from '$lib/models/Livros';
+
+    const API_URL = 'http://localhost:3000';
 
     interface Categoria {
         id_categorias: number;
@@ -26,10 +27,33 @@
     let livroParaDeletar: Livro | null = null;
     let categoriasSelecionadas: number[] = [];
 
+    // CONTROLE DA PESQUISA AUTOMÁTICA
+    let debouncePesquisa: ReturnType<typeof setTimeout>;
+    let ultimaBusca = 0;
+
+    // GERA O ENDEREÇO DA CAPA
+    function urlFoto(foto: string | null | undefined): string {
+        if (!foto) return '';
+
+        if (
+            foto.startsWith('http://') ||
+            foto.startsWith('https://') ||
+            foto.startsWith('data:')
+        ) {
+            return foto;
+        }
+
+        return `${API_URL}/uploads/${foto}`;
+    }
+
     onMount(async () => {
         await carregarUsuario();
         await carregarCategorias();
         await filtrarLivros();
+    });
+
+    onDestroy(() => {
+        clearTimeout(debouncePesquisa);
     });
 
     // CARREGAR USUÁRIO AUTENTICADO
@@ -57,6 +81,10 @@
 
     // FILTRAR LIVROS
     async function filtrarLivros() {
+        clearTimeout(debouncePesquisa);
+
+        const requisicao = ++ultimaBusca;
+
         loading = true;
         error = '';
 
@@ -82,6 +110,9 @@
 
             const body = res.data as ApiResponse<Livro[]>;
 
+            // Impede que uma pesquisa antiga sobrescreva a mais recente
+            if (requisicao !== ultimaBusca) return;
+
             if (body?.success) {
                 livros = body.data ?? [];
             } else {
@@ -90,6 +121,8 @@
                 livros = [];
             }
         } catch (e: any) {
+            if (requisicao !== ultimaBusca) return;
+
             console.error('Erro ao carregar livros:', e);
 
             const body = e.response?.data as
@@ -98,8 +131,19 @@
             error = body?.message || 'Erro ao carregar os livros.';
             livros = [];
         } finally {
-            loading = false;
+            if (requisicao === ultimaBusca) {
+                loading = false;
+            }
         }
+    }
+
+    // PESQUISA AUTOMÁTICA ENQUANTO DIGITA
+    function agendarBusca() {
+        clearTimeout(debouncePesquisa);
+
+        debouncePesquisa = setTimeout(() => {
+            filtrarLivros();
+        }, 350);
     }
 
     // SELECIONAR CATEGORIA
@@ -115,12 +159,17 @@
                 idCategoria
             ];
         }
+
+        filtrarLivros();
     }
 
     // LIMPAR FILTROS
     async function limparFiltros() {
+        clearTimeout(debouncePesquisa);
+
         consulta = '';
         categoriasSelecionadas = [];
+
         await filtrarLivros();
     }
 
@@ -152,7 +201,7 @@
 
         const id = livroParaDeletar.id;
 
-        if (!id) {
+        if (id == null) {
             error = 'Não foi possível identificar o livro.';
             return;
         }
@@ -294,6 +343,7 @@
                     id="pesquisa"
                     type="search"
                     bind:value={consulta}
+                    oninput={agendarBusca}
                     placeholder="Digite o título do livro..."
                     class="w-full rounded-xl border border-gray-300 bg-gray-50
                            py-3 pl-10 pr-4 text-sm text-gray-900 outline-none
@@ -315,7 +365,10 @@
                 {#if categoriasSelecionadas.length > 0}
                     <button
                         type="button"
-                        onclick={() => categoriasSelecionadas = []}
+                        onclick={() => {
+                            categoriasSelecionadas = [];
+                            filtrarLivros();
+                        }}
                         class="text-xs font-semibold text-violet-700
                                hover:underline dark:text-violet-300"
                     >
@@ -458,12 +511,11 @@
                     stroke="currentColor"
                     stroke-width="1.7"
                     viewBox="0 0 24 24"
-                    aria-hidden="true"
                 >
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        d="M12 7v14m0-14C10.5 5.5 8.5 5 5 5v14c3.5 0 5.5.5 7 2m0-14c1.5-1.5 3.5-2 7-2v14c-3.5 0-5.5.5-7 2"
+                        d="M12 7v14m0-14C10.5 5.5 8.5 5 5 5v14c3.5 0 5.5.5 7 2m0-14c1.5-1.5 3.5-2 7-2v14c-3.5 0-5.5-.5-7 2"
                     />
                 </svg>
             </div>
@@ -504,11 +556,20 @@
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {#each livros as livro (livro.id)}
                     <article
+                        onclick={() => goto(`/pagina_livros?id=${livro.id}`)}
+                        onkeydown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                goto(`/pagina_livros?id=${livro.id}`);
+                            }
+                        }}
+                        role="button"
+                        tabindex="0"
                         class="group flex min-w-0 flex-col overflow-hidden rounded-2xl
                                border border-gray-200 bg-white shadow-sm transition
                                duration-200 hover:-translate-y-0.5 hover:border-violet-300
-                               hover:shadow-md dark:border-gray-700 dark:bg-gray-800
-                               dark:hover:border-violet-700"
+                               hover:shadow-md cursor-pointer
+                               dark:border-gray-700 dark:bg-gray-800"
                     >
                         <!-- CABEÇALHO DO CARTÃO -->
                         <div
@@ -517,25 +578,35 @@
                                    dark:border-gray-700 dark:from-violet-950/40
                                    dark:to-gray-800"
                         >
+                            <!-- FOTO DO LIVRO -->
                             <div
-                                class="flex h-12 w-12 shrink-0 items-center justify-center
-                                       rounded-xl bg-violet-200 text-violet-800
+                                class="flex h-12 w-12 shrink-0 items-center
+                                       justify-center overflow-hidden rounded-xl
+                                       bg-violet-200 text-violet-800
                                        dark:bg-violet-900 dark:text-violet-200"
                                 aria-hidden="true"
                             >
-                                <svg
-                                    class="h-6 w-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.7"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"
+                                {#if livro.foto}
+                                    <img
+                                        src={urlFoto(livro.foto)}
+                                        alt={`Capa de ${livro.titulo}`}
+                                        class="h-full w-full object-cover"
                                     />
-                                </svg>
+                                {:else}
+                                    <svg
+                                        class="h-6 w-6"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"
+                                        />
+                                    </svg>
+                                {/if}
                             </div>
 
                             <div class="min-w-0 flex-1">
@@ -556,14 +627,17 @@
                                 </p>
                             </div>
 
-                            <!-- AÇÕES EXCLUSIVAS DO ADMINISTRADOR -->
+                            <!-- AÇÕES DO ADMINISTRADOR -->
                             <div class="flex shrink-0 items-center gap-1.5">
                                 {#if user?.role === 'admin'}
                                     <button
                                         type="button"
                                         aria-label={`Editar ${livro.titulo}`}
                                         title="Editar livro"
-                                        onclick={() => goto(`/livros/edit/${livro.id}`)}
+                                        onclick={(event) => {
+                                            event.stopPropagation();
+                                            goto(`/livros/edit/${livro.id}`);
+                                        }}
                                         class="inline-flex h-9 w-9 items-center justify-center
                                                rounded-lg border border-violet-200 bg-white
                                                text-violet-700 transition hover:bg-violet-100
@@ -578,7 +652,10 @@
                                         type="button"
                                         aria-label={`Remover ${livro.titulo}`}
                                         title="Remover livro"
-                                        onclick={() => abrirDelete(livro)}
+                                        onclick={(event) => {
+                                            event.stopPropagation();
+                                            abrirDelete(livro);
+                                        }}
                                         disabled={deleting}
                                         class="inline-flex h-9 w-9 items-center justify-center
                                                rounded-lg border border-red-200 bg-white
@@ -622,9 +699,7 @@
                                         {/each}
                                     </div>
                                 {:else}
-                                    <span
-                                        class="text-sm text-gray-500 dark:text-gray-400"
-                                    >
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
                                         Sem categoria
                                     </span>
                                 {/if}
@@ -645,7 +720,6 @@
                                         stroke="currentColor"
                                         stroke-width="1.8"
                                         viewBox="0 0 24 24"
-                                        aria-hidden="true"
                                     >
                                         <path
                                             stroke-linecap="round"
@@ -679,7 +753,6 @@
                                         stroke="currentColor"
                                         stroke-width="1.8"
                                         viewBox="0 0 24 24"
-                                        aria-hidden="true"
                                     >
                                         <path
                                             stroke-linecap="round"
@@ -713,7 +786,6 @@
                                         stroke="currentColor"
                                         stroke-width="1.8"
                                         viewBox="0 0 24 24"
-                                        aria-hidden="true"
                                     >
                                         <path
                                             stroke-linecap="round"
@@ -741,7 +813,7 @@
     {/if}
 </div>
 
-<!-- MODAL DE EXCLUSÃO: SOMENTE ADMINISTRADORES -->
+<!-- MODAL DE EXCLUSÃO -->
 {#if user?.role === 'admin'}
     <Modal bind:open={abrirModalDelete} size="sm">
         <div class="p-6">
@@ -793,7 +865,6 @@
                                 class="h-4 w-4 animate-spin rounded-full
                                        border-2 border-white/40 border-t-white"
                             ></span>
-
                             Excluindo...
                         </span>
                     {:else}

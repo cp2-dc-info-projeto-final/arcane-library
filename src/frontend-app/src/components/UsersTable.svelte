@@ -1,6 +1,5 @@
-
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { Badge } from 'flowbite-svelte';
   import { UserEditOutline, TrashBinOutline } from 'flowbite-svelte-icons';
   import { goto } from '$app/navigation';
@@ -17,11 +16,24 @@
   let confirmTargetId: number | null = null;
   let consulta = '';
 
+  // CONTROLE DA PESQUISA AUTOMÁTICA
+  let debouncePesquisa: ReturnType<typeof setTimeout>;
+  let ultimaBusca = 0;
+
   onMount(() => {
     carregarUsuarios();
   });
 
+  onDestroy(() => {
+    clearTimeout(debouncePesquisa);
+  });
+
+  // CARREGAR E FILTRAR USUÁRIOS
   async function carregarUsuarios() {
+    clearTimeout(debouncePesquisa);
+
+    const requisicao = ++ultimaBusca;
+
     loading = true;
     error = '';
 
@@ -33,11 +45,15 @@
       }
 
       const query = params.toString();
+
       const res = await api.get(
         query ? `/users?${query}` : '/users'
       );
 
       const body = res.data as ApiResponse<User[]>;
+
+      // Impede que uma pesquisa antiga sobrescreva a mais recente
+      if (requisicao !== ultimaBusca) return;
 
       if (body.success) {
         users = body.data ?? [];
@@ -46,30 +62,51 @@
         users = [];
       }
     } catch (e: any) {
+      if (requisicao !== ultimaBusca) return;
+
       console.error('Erro ao carregar usuários:', e);
 
       const body = e.response?.data as ApiResponse<User[]> | undefined;
       error = body?.message || 'Erro ao carregar usuários.';
       users = [];
     } finally {
-      loading = false;
+      if (requisicao === ultimaBusca) {
+        loading = false;
+      }
     }
   }
 
+  // PESQUISA AUTOMÁTICA ENQUANTO DIGITA
+  function agendarBusca() {
+    clearTimeout(debouncePesquisa);
+
+    debouncePesquisa = setTimeout(() => {
+      carregarUsuarios();
+    }, 350);
+  }
+
+  // BUSCAR MANUALMENTE
   async function filtrarUsuario() {
+    clearTimeout(debouncePesquisa);
     await carregarUsuarios();
   }
 
+  // LIMPAR PESQUISA
   async function limparPesquisa() {
+    clearTimeout(debouncePesquisa);
+
     consulta = '';
+
     await carregarUsuarios();
   }
 
+  // ABRIR MODAL DE CONFIRMAÇÃO
   function openConfirm(id: number) {
     confirmTargetId = id;
     confirmOpen = true;
   }
 
+  // FECHAR MODAL
   function closeConfirm() {
     if (deletingId !== null) return;
 
@@ -77,6 +114,7 @@
     confirmTargetId = null;
   }
 
+  // CONFIRMAR EXCLUSÃO
   async function handleConfirm() {
     if (confirmTargetId === null || deletingId !== null) return;
 
@@ -92,6 +130,7 @@
     closeConfirm();
   }
 
+  // EXCLUIR USUÁRIO
   async function handleDelete(id: number) {
     deletingId = id;
     error = '';
@@ -218,6 +257,7 @@
           id="pesquisa"
           type="search"
           bind:value={consulta}
+          oninput={agendarBusca}
           placeholder="Pesquise por login ou e-mail..."
           class="w-full rounded-xl border border-gray-300 bg-gray-50
                  py-3 pl-10 pr-4 text-sm text-gray-900 outline-none

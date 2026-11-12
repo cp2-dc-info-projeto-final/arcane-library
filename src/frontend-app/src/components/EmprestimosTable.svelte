@@ -1,493 +1,524 @@
 
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { Button, Spinner, Modal } from 'flowbite-svelte';
-    import { TrashBinOutline, UserEditOutline } from 'flowbite-svelte-icons';
-    import { goto } from '$app/navigation';
-    import api from '$lib/api';
-    import type { ApiResponse } from '$lib/api';
-    import type { Emprestimos } from '$lib/models/Emprestimos';
-  
-    interface EmprestimoTabela extends Emprestimos {
-      usuario?: string;
-      email_usuario?: string;
-      livro?: string;
-    }
-  
-    let emprestimos: EmprestimoTabela[] = [];
-    let loading = true;
-    let deleting = false;
-    let error = '';
-    let consulta = '';
-  
-    let abrirModalDelete = false;
-    let emprestimoParaDeletar: EmprestimoTabela | null = null;
-  
-    onMount(() => {
-      filtrarEmprestimos();
-    });
-  
-    async function filtrarEmprestimos() {
+  import { onMount } from 'svelte';
+  import { Button, Spinner, Modal } from 'flowbite-svelte';
+  import { TrashBinOutline, UserEditOutline } from 'flowbite-svelte-icons';
+  import { goto } from '$app/navigation';
+  import api from '$lib/api';
+  import type { ApiResponse } from '$lib/api';
+  import type { Emprestimos } from '$lib/models/Emprestimos';
+
+  interface EmprestimoTabela extends Emprestimos {
+    usuario?: string;
+    email_usuario?: string;
+    livro?: string;
+  }
+
+  let emprestimos: EmprestimoTabela[] = [];
+  let loading = true;
+  let deleting = false;
+  let error = '';
+  let consulta = '';
+
+  let abrirModalDelete = false;
+  let emprestimoParaDeletar: EmprestimoTabela | null = null;
+
+  let buscaTimeout: ReturnType<typeof setTimeout>;
+  let requisicaoAtual = 0;
+
+  onMount(() => {
+    filtrarEmprestimos(true);
+
+    return () => {
+      clearTimeout(buscaTimeout);
+    };
+  });
+
+  async function filtrarEmprestimos(mostrarLoading = false) {
+    const requisicao = ++requisicaoAtual;
+
+    if (mostrarLoading) {
       loading = true;
-      error = '';
-  
-      try {
-        const params = new URLSearchParams();
-  
-        if (consulta.trim()) {
-          params.append('consulta', consulta.trim());
-        }
-  
-        const query = params.toString();
-        const res = await api.get(
-          query ? `/emprestimos?${query}` : '/emprestimos'
-        );
-  
-        const body = res.data as ApiResponse<EmprestimoTabela[]>;
-  
-        if (body?.success) {
-          emprestimos = body.data ?? [];
-        } else {
-          error = body?.message || 'Erro ao carregar empréstimos.';
-          emprestimos = [];
-        }
-      } catch (e: any) {
-        console.error('Erro ao carregar empréstimos:', e);
-        const body = e.response?.data as ApiResponse<EmprestimoTabela[]> | undefined;
-        error = body?.message || 'Não foi possível carregar os empréstimos.';
+    }
+
+    error = '';
+
+    try {
+      const params = new URLSearchParams();
+
+      if (consulta.trim()) {
+        params.append('consulta', consulta.trim());
+      }
+
+      const query = params.toString();
+
+      const res = await api.get(
+        query ? `/emprestimos?${query}` : '/emprestimos'
+      );
+
+      // Impede respostas antigas de sobrescreverem pesquisas recentes
+      if (requisicao !== requisicaoAtual) return;
+
+      const body = res.data as ApiResponse<EmprestimoTabela[]>;
+
+      if (body?.success) {
+        emprestimos = body.data ?? [];
+      } else {
+        error = body?.message || 'Erro ao carregar empréstimos.';
         emprestimos = [];
-      } finally {
+      }
+    } catch (e: any) {
+      if (requisicao !== requisicaoAtual) return;
+
+      console.error('Erro ao carregar empréstimos:', e);
+
+      const body = e.response?.data as ApiResponse<EmprestimoTabela[]> | undefined;
+
+      error = body?.message || 'Não foi possível carregar os empréstimos.';
+      emprestimos = [];
+    } finally {
+      if (requisicao === requisicaoAtual) {
         loading = false;
       }
     }
-  
-    async function limparFiltros() {
-      consulta = '';
-      await filtrarEmprestimos();
+  }
+
+  // Pesquisa automática enquanto digita
+  function pesquisarEmTempoReal() {
+    clearTimeout(buscaTimeout);
+
+    buscaTimeout = setTimeout(() => {
+      filtrarEmprestimos();
+    }, 300);
+  }
+
+  async function limparFiltros() {
+    clearTimeout(buscaTimeout);
+    consulta = '';
+    await filtrarEmprestimos();
+  }
+
+  function abrirDelete(emprestimo: EmprestimoTabela) {
+    emprestimoParaDeletar = emprestimo;
+    abrirModalDelete = true;
+  }
+
+  function cancelarDelete() {
+    if (deleting) return;
+
+    abrirModalDelete = false;
+    emprestimoParaDeletar = null;
+  }
+
+  async function confirmarDelete() {
+    if (!emprestimoParaDeletar || deleting) return;
+
+    const id = emprestimoParaDeletar.id;
+
+    if (!id) {
+      error = 'Não foi possível identificar o empréstimo.';
+      return;
     }
-  
-    function abrirDelete(emprestimo: EmprestimoTabela) {
-      emprestimoParaDeletar = emprestimo;
-      abrirModalDelete = true;
-    }
-  
-    function cancelarDelete() {
-      if (deleting) return;
-  
-      abrirModalDelete = false;
-      emprestimoParaDeletar = null;
-    }
-  
-    async function confirmarDelete() {
-      if (!emprestimoParaDeletar || deleting) return;
-  
-      const id = emprestimoParaDeletar.id;
-  
-      if (!id) {
-        error = 'Não foi possível identificar o empréstimo.';
+
+    deleting = true;
+    error = '';
+
+    try {
+      const res = await api.delete(`/emprestimos/${id}`);
+      const body = res.data as ApiResponse<null> | undefined;
+
+      if (body && body.success === false) {
+        error = body.message || 'Não foi possível excluir o empréstimo.';
         return;
       }
-  
-      deleting = true;
-      error = '';
-  
-      try {
-        const res = await api.delete(`/emprestimos/${id}`);
-        const body = res.data as ApiResponse<null> | undefined;
-  
-        if (body && body.success === false) {
-          error = body.message || 'Não foi possível excluir o empréstimo.';
-          return;
-        }
-  
-        abrirModalDelete = false;
-        emprestimoParaDeletar = null;
-        await filtrarEmprestimos();
-      } catch (e: any) {
-        console.error('Erro ao deletar empréstimo:', e);
-        error = e.response?.data?.message || 'Erro ao excluir empréstimo.';
-      } finally {
-        deleting = false;
-      }
+
+      abrirModalDelete = false;
+      emprestimoParaDeletar = null;
+
+      await filtrarEmprestimos();
+    } catch (e: any) {
+      console.error('Erro ao deletar empréstimo:', e);
+      error = e.response?.data?.message || 'Erro ao excluir empréstimo.';
+    } finally {
+      deleting = false;
     }
-  
-    function formatarData(data: string | null | undefined) {
-      if (!data) return 'Não informada';
-  
-      const valor = String(data);
-      const dataISO = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  
-      if (dataISO) {
-        const [, ano, mes, dia] = dataISO;
-        return `${dia}/${mes}/${ano}`;
-      }
-  
-      const dataFormatada = new Date(valor);
-  
-      if (Number.isNaN(dataFormatada.getTime())) return 'Data inválida';
-  
-      return dataFormatada.toLocaleDateString('pt-BR');
+  }
+
+  function formatarData(data: string | null | undefined) {
+    if (!data) return 'Não informada';
+
+    const valor = String(data);
+    const dataISO = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+    if (dataISO) {
+      const [, ano, mes, dia] = dataISO;
+      return `${dia}/${mes}/${ano}`;
     }
-  
-    function formatarStatus(status: string) {
-      switch (status) {
-        case 'ativo': return 'Ativo';
-        case 'devolvido': return 'Devolvido';
-        case 'atrasado': return 'Atrasado';
-        default: return status || 'Indefinido';
-      }
+
+    const dataFormatada = new Date(valor);
+
+    if (Number.isNaN(dataFormatada.getTime())) return 'Data inválida';
+
+    return dataFormatada.toLocaleDateString('pt-BR');
+  }
+
+  function formatarStatus(status: string) {
+    switch (status) {
+      case 'ativo': return 'Ativo';
+      case 'devolvido': return 'Devolvido';
+      case 'atrasado': return 'Atrasado';
+      default: return status || 'Indefinido';
     }
-  
-    function iconeStatus(status: string) {
-      switch (status) {
-        case 'ativo': return '●';
-        case 'devolvido': return '✓';
-        case 'atrasado': return '!';
-        default: return '•';
-      }
+  }
+
+  function iconeStatus(status: string) {
+    switch (status) {
+      case 'ativo': return '●';
+      case 'devolvido': return '✓';
+      case 'atrasado': return '!';
+      default: return '•';
     }
-  
-    $: totalAtivos = emprestimos.filter(
-      (item) => item.status_emprestimo === 'ativo'
-    ).length;
-  
-    $: totalDevolvidos = emprestimos.filter(
-      (item) => item.status_emprestimo === 'devolvido'
-    ).length;
-  
-    $: totalAtrasados = emprestimos.filter(
-      (item) => item.status_emprestimo === 'atrasado'
-    ).length;
-  </script>
-  
-  <svelte:head>
-    <title>Empréstimos | Arcane Library</title>
-    <meta
-      name="description"
-      content="Consulte e gerencie os empréstimos da Arcane Library."
-    />
-  </svelte:head>
-  
-  <div class="loans-page">
-    <!-- Cabeçalho -->
-    <header class="page-header">
-      <div class="header-icon">
+  }
+
+  $: totalAtivos = emprestimos.filter(
+    (item) => item.status_emprestimo === 'ativo'
+  ).length;
+
+  $: totalDevolvidos = emprestimos.filter(
+    (item) => item.status_emprestimo === 'devolvido'
+  ).length;
+
+  $: totalAtrasados = emprestimos.filter(
+    (item) => item.status_emprestimo === 'atrasado'
+  ).length;
+</script>
+
+<svelte:head>
+  <title>Empréstimos | Arcane Library</title>
+  <meta
+    name="description"
+    content="Consulte e gerencie os empréstimos da Arcane Library."
+  />
+</svelte:head>
+
+<div class="loans-page">
+  <!-- Cabeçalho -->
+  <header class="page-header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.7" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M4 6h13M9 8v7" />
+      </svg>
+    </div>
+
+    <div class="header-text">
+      <p class="eyebrow">ARCANE LIBRARY</p>
+      <h1>Empréstimos</h1>
+      <p class="subtitle">
+        Acompanhe os livros emprestados e mantenha tudo organizado.
+      </p>
+    </div>
+  </header>
+
+  <!-- Indicadores -->
+  <section class="stats-grid" aria-label="Resumo dos empréstimos">
+    <div class="stat-card">
+      <div class="stat-icon total-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="1.7" aria-hidden="true">
+          stroke-width="1.8" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M4 6h13M9 8v7" />
         </svg>
       </div>
-  
-      <div class="header-text">
-        <p class="eyebrow">ARCANE LIBRARY</p>
-        <h1>Empréstimos</h1>
-        <p class="subtitle">
-          Acompanhe os livros emprestados e mantenha tudo organizado.
+      <div>
+        <p>Total listado</p>
+        <strong>{emprestimos.length}</strong>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon active-icon">●</div>
+      <div>
+        <p>Ativos</p>
+        <strong>{totalAtivos}</strong>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon returned-icon">✓</div>
+      <div>
+        <p>Devolvidos</p>
+        <strong>{totalDevolvidos}</strong>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon late-icon">!</div>
+      <div>
+        <p>Atrasados</p>
+        <strong>{totalAtrasados}</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pesquisa -->
+  <section class="search-panel">
+    <div class="search-heading">
+      <div>
+        <h2>Consultar empréstimos</h2>
+        <p>Pesquise pelo livro, usuário ou e-mail.</p>
+      </div>
+    </div>
+
+    <form
+      class="search-form"
+      onsubmit={(event) => {
+        event.preventDefault();
+        clearTimeout(buscaTimeout);
+        filtrarEmprestimos();
+      }}
+    >
+      <div class="search-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path stroke-linecap="round" d="m16 16 4 4" />
+        </svg>
+
+        <input
+          id="pesquisa"
+          type="search"
+          bind:value={consulta}
+          oninput={pesquisarEmTempoReal}
+          placeholder="Ex.: título do livro, login ou e-mail..."
+          aria-label="Buscar empréstimos"
+        />
+      </div>
+
+      <button type="submit" class="search-button">
+        Buscar
+      </button>
+
+      <button
+        type="button"
+        class="clear-button"
+        onclick={limparFiltros}
+      >
+        Limpar
+      </button>
+    </form>
+  </section>
+
+  {#if error}
+    <div class="error-box" role="alert">
+      <div>
+        <strong>Não foi possível concluir a operação</strong>
+        <p>{error}</p>
+      </div>
+
+      <button
+        type="button"
+        class="retry-button"
+        onclick={() => filtrarEmprestimos(true)}
+      >
+        Tentar novamente
+      </button>
+    </div>
+  {/if}
+
+  <!-- Lista -->
+  <section class="list-section">
+    <div class="list-heading">
+      <div>
+        <h2>Registros de empréstimos</h2>
+        <p>
+          {emprestimos.length}
+          {emprestimos.length === 1 ? 'registro encontrado' : 'registros encontrados'}
         </p>
       </div>
-    </header>
-  
-    <!-- Indicadores -->
-    <section class="stats-grid" aria-label="Resumo dos empréstimos">
-      <div class="stat-card">
-        <div class="stat-icon total-icon">
+    </div>
+
+    {#if loading}
+      <div class="state-card">
+        <Spinner size="8" color="purple" />
+        <p>Carregando empréstimos...</p>
+      </div>
+    {:else if emprestimos.length === 0}
+      <div class="state-card">
+        <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="1.8" aria-hidden="true">
+            stroke-width="1.7" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
           </svg>
         </div>
-        <div>
-          <p>Total listado</p>
-          <strong>{emprestimos.length}</strong>
-        </div>
+        <h3>Nenhum empréstimo encontrado</h3>
+        <p>
+          {consulta
+            ? 'Tente outro termo de pesquisa ou limpe os filtros.'
+            : 'Os empréstimos cadastrados aparecerão aqui.'}
+        </p>
+
+        {#if consulta}
+          <button type="button" class="clear-button empty-clear" onclick={limparFiltros}>
+            Limpar pesquisa
+          </button>
+        {/if}
       </div>
-  
-      <div class="stat-card">
-        <div class="stat-icon active-icon">●</div>
-        <div>
-          <p>Ativos</p>
-          <strong>{totalAtivos}</strong>
-        </div>
-      </div>
-  
-      <div class="stat-card">
-        <div class="stat-icon returned-icon">✓</div>
-        <div>
-          <p>Devolvidos</p>
-          <strong>{totalDevolvidos}</strong>
-        </div>
-      </div>
-  
-      <div class="stat-card">
-        <div class="stat-icon late-icon">!</div>
-        <div>
-          <p>Atrasados</p>
-          <strong>{totalAtrasados}</strong>
-        </div>
-      </div>
-    </section>
-  
-    <!-- Pesquisa -->
-    <section class="search-panel">
-      <div class="search-heading">
-        <div>
-          <h2>Consultar empréstimos</h2>
-          <p>Pesquise pelo livro, usuário ou e-mail.</p>
-        </div>
-      </div>
-  
-      <form
-        class="search-form"
-        onsubmit={(event) => {
-          event.preventDefault();
-          filtrarEmprestimos();
-        }}
-      >
-        <div class="search-field">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" />
-            <path stroke-linecap="round" d="m16 16 4 4" />
-          </svg>
-  
-          <input
-            id="pesquisa"
-            type="search"
-            bind:value={consulta}
-            placeholder="Ex.: título do livro, login ou e-mail..."
-            aria-label="Buscar empréstimos"
-            disabled={loading}
-          />
-        </div>
-  
-        <button type="submit" class="search-button" disabled={loading}>
-          Buscar
-        </button>
-  
-        <button
-          type="button"
-          class="clear-button"
-          onclick={limparFiltros}
-          disabled={loading}
-        >
-          Limpar
-        </button>
-      </form>
-    </section>
-  
-    {#if error}
-      <div class="error-box" role="alert">
-        <div>
-          <strong>Não foi possível concluir a operação</strong>
-          <p>{error}</p>
-        </div>
-  
-        <button
-          type="button"
-          class="retry-button"
-          onclick={filtrarEmprestimos}
-          disabled={loading}
-        >
-          Tentar novamente
-        </button>
-      </div>
-    {/if}
-  
-    <!-- Lista -->
-    <section class="list-section">
-      <div class="list-heading">
-        <div>
-          <h2>Registros de empréstimos</h2>
-          <p>
-            {emprestimos.length}
-            {emprestimos.length === 1 ? 'registro encontrado' : 'registros encontrados'}
-          </p>
-        </div>
-      </div>
-  
-      {#if loading}
-        <div class="state-card">
-          <Spinner size="8" color="purple" />
-          <p>Carregando empréstimos...</p>
-        </div>
-      {:else if emprestimos.length === 0}
-        <div class="state-card">
-          <div class="empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.7" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
-            </svg>
-          </div>
-          <h3>Nenhum empréstimo encontrado</h3>
-          <p>
-            {consulta
-              ? 'Tente outro termo de pesquisa ou limpe os filtros.'
-              : 'Os empréstimos cadastrados aparecerão aqui.'}
-          </p>
-  
-          {#if consulta}
-            <button type="button" class="clear-button empty-clear" onclick={limparFiltros}>
-              Limpar pesquisa
-            </button>
-          {/if}
-        </div>
-      {:else}
-        <div class="loans-grid">
-          {#each emprestimos as emprestimo (emprestimo.id)}
-            <article class="loan-card">
-              <div class="loan-card-header">
-                <div class="book-symbol">
+    {:else}
+      <div class="loans-grid">
+        {#each emprestimos as emprestimo (emprestimo.id)}
+          <article class="loan-card">
+            <div class="loan-card-header">
+              <div class="book-symbol">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.7" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h13" />
+                </svg>
+              </div>
+
+              <span class={`status-badge status-${emprestimo.status_emprestimo}`}>
+                <span>{iconeStatus(emprestimo.status_emprestimo)}</span>
+                {formatarStatus(emprestimo.status_emprestimo)}
+              </span>
+            </div>
+
+            <div class="loan-book">
+              <p class="item-overline">LIVRO</p>
+              <h3 title={emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}>
+                {emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}
+              </h3>
+              <p class="record-id">Empréstimo #{emprestimo.id}</p>
+            </div>
+
+            <div class="loan-details">
+              <div class="detail-row">
+                <div class="detail-icon user-detail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.7" aria-hidden="true">
+                    stroke-width="1.8" aria-hidden="true">
+                    <circle cx="12" cy="8" r="4" />
                     <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h13" />
+                      d="M4.5 21a7.5 7.5 0 0 1 15 0" />
                   </svg>
                 </div>
-  
-                <span class={`status-badge status-${emprestimo.status_emprestimo}`}>
-                  <span>{iconeStatus(emprestimo.status_emprestimo)}</span>
-                  {formatarStatus(emprestimo.status_emprestimo)}
-                </span>
-              </div>
-  
-              <div class="loan-book">
-                <p class="item-overline">LIVRO</p>
-                <h3 title={emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}>
-                  {emprestimo.livro ?? `Livro #${emprestimo.id_livro}`}
-                </h3>
-                <p class="record-id">Empréstimo #{emprestimo.id}</p>
-              </div>
-  
-              <div class="loan-details">
-                <div class="detail-row">
-                  <div class="detail-icon user-detail">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.8" aria-hidden="true">
-                      <circle cx="12" cy="8" r="4" />
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M4.5 21a7.5 7.5 0 0 1 15 0" />
-                    </svg>
-                  </div>
-                  <div class="detail-text">
-                    <span>Usuário</span>
-                    <strong>{emprestimo.usuario ?? `Usuário #${emprestimo.id_usuario}`}</strong>
-                    {#if emprestimo.email_usuario}
-                      <small>{emprestimo.email_usuario}</small>
-                    {/if}
-                  </div>
-                </div>
-  
-                <div class="detail-row">
-                  <div class="detail-icon date-detail">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.8" aria-hidden="true">
-                      <rect x="3" y="5" width="18" height="16" rx="2" />
-                      <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
-                    </svg>
-                  </div>
-                  <div class="detail-text">
-                    <span>Data do empréstimo</span>
-                    <strong>{formatarData(emprestimo.data_de_emprestimo)}</strong>
-                  </div>
-                </div>
-  
-                <div class="detail-row">
-                  <div class="detail-icon return-detail">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.8" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v5h5" />
-                    </svg>
-                  </div>
-                  <div class="detail-text">
-                    <span>Data de devolução</span>
-                    <strong>{formatarData(emprestimo.data_fim_emprestimo)}</strong>
-                  </div>
+                <div class="detail-text">
+                  <span>Usuário</span>
+                  <strong>{emprestimo.usuario ?? `Usuário #${emprestimo.id_usuario}`}</strong>
+                  {#if emprestimo.email_usuario}
+                    <small>{emprestimo.email_usuario}</small>
+                  {/if}
                 </div>
               </div>
-  
-              <div class="card-actions">
-                <button
-                  type="button"
-                  class="edit-button"
-                  onclick={() => goto(`/emprestimos/edit/${emprestimo.id}`)}
-                  aria-label={`Editar empréstimo ${emprestimo.id}`}
-                  disabled={loading || deleting}
-                >
-                  <UserEditOutline class="h-5 w-5" />
-                  <span>Editar</span>
-                </button>
-  
-                <button
-                  type="button"
-                  class="delete-button"
-                  onclick={() => abrirDelete(emprestimo)}
-                  aria-label={`Excluir empréstimo ${emprestimo.id}`}
-                  disabled={loading || deleting}
-                >
-                  <TrashBinOutline class="h-5 w-5" />
-                  <span>Excluir</span>
-                </button>
+
+              <div class="detail-row">
+                <div class="detail-icon date-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
+                  </svg>
+                </div>
+                <div class="detail-text">
+                  <span>Data do empréstimo</span>
+                  <strong>{formatarData(emprestimo.data_de_emprestimo)}</strong>
+                </div>
               </div>
-            </article>
-          {/each}
-        </div>
-      {/if}
-    </section>
-  </div>
-  
-  <!-- Modal de exclusão -->
-  <Modal bind:open={abrirModalDelete} size="md">
-    <div class="delete-modal">
-      <div class="modal-icon">
-        <TrashBinOutline class="h-7 w-7" />
+
+              <div class="detail-row">
+                <div class="detail-icon return-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v5h5" />
+                  </svg>
+                </div>
+                <div class="detail-text">
+                  <span>Data de devolução</span>
+                  <strong>{formatarData(emprestimo.data_fim_emprestimo)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button
+                type="button"
+                class="edit-button"
+                onclick={() => goto(`/emprestimos/edit/${emprestimo.id}`)}
+                aria-label={`Editar empréstimo ${emprestimo.id}`}
+                disabled={loading || deleting}
+              >
+                <UserEditOutline class="h-5 w-5" />
+                <span>Editar</span>
+              </button>
+
+              <button
+                type="button"
+                class="delete-button"
+                onclick={() => abrirDelete(emprestimo)}
+                aria-label={`Excluir empréstimo ${emprestimo.id}`}
+                disabled={loading || deleting}
+              >
+                <TrashBinOutline class="h-5 w-5" />
+                <span>Excluir</span>
+              </button>
+            </div>
+          </article>
+        {/each}
       </div>
-  
-      <h2>Excluir empréstimo?</h2>
-      <p class="modal-description">
-        Esta ação removerá o registro selecionado. Confirme se deseja continuar.
-      </p>
-  
-      <div class="modal-record">
-        <span>Livro</span>
-        <strong>
-          {emprestimoParaDeletar?.livro ??
-            `Livro #${emprestimoParaDeletar?.id_livro ?? ''}`}
-        </strong>
-  
-        <span>Usuário</span>
-        <strong>
-          {emprestimoParaDeletar?.usuario ??
-            `Usuário #${emprestimoParaDeletar?.id_usuario ?? ''}`}
-        </strong>
-      </div>
-  
-      <div class="modal-actions">
-        <Button color="light" onclick={cancelarDelete} disabled={deleting}>
-          Cancelar
-        </Button>
-  
-        <Button color="red" onclick={confirmarDelete} disabled={deleting}>
-          {#if deleting}
-            Excluindo...
-          {:else}
-            <TrashBinOutline class="mr-2 inline h-4 w-4" />
-            Excluir empréstimo
-          {/if}
-        </Button>
-      </div>
+    {/if}
+  </section>
+</div>
+
+<!-- Modal de exclusão -->
+<Modal bind:open={abrirModalDelete} size="md">
+  <div class="delete-modal">
+    <div class="modal-icon">
+      <TrashBinOutline class="h-7 w-7" />
     </div>
-  </Modal>
-  
-  <style>
-    
+
+    <h2>Excluir empréstimo?</h2>
+    <p class="modal-description">
+      Esta ação removerá o registro selecionado. Confirme se deseja continuar.
+    </p>
+
+    <div class="modal-record">
+      <span>Livro</span>
+      <strong>
+        {emprestimoParaDeletar?.livro ??
+          `Livro #${emprestimoParaDeletar?.id_livro ?? ''}`}
+      </strong>
+
+      <span>Usuário</span>
+      <strong>
+        {emprestimoParaDeletar?.usuario ??
+          `Usuário #${emprestimoParaDeletar?.id_usuario ?? ''}`}
+      </strong>
+    </div>
+
+    <div class="modal-actions">
+      <Button color="light" onclick={cancelarDelete} disabled={deleting}>
+        Cancelar
+      </Button>
+
+      <Button color="red" onclick={confirmarDelete} disabled={deleting}>
+        {#if deleting}
+          Excluindo...
+        {:else}
+          <TrashBinOutline class="mr-2 inline h-4 w-4" />
+          Excluir empréstimo
+        {/if}
+      </Button>
+    </div>
+  </div>
+</Modal>
+
+<style>
 .loans-page {
     width: 100%;
     max-width: 1200px;
@@ -1415,6 +1446,5 @@
     .search-field {
         transition: none;
     }
-} 
+}
 </style>
-

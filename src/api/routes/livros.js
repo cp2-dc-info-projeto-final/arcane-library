@@ -58,6 +58,7 @@ const livroSelect = `
     l.id,
     l.id_autor,
     l.titulo,
+    l.sinopse,
     l.ano_de_publicacao,
     l.editora,
     l.isbn,
@@ -106,6 +107,7 @@ router.get('/', verifyToken, async function (req, res) {
 
       WHERE (
         l.titulo ILIKE $1
+        OR l.sinopse ILIKE $1
         OR a.nome ILIKE $1
         OR a.pseunonimo ILIKE $1
       )
@@ -126,6 +128,7 @@ router.get('/', verifyToken, async function (req, res) {
         l.id,
         l.id_autor,
         l.titulo,
+        l.sinopse,
         l.ano_de_publicacao,
         l.editora,
         l.isbn,
@@ -168,6 +171,7 @@ router.post(
 
       const {
         titulo,
+        sinopse,
         ano_de_publicacao,
         editora,
         isbn
@@ -244,18 +248,20 @@ router.post(
         `
         INSERT INTO livro (
           titulo,
+          sinopse,
           ano_de_publicacao,
           id_autor,
           editora,
           isbn,
           foto
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
 
         RETURNING
           id,
           id_autor,
           titulo,
+          sinopse,
           ano_de_publicacao,
           editora,
           isbn,
@@ -263,6 +269,7 @@ router.post(
         `,
         [
           titulo,
+          sinopse,
           ano_de_publicacao,
           id_autor,
           editora,
@@ -303,6 +310,7 @@ router.post(
           l.id,
           l.id_autor,
           l.titulo,
+          l.sinopse,
           l.ano_de_publicacao,
           l.editora,
           l.isbn,
@@ -370,6 +378,7 @@ router.get('/:id', verifyToken, async function (req, res) {
         l.id,
         l.id_autor,
         l.titulo,
+        l.sinopse,
         l.ano_de_publicacao,
         l.editora,
         l.isbn,
@@ -416,6 +425,7 @@ router.put(
 
       const {
         titulo,
+        sinopse,
         ano_de_publicacao,
         editora,
         isbn
@@ -524,16 +534,18 @@ router.put(
         SET
           id_autor = $1,
           titulo = $2,
-          ano_de_publicacao = $3,
-          editora = $4,
-          isbn = $5,
-          foto = $6
+          sinopse = $3,
+          ano_de_publicacao = $4,
+          editora = $5,
+          isbn = $6,
+          foto = $7
 
-        WHERE id = $7::BIGINT
+        WHERE id = $8::BIGINT
         `,
         [
           id_autor,
           titulo,
+          sinopse,
           ano_de_publicacao,
           editora,
           isbn,
@@ -582,6 +594,7 @@ router.put(
           l.id,
           l.id_autor,
           l.titulo,
+          l.sinopse,
           l.ano_de_publicacao,
           l.editora,
           l.isbn,

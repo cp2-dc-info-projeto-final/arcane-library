@@ -16,12 +16,24 @@
   let confirmTargetId: number | null = null;
   let consulta = '';
 
+  let buscaTimeout: ReturnType<typeof setTimeout>;
+  let requisicaoAtual = 0;
+
   onMount(() => {
-    carregarAutores();
+    carregarAutores(true);
+
+    return () => {
+      clearTimeout(buscaTimeout);
+    };
   });
 
-  async function carregarAutores() {
-    loading = true;
+  async function carregarAutores(mostrarLoading = false) {
+    const requisicao = ++requisicaoAtual;
+
+    if (mostrarLoading) {
+      loading = true;
+    }
+
     error = '';
 
     try {
@@ -35,6 +47,9 @@
         `/autores${params.size ? `?${params.toString()}` : ''}`
       );
 
+      // Ignora respostas de pesquisas anteriores
+      if (requisicao !== requisicaoAtual) return;
+
       const body = res.data as ApiResponse<Autores[]>;
 
       if (body.success) {
@@ -43,17 +58,30 @@
         error = body.message || 'Não foi possível carregar os autores.';
       }
     } catch (e: any) {
+      if (requisicao !== requisicaoAtual) return;
+
       console.error('Erro ao carregar autores:', e);
 
       const body = e.response?.data as ApiResponse<Autores[]> | undefined;
       error = body?.message || 'Erro ao carregar autores.';
     } finally {
-      loading = false;
+      if (requisicao === requisicaoAtual) {
+        loading = false;
+      }
     }
   }
 
-  async function filtrarAutores() {
-    await carregarAutores();
+  // Pesquisa automaticamente enquanto o usuário digita
+  function filtrarAutores() {
+    clearTimeout(buscaTimeout);
+
+    buscaTimeout = setTimeout(() => {
+      carregarAutores();
+    }, 300);
+  }
+
+  function abrirAutor(id: number) {
+    goto(`/pagina_autores?id=${id}`);
   }
 
   function openConfirm(id: number) {
@@ -113,6 +141,7 @@
 </svelte:head>
 
 <div class="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+
   <!-- Cabeçalho -->
   <header class="flex flex-col gap-2">
     <div class="flex items-center gap-3">
@@ -152,7 +181,8 @@
                text-xs font-semibold text-violet-700
                dark:bg-violet-950 dark:text-violet-300"
       >
-        {autores.length} {autores.length === 1 ? 'autor cadastrado' : 'autores cadastrados'}
+        {autores.length}
+        {autores.length === 1 ? 'autor cadastrado' : 'autores cadastrados'}
       </span>
     </div>
   </header>
@@ -163,7 +193,8 @@
            dark:border-gray-700 dark:bg-gray-800 sm:p-5"
     onsubmit={(event) => {
       event.preventDefault();
-      filtrarAutores();
+      clearTimeout(buscaTimeout);
+      carregarAutores();
     }}
   >
     <label
@@ -192,6 +223,7 @@
           id="pesquisa"
           type="search"
           bind:value={consulta}
+          oninput={filtrarAutores}
           placeholder="Pesquise pelo nome ou pseudônimo..."
           class="w-full rounded-xl border border-gray-300 bg-gray-50
                  py-3 pl-10 pr-4 text-sm text-gray-900 outline-none
@@ -205,38 +237,24 @@
       <div class="flex gap-2">
         <button
           type="submit"
-          disabled={loading}
           class="inline-flex flex-1 items-center justify-center gap-2
                  rounded-xl bg-violet-700 px-5 py-3 text-sm font-semibold
                  text-white transition hover:bg-violet-800
                  focus:outline-none focus:ring-4 focus:ring-violet-300
-                 disabled:cursor-not-allowed disabled:opacity-60
                  dark:focus:ring-violet-900 sm:flex-none"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path stroke-linecap="round" d="m16 16 4 4" />
-          </svg>
           Buscar
         </button>
 
         <button
           type="button"
-          disabled={loading}
           onclick={() => {
+            clearTimeout(buscaTimeout);
             consulta = '';
             carregarAutores();
           }}
           class="rounded-xl border border-gray-300 px-4 py-3 text-sm
                  font-medium text-gray-700 transition hover:bg-gray-100
-                 disabled:cursor-not-allowed disabled:opacity-60
                  dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           Limpar
@@ -245,107 +263,58 @@
     </div>
   </form>
 
-  <!-- Mensagem de erro -->
+  <!-- Erro -->
   {#if error}
     <div
       role="alert"
-      class="flex items-start gap-3 rounded-xl border border-red-200
-             bg-red-50 p-4 text-sm text-red-800
-             dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+      class="rounded-xl border border-red-200 bg-red-50 p-4
+             text-sm text-red-800 dark:border-red-900
+             dark:bg-red-950/40 dark:text-red-300"
     >
-      <svg
-        class="mt-0.5 h-5 w-5 shrink-0"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path stroke-linecap="round" d="M12 7v5m0 3h.01" />
-      </svg>
-
-      <div class="min-w-0 flex-1">{error}</div>
+      {error}
 
       <button
         type="button"
-        onclick={carregarAutores}
-        class="shrink-0 font-semibold underline underline-offset-2"
+        onclick={() => carregarAutores(true)}
+        class="ml-2 font-semibold underline"
       >
         Tentar novamente
       </button>
     </div>
   {/if}
 
-  <!-- Carregamento -->
+  <!-- Carregamento inicial -->
   {#if loading}
     <div
       class="flex flex-col items-center justify-center gap-3 rounded-2xl
              border border-gray-200 bg-white px-4 py-16
              dark:border-gray-700 dark:bg-gray-800"
-      aria-live="polite"
     >
       <div
         class="h-9 w-9 animate-spin rounded-full border-4
-               border-violet-200 border-t-violet-700
-               dark:border-violet-950 dark:border-t-violet-400"
+               border-violet-200 border-t-violet-700"
       ></div>
+
       <p class="text-sm text-gray-500 dark:text-gray-400">
         Carregando autores...
       </p>
     </div>
 
   {:else if !error && autores.length === 0}
-    <!-- Estado vazio -->
     <div
       class="flex flex-col items-center justify-center rounded-2xl
              border border-dashed border-gray-300 bg-white px-6 py-16
              text-center dark:border-gray-700 dark:bg-gray-800"
     >
-      <div
-        class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl
-               bg-violet-100 text-violet-600
-               dark:bg-violet-950 dark:text-violet-300"
-      >
-        <svg
-          class="h-8 w-8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.7"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 7v14m0-14C10.5 5.5 8.5 5 5 5v14c3.5 0 5.5.5 7 2m0-14c1.5-1.5 3.5-2 7-2v14c-3.5 0-5.5.5-7 2"
-          />
-        </svg>
-      </div>
-
       <h2 class="text-lg font-bold text-gray-900 dark:text-white">
         Nenhum autor encontrado
       </h2>
+
       <p class="mt-2 max-w-sm text-sm text-gray-500 dark:text-gray-400">
         {consulta.trim()
-          ? 'Não encontramos autores com essa pesquisa. Tente outro nome ou limpe os filtros.'
+          ? 'Não encontramos autores com essa pesquisa.'
           : 'Ainda não há autores cadastrados na biblioteca.'}
       </p>
-
-      {#if consulta.trim()}
-        <button
-          type="button"
-          onclick={() => {
-            consulta = '';
-            carregarAutores();
-          }}
-          class="mt-5 rounded-xl bg-violet-700 px-4 py-2.5
-                 text-sm font-semibold text-white transition
-                 hover:bg-violet-800"
-        >
-          Limpar pesquisa
-        </button>
-      {/if}
     </div>
 
   {:else if !error}
@@ -355,6 +324,7 @@
         <h2 class="text-lg font-bold text-gray-900 dark:text-white">
           Autores cadastrados
         </h2>
+
         <span class="text-sm text-gray-500 dark:text-gray-400">
           {autores.length} resultado(s)
         </span>
@@ -369,34 +339,56 @@
                    dark:border-gray-700 dark:bg-gray-800
                    dark:hover:border-violet-700"
           >
-            <!-- Faixa superior -->
+            <!-- Cabeçalho do autor -->
             <div
               class="flex items-start gap-3 border-b border-gray-100
                      bg-gradient-to-r from-violet-50 to-white p-4
                      dark:border-gray-700 dark:from-violet-950/40
                      dark:to-gray-800 sm:p-5"
             >
-              <div
-                class="flex h-12 w-12 shrink-0 items-center justify-center
-                       rounded-xl bg-violet-200 text-lg font-bold
-                       text-violet-800 dark:bg-violet-900 dark:text-violet-200"
-                aria-hidden="true"
+              <!-- FOTO CLICÁVEL -->
+              <button
+                type="button"
+                onclick={() => abrirAutor(autor.id)}
+                aria-label={`Ver página de ${autor.nome}`}
+                title="Ver página do autor"
+                class="shrink-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
-                {autor.nome?.trim().charAt(0).toUpperCase() || '?'}
-              </div>
+                {#if autor.foto}
+                  <img
+                    src={`http://localhost:3000/uploads/${autor.foto}`}
+                    alt={`Foto de ${autor.nome}`}
+                    class="h-12 w-12 rounded-xl object-cover transition hover:opacity-80"
+                  />
+                {:else}
+                  <div
+                    class="flex h-12 w-12 items-center justify-center
+                           rounded-xl bg-violet-200 text-lg font-bold
+                           text-violet-800 dark:bg-violet-900 dark:text-violet-200"
+                  >
+                    {autor.nome?.trim().charAt(0).toUpperCase() || '?'}
+                  </div>
+                {/if}
+              </button>
 
+              <!-- NOME CLICÁVEL -->
               <div class="min-w-0 flex-1">
-                <h3
-                  class="break-words text-base font-bold text-gray-900
-                         dark:text-white"
+                <button
+                  type="button"
+                  onclick={() => abrirAutor(autor.id)}
+                  class="break-words text-left text-base font-bold
+                         text-gray-900 transition hover:text-violet-700
+                         dark:text-white dark:hover:text-violet-300"
                 >
                   {autor.nome}
-                </h3>
+                </button>
+
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Registro #{autor.id}
                 </p>
               </div>
 
+              <!-- EDITAR E EXCLUIR -->
               <div class="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
@@ -406,7 +398,6 @@
                   class="inline-flex h-9 w-9 items-center justify-center
                          rounded-lg border border-violet-200 bg-white
                          text-violet-700 transition hover:bg-violet-100
-                         focus:outline-none focus:ring-2 focus:ring-violet-300
                          dark:border-violet-900 dark:bg-gray-800
                          dark:text-violet-300 dark:hover:bg-violet-950"
                 >
@@ -422,7 +413,6 @@
                   class="inline-flex h-9 w-9 items-center justify-center
                          rounded-lg border border-red-200 bg-white
                          text-red-600 transition hover:bg-red-50
-                         focus:outline-none focus:ring-2 focus:ring-red-200
                          disabled:cursor-not-allowed disabled:opacity-50
                          dark:border-red-900 dark:bg-gray-800
                          dark:text-red-400 dark:hover:bg-red-950"
@@ -439,7 +429,7 @@
               </div>
             </div>
 
-            <!-- Informações do autor -->
+            <!-- Informações -->
             <div class="p-4 sm:p-5">
               <p
                 class="mb-2 text-xs font-semibold uppercase tracking-wider
@@ -448,29 +438,16 @@
                 Pseudônimo
               </p>
 
-              <div class="flex items-center gap-2">
-                <svg
-                  class="h-5 w-5 shrink-0 text-violet-500 dark:text-violet-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0"
-                  />
-                </svg>
-
-                <span
-                  class="break-words text-sm font-medium text-gray-700
-                         dark:text-gray-200"
-                >
-                  {autor.pseunonimo?.trim() || 'Não informado'}
-                </span>
-              </div>
+              
+              <button
+                type="button"
+                onclick={() => abrirAutor(autor.id)}
+                class="mt-4 text-sm font-semibold text-violet-700
+                       hover:text-violet-900 dark:text-violet-300
+                       dark:hover:text-violet-200"
+              >
+                Ver perfil do autor →
+              </button>
             </div>
           </article>
         {/each}
@@ -479,7 +456,6 @@
   {/if}
 </div>
 
-<!-- Modal de confirmação -->
 <ConfirmModal
   open={confirmOpen}
   message="Tem certeza que deseja remover este autor? Essa ação não poderá ser desfeita."
