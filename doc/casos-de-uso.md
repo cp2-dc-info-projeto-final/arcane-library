@@ -432,6 +432,8 @@
 
 #### Atores: 
 
+#### Regras de uso: O administrador só pode apagar a conta de um usuário depois de ter apagado todos os empréstimos dele.
+
 - Administrador.
 
 #### Fluxo principal: 
