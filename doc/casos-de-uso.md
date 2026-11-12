@@ -81,7 +81,7 @@
 
 - O usuário seleciona a opção "Login".
 
-- O sistema leva o usuário até a tela de preenchimento de nome, senha e email.
+- O sistema leva o usuário até a tela de preenchimento de nome ou email e senha.
 
 - O usuário preenche os campos da tela.
 
@@ -101,7 +101,7 @@
 
 - O sistema consulta o banco de dados.
 
-- O banco de dados retorna que o email informado já está em uso.
+- O banco de dados retorna que o email inserido está inválido.
 
 - O sistema exibe uma mensagem dizendo que o email está inválido e sugere que o usuário digite outro email.
 
@@ -148,7 +148,9 @@
 
 - O sistema apresenta a página inicial do site.
 
-- O usuário aperta na barra de pesquisa.
+- O usuário aperta na parte de livros.
+
+- O usuário clica na parte de pesquisar livros.
 
 - O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor.
 
@@ -170,7 +172,7 @@
 
 - O usuário não preenche o campo e aperta a barra de pesquisa.
 
-- O sistema analisa e pede que o usuário digite o livro que deseja, o gênero de livro que deseja ou o autor.    PAREI AQUI
+- O sistema exibe os livros que já estavam na página inicialmente.    PAREI AQUI
 
 - O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor desejado e clica na barra de pesquisa.
 
@@ -284,7 +286,7 @@
 - O sistema apresenta mensagem dizendo que o comentário foi editado.
 
 
-### Caso de Uso 5: Efetuar aluguel do livro físico.
+### Caso de Uso 5: Efetuar aluguel do livro.
 
 #### Atores: 
 
@@ -292,19 +294,17 @@
 
 #### Fluxo principal:  
 
-- O administrador clica no botão de iniciar o processo de aluguel.
+- O administrador clica no botão de empréstimos.
 
 - O sistema abre a página de aluguel de livros.
 
-- O administrador clica no campo de digitar o código do livro.
+- O administrador clica em adicionar empréstimo.
 
-- O administrador preenche o código do livro a ser alugado.
+- O administrador preenche o nome do livro, o nome do usuário, a data de começo do empréstimo, data do fim do empréstimo e status do empréstimo.
 
 - O sistema exibe os dados do livro a ser alugado.
 
-- O sistema pede confirmação.
-
-- O administrador confirma.
+- O administrador clica no botão de confirmar.
 
 - O administrador preenche a identificação do cliente.
 
@@ -314,71 +314,38 @@
 
 - O sistema exibe um prazo pra devolução. 
   
-- O administrador finaliza o aluguel e é redirecionado para a pagina inicial.
+- O administrador finaliza o aluguel e é redirecionado para a pagina de empréstimos 
 
 ![Diagrama de sequência do caso de uso 5](diagramas/diagrama_sequencia_caso_5.drawio.png)
 
  #### Fluxo Alternativo A: Livro não encontrado.
 
-- O administrador clica no botão de iniciar o processo de aluguel.
+- O administrador clica no botão de empréstimos.
 
 - O sistema abre a página de aluguel de livros.
 
-- O administrador clica no campo de digitar o código do livro.
+- O administrador clica em adicionar empréstimo.
 
-- O administrador preenche o código do livro a ser alugado.
+- O administrador preenche o nome de um livro não cadastrado.
 
-- O sistema avisa que o livro não encontrado.
-
-- O administrador aperta em cancelar.
-
-- O sistema cancela.
-
-- O sistema redireciona o administrador para a página de processo de aluguel.
+- O sistema não exibe nenhum nome de livro, portanto, não é possível selecionar livro algum até que o administrador digite, e posteriormente selecione um livro válido.
 
 
  #### Fluxo Alternativo B: Livro não disponível.
 
-- O administrador clica no botão de iniciar o processo de aluguel.
+- O administrador clica no botão de empréstimos.
 
 - O sistema abre a página de aluguel de livros.
 
-- O administrador clica no campo de digitar o código do livro.
+- O administrador clica em adicionar empréstimo.
 
-- O administrador preenche o código do livro a ser alugado.
-
-- O sistema avisa que o livro não está disponível.
+- O administrador preenche o nome do livro, o nome do usuário, a data de começo do empréstimo, data do fim do empréstimo e status do empréstimo.
 
 - O administrador aperta em cancelar.
 
 - O sistema cancela.
 
 - O sistema redireciona o administrador para a página de processo de aluguel.
-
-
- #### Fluxo Alternativo C: Livro digital.
-
-- O administrador clica no botão de iniciar o processo de aluguel.
-
-- O sistema abre a página de aluguel de livros.
-
-- O administrador clica no campo de digitar o código do livro.
-
-- O administrador preenche o código do livro a ser alugado.
-
-- O sistema exibe os dados do livro a ser alugado.
-
-- O sistema pede confirmação.
-
-- O administrador confirma.
-
-- O administrador preenche a identificação do cliente.
-
-- O sistema pede confirmação.
-
-- O administrador confirma.
-  
-- O administrador finaliza o aluguel e é redirecionado para a pagina inicial.
 
 
 ### Caso de Uso 6: Finalizar aluguel do livro físico.
@@ -389,15 +356,25 @@
 
 #### Fluxo principal:  
 
-- O administrador abre a página de aluguéis do cliente.
+- O administrador clica no botão de empréstimos.
 
-- O administrador clica na opção de dar baixa no livro.
+- O sistema exibe a página de empréstimos.
 
-- O sistema pede confirmação.
+- O administrador clica no botão de filtrar empréstimo por livro, nome do usuário ou email.
 
-- O administrador confirma.
+- O administrador digita o livro, nome do usuário ou email e clica em pesquisar empréstimo.
 
-- O sistema volta pra página de aluguéis do cliente.
+- O sistema exibe o empréstimo correspondente.
+
+- O administrador clica em editar livro.
+
+- O sistema abre a página de editar empréstimo.
+
+- O administrador seleciona que o livro foi devolvido.
+
+- O administrador clica no botão de confirmar edição.
+
+- O sistema volta pra página de empréstimos.
 
 ![Diagrama de sequência do caso de uso 6](diagramas/diagrama_sequencia_caso_6.drawio.png)
 
@@ -410,7 +387,13 @@
 
 #### Fluxo principal:  
 
-- O administrador abre a página de um livro.
+- O administrador clica na parte de livros.
+
+- O sistema exibe a página de gerenciar livros.
+
+- O administrador clica na parte de pesquisar livro por nome, categoria ou autor do livro.
+
+- O sistema exibe o livro.
 
 - O administrador aperta no botão de editar livro.
 
@@ -420,31 +403,29 @@
 
 - O administrador aperta no botão de editar.
 
-- O sistema pede confirmação.
+- O sistema confirma as alterações.
 
-- O administrador confirma.
-
-- O sistema avisa que a edição foi feita.
-
-- O sistema volta pra página inicial.
+- O sistema volta pra página de livros.
 
 ![Diagrama de sequência do caso de uso 7](diagramas/diagrama_sequencia_caso_7.drawio.png)
 
 #### Fluxo Alternativo A: Excluir livro.
 
-- O administrador abre a página de um livro.
+- O administrador clica na parte de livros.
 
-- O administrador clicar em apagar o livro.
+- O sistema exibe a página de gerenciar livros.
+
+- O administrador clica na parte de pesquisar livro por nome, categoria ou autor do livro.
+
+- O sistema exibe o livro.
+
+- O administrador aperta no botão de excluir livro.
 
 - O sistema pede confirmação.
 
 - O administrador confirma.
 
-- O sistema avisa que o livro foi apagado.
-
-- O sistema volta pra página inicial.
-
-
+- O sistema volta pra página de livros.
 
 
 ### Caso de Uso 8: Gerenciar usuários.
@@ -455,15 +436,17 @@
 
 #### Fluxo principal: 
 
-- O administrador vai para a página de usuários.
+- O administrador clica na parte de gerenciar usuários.
 
-- O administrador escolhe um usuário.
+- O sistema exibe a página de usuários.
 
-- O administrador clica no perfil do usuário.
+- O administrador clica na parte de filtrar usuário por email ou login.
 
-- O administrador entra no perfil do usuário.
+- O administrador digita o login ou email e clica em pesquisar.
 
-- O administrador clica no botão de apagar usuário.
+- O sistema exibe o usuário.
+
+- O administrador clica no botão de excluir usuário.
 
 - O sistema pede confirmação.
 
@@ -471,30 +454,29 @@
 
 - O sistema apaga o usuário do banco de dados.
 
-- O sistema avisa que o usuário foi apagado.
+- O sistema volta para a página de usuários.
 
 ![Diagrama de sequência do caso de uso 8](diagramas/diagrama_sequencia_caso_8.drawio.png)
 
 #### Fluxo Alternativo A: Editar usuário.
 
-- O administrador vai para a página de usuários.
+- O administrador clica na parte de gerenciar usuários.
 
-- O administrador escolhe um usuário.
+- O sistema exibe a página de usuários.
 
-- O administrador clica no perfil do usuário.
+- O administrador clica na parte de filtrar usuário por email ou login.
 
-- O administrador entra no perfil do usuário.
+- O administrador digita o login ou email e clica em pesquisar.
+
+- O sistema exibe o usuário.
 
 - O administrador clica no botão de editar usuário.
 
-- O sistema pede confirmação.
+- O sistema exibe a página do usuário.
 
-- O administrador confirma.
+- O administrador edita o que quer e clica no botão de salvar alterações.
 
-- O sistema edita as informações do usuário no banco de dados.
-
-- O sistema avisa que o usuário foi editado.
-
+- O sistema volta para a página de usuários.
 
 
 
@@ -516,7 +498,7 @@
 
 - O usuário edita as informações do perfil.
 
-- O usuário clica no botão de editar.
+- O usuário clica no botão de salvar alterações.
 
 - O sistema pede confirmação.
 
