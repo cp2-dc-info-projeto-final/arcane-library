@@ -1,5 +1,7 @@
 ## Casos de Uso:
 
+
+
 ### Caso de uso 1: Efetuar cadastro.
 
 #### Atores:
@@ -24,6 +26,7 @@
 
 ![Diagrama de sequência do caso de uso 1](diagramas/diagrama_sequencia_caso_1.drawio.png)
 
+
 #### Fluxo Alternativo A: O email já está cadastrado
 
 - O sistema apresenta formulário de cadastro.
@@ -36,9 +39,9 @@
 
 - O sistema exibe uma mensagem de erro informando que o email digitado já está em uso.
 
-- O usuário digita um novo email no formulário e tenta novamente.
+- O usuário digita um novo email no formulário e clica no botão de "Criar Conta".
 
-- O sistema registra as informações no banco de dados e informa usuário.
+- O sistema registra as informações no banco de dados e volta para a página de login.
 
 
 #### Fluxo Alternativo B: Campo vazio
@@ -49,9 +52,9 @@
 
 - O sistema analisa os campos de cadastro e pede que o usuário preencha todos os campos.
 
-- O usuário preenche todos os campos  e clica no botão de "Criar Conta".
+- O usuário preenche todos os campos e clica no botão de "Criar Conta".
 
-- O sistema registra as informações no banco de dados e informa usuário.
+- O sistema registra as informações no banco de dados e volta para a página de login.
 
 
 #### Fluxo Alternativo C: Senha diferente dos padrões exigidos
@@ -60,14 +63,13 @@
 
 - O usuário insere uma senha.
 
-- O sistema analisa se a senha está dentro dos padrões exigidos  (mínimo 8 caracteres e 1 símbolo)
+- O sistema analisa se a senha está dentro dos padrões exigidos (mínimo 8 caracteres e 1 símbolo)
 
 - O sistema exibe uma mensagem de erro e informa ao usuário que a senha está fora dos padrões.
 
 - O sistema exibe uma mensagem sugerindo que o usuário coloque a senha correta.
   
-- O sistema registra as informações no banco de dados e informa usuário.
-
+- O sistema registra as informações no banco de dados e volta para a página de login.
 
 
 
@@ -93,6 +95,7 @@
 
 ![Diagrama de sequência do caso de uso 2](diagramas/diagrama_sequencia_caso_2.drawio.png)
 
+
 #### Fluxo Alternativo A: Email inválido
 
 - O sistema apresenta a página de formulário de Login.
@@ -104,6 +107,14 @@
 - O banco de dados retorna que o email inserido está inválido.
 
 - O sistema exibe uma mensagem dizendo que o email está inválido e sugere que o usuário digite outro email.
+
+- O usuário digita um email válido e crica na opção de "Entrar na minha conta".
+
+- O sistema consulta o banco de dados para a confirmação dos dados inseridos.
+
+- O banco de dados retorna uma confirmação positiva.
+
+- O sistema encaminha o usuário para a página principal do site.
 
 
 #### Fluxo Alternativo B: Senha inválida
@@ -118,8 +129,37 @@
 
 - O sistema exibe uma mensagem dizendo que a senha está invalida e sugere que o usuário insira uma senha correta.
 
+- O usuário digita uma senha válida e crica na opção de "Entrar na minha conta".
 
-#### Fluxo Alternativo C: Campo vazio
+- O sistema consulta o banco de dados para a confirmação dos dados inseridos.
+
+- O banco de dados retorna uma confirmação positiva.
+
+- O sistema encaminha o usuário para a página principal do site.
+
+
+#### Fluxo Alternativo C: Nome inválido
+
+- O sistema apresenta a página de formulário de Login.
+
+- O usuário insere um nome.
+
+- O sistema consulta o banco de dados.
+
+- O banco de dados retorna que o nome inserido está inválido.
+
+- O sistema exibe uma mensagem dizendo que o nome está inválido e sugere que o usuário digite outro nome.
+
+- O usuário digita um nome válido e crica na opção de "Entrar na minha conta".
+
+- O sistema consulta o banco de dados para a confirmação dos dados inseridos.
+
+- O banco de dados retorna uma confirmação positiva.
+
+- O sistema encaminha o usuário para a página principal do site.
+
+
+#### Fluxo Alternativo D: Campo vazio
 
 - O sistema apresenta a página de formulário de Login.
 
@@ -137,7 +177,6 @@
 
 
 
-
 ### Caso de Uso 3: Buscar livros.
 
 #### Atores: 
@@ -152,7 +191,7 @@
 
 - O usuário clica na parte de pesquisar livros.
 
-- O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor.
+- O usuário digita o livro, o gênero de livro, o autor ou o pseudônimo do autor.
 
 - O usuário aperta no botão "Enter".
 
@@ -164,6 +203,7 @@
 
 ![Diagrama de sequência do caso de uso 3](diagramas/diagrama_sequencia_caso_3.drawio.png)
 
+
 #### Fluxo Alternativo A: Campo vazio.
 
 - O sistema apresenta a página inicial do site.
@@ -172,15 +212,7 @@
 
 - O usuário não preenche o campo e aperta a barra de pesquisa.
 
-- O sistema exibe os livros que já estavam na página inicialmente.    PAREI AQUI
-
-- O usuário digita o livro que deseja, o gênero de livro que deseja ou o autor desejado e clica na barra de pesquisa.
-
-- O sistema verifica no banco de dados se tem o livro que deseja, o gênero de livro que deseja ou o autor desejado.
-
-- O banco de dados retorna verdadeiro.
-
-- O sistema direciona o usuário para a página com o livro que deseja, o gênero de livro que deseja ou o autor desejado.
+- O sistema exibe os livros que já estavam na página inicialmente.
 
 
 #### Fluxo Alternativo B: Livros indisponíveis.
@@ -196,7 +228,6 @@
 - O banco de dados retorna negativo.
 
 - O sistema apresenta mensagem dizendo que o livro que deseja, livros do gênero que deseja ou livros do autor desejado não tem disponíveis para aluguel no momento.
-
 
 
 
@@ -227,6 +258,7 @@
 - O sistema publica o comentário.
 
 ![Diagrama de sequência do caso de uso 4](diagramas/diagrama_sequencia_caso_4.drawio.png)
+
 
 #### Fluxo Alternativo A: Excluir comentário.
 
@@ -314,9 +346,10 @@
 
 - O sistema exibe um prazo pra devolução. 
   
-- O administrador finaliza o aluguel e é redirecionado para a pagina de empréstimos 
+- O administrador finaliza o aluguel e é redirecionado para a pagina de empréstimos.
 
 ![Diagrama de sequência do caso de uso 5](diagramas/diagrama_sequencia_caso_5.drawio.png)
+
 
  #### Fluxo Alternativo A: Livro não encontrado.
 
@@ -328,7 +361,7 @@
 
 - O administrador preenche o nome de um livro não cadastrado.
 
-- O sistema não exibe nenhum nome de livro, portanto, não é possível selecionar livro algum até que o administrador digite, e posteriormente selecione um livro válido.
+- O sistema não exibe nenhum nome de livro, portanto, não é possível selecionar livro algum até que o administrador digite e, posteriormente, selecione um livro válido.
 
 
  #### Fluxo Alternativo B: Livro não disponível.
@@ -341,11 +374,8 @@
 
 - O administrador preenche o nome do livro, o nome do usuário, a data de começo do empréstimo, data do fim do empréstimo e status do empréstimo.
 
-- O administrador aperta em cancelar.
+- O sistema diz que o livro está indisponível.
 
-- O sistema cancela.
-
-- O sistema redireciona o administrador para a página de processo de aluguel.
 
 
 ### Caso de Uso 6: Finalizar aluguel do livro físico.
@@ -360,7 +390,7 @@
 
 - O sistema exibe a página de empréstimos.
 
-- O administrador clica no botão de filtrar empréstimo por livro, nome do usuário ou email.
+- O administrador clica na barra de pesquisa de filtrar empréstimo por livro, nome do usuário ou email.
 
 - O administrador digita o livro, nome do usuário ou email e clica em pesquisar empréstimo.
 
@@ -408,6 +438,7 @@
 - O sistema volta pra página de livros.
 
 ![Diagrama de sequência do caso de uso 7](diagramas/diagrama_sequencia_caso_7.drawio.png)
+
 
 #### Fluxo Alternativo A: Excluir livro.
 
@@ -459,6 +490,7 @@
 - O sistema volta para a página de usuários.
 
 ![Diagrama de sequência do caso de uso 8](diagramas/diagrama_sequencia_caso_8.drawio.png)
+
 
 #### Fluxo Alternativo A: Editar usuário.
 
@@ -513,6 +545,7 @@
 - O sistema abre a página do perfil do usuário.
 
 ![Diagrama de sequência do caso de uso 9](diagramas/diagrama_sequencia_caso_9.drawio.png)
+
 
 #### Fluxo Alternativo A: Cancelar edição.
 
@@ -577,7 +610,6 @@
 - O banco de dados retorna uma confirmação positiva.
 
 - O sistema envia uma mensagem de sucesso e envia o usuário para a página de cadastro e login. 
-
 
 
 
