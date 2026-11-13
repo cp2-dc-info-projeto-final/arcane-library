@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -16,6 +17,12 @@ var comentariosRouter = require('./routes/comentarios');
 
 var app = express();
 
+app.get('/teste-api', (req, res) => {
+  res.json({
+      success: true,
+      message: 'Backend funcionando!'
+  });
+});
 
 app.use(
     '/uploads',

@@ -2,7 +2,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { Spinner } from 'flowbite-svelte';
-    import api, { type ApiResponse } from '$lib/api';
+    import type { ApiResponse } from '$lib/models/ApiResponse';
 
     interface EmprestimoUsuario {
         id: number;

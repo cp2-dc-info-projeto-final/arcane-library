@@ -27,6 +27,7 @@ export interface ApiFailure {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
+
 // Instância global do Axios
 const api = axios.create({
   baseURL: 'http://localhost:3000',

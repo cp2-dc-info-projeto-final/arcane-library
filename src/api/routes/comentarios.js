@@ -65,6 +65,23 @@ router.get('/livro/:id', verifyToken, async (req, res) => {
                 -- Dados do usuário diretamente no comentário
                 u.login AS login,
                 u.foto AS foto,
+                -- Biel acrescentou isso
+                
+                COALESCE(
+                    (
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'login', um.login,
+                                'usuario_id', um.id
+                            )
+                        )
+                        FROM mencao_comentario mc
+                        INNER JOIN usuario um
+                            ON um.id = mc.usuario_mencionado_id
+                        WHERE mc.comentario_id = c.id
+                    ),
+                    '[]'::jsonb
+                ) AS mencoes,
 
                 -- Mantém também o objeto usuario
                 jsonb_build_object(
@@ -267,11 +284,11 @@ router.post('/livro/:id', verifyToken, async (req, res) => {
         // Identificar e salvar menções (@login)
         const logins = [
             ...new Set(
-                [...conteudo.matchAll(/@([a-zA-Z0-9_.-]+)/g)]
-                    .map(match => match[1])
+                [...conteudo.matchAll(/@([\p{L}\p{N}_]+(?:[.-][\p{L}\p{N}_]+)*)/gu)]
+                    .map(match => match[1].normalize('NFC').toLowerCase())
             )
         ];
-
+        
         for (const login of logins) {
             const usuarioMencionado = await client.query(
                 `

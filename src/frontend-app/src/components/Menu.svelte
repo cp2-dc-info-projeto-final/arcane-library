@@ -83,6 +83,20 @@
       console.error('Erro no logout:', error);
     }
   }
+
+  function getFotoUrl(foto: string | null | undefined): string {
+  if (!foto) return '';
+
+  if (
+    foto.startsWith('data:') ||
+    foto.startsWith('http') ||
+    foto.startsWith('/')
+  ) {
+    return foto;
+  }
+
+  return `http://localhost:3000/uploads/${foto}`;
+    }
 </script>
 
 <!-- NAVBAR -->
@@ -155,10 +169,24 @@
 
           {/if}
 
-          <li>
-            <a href="/editar_perfil" class="arcane-nav-link">
-              <EditOutline class="nav-icon" />
-              Perfil
+          <li class="profile-photo-item">
+            <a
+              href={`/perfil/${user.id}`}
+              class="profile-photo-link"
+              aria-label="Abrir meu perfil"
+              title="Meu perfil"
+            >
+              {#if user.foto}
+                <img
+                  src={getFotoUrl(user.foto)}
+                  alt={`Foto de ${user.login}`}
+                  class="navbar-user-photo"
+                />
+              {:else}
+                <span class="navbar-user-placeholder">
+                  {user.login.charAt(0).toUpperCase()}
+                </span>
+              {/if}
             </a>
           </li>
 
@@ -675,4 +703,46 @@
       animation-duration: 0.01ms !important;
     }
   }
+  /* FOTO DO USUÁRIO NA NAVBAR */
+
+.profile-photo-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-photo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #c9a45c;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-photo-link:hover {
+  transform: scale(1.08);
+  border-color: #967237;
+}
+
+.navbar-user-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.navbar-user-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #c9a45c;
+  color: #10243a;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
 </style>

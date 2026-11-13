@@ -24,25 +24,36 @@
   import type { User, UserFormData } from '$lib/models/User';
   import { getToken } from '$lib/auth';
 
+  type UserWithProfile = User & {
+  biografia?: string | null;
+  cor_biografia?: string | null;
+};
+
   export let id: number | null = null;
   export let me: string = 'false';
 
-  let user: UserFormData = {
-    id: 0,
-    foto: '',
-    login: '',
-    cpf: '',
-    telefone: '',
-    datanasc: '',
-    email: '',
-    senha: '',
-    role: 'cliente'
-  };
+  let user: UserFormData & {
+  biografia: string;
+  cor_biografia: string;
+} = {
+  id: 0,
+  foto: '',
+  login: '',
+  cpf: '',
+  telefone: '',
+  datanasc: '',
+  email: '',
+  senha: '',
+  role: 'cliente',
+  biografia: '',
+  cor_biografia: '#000000'
+};
 
   const roleOptions = [
-    { value: 'cliente', name: 'Cliente' },
-    { value: 'admin', name: 'Administrador' }
-  ];
+  { value: 'cliente', name: 'Cliente' },
+  { value: 'bibliotecario', name: 'Bibliotecário' },
+  { value: 'admin', name: 'Administrador' }
+];
 
   let fotoPerfil = '';
   let fotoFile: File | null = null;
@@ -198,14 +209,16 @@ function atualizarCPF(valor: string) {
     try {
       const targetRoute = me === 'true' ? '/users/me' : `/users/${id}`;
       const res = await api.get(targetRoute);
-      const body = res.data as ApiResponse<User>;
+      const body = res.data as ApiResponse<UserWithProfile>;  
 
       if (body?.success && body.data) {
         user = {
-                  ...body.data,
-                  cpf: aplicarMascara(String(body.data.cpf ?? '')),
-                  senha: ''
-               };
+  ...body.data,
+  cpf: aplicarMascara(String(body.data.cpf ?? '')),
+  senha: '',
+  biografia: body.data.biografia ?? '',
+  cor_biografia: body.data.cor_biografia ?? '#000000'
+};
               fotoPerfil = body.data.foto
               ? `http://localhost:3000/uploads/${body.data.foto}`
               : '';
@@ -289,6 +302,8 @@ function atualizarCPF(valor: string) {
     formData.append('telefone', user.telefone);
     formData.append('datanasc', user.datanasc);
     formData.append('email', user.email.trim());
+    formData.append('biografia', user.biografia || '');
+    formData.append('cor_biografia', user.cor_biografia || '#000000');
 
     if (user.senha) {
       formData.append('senha', user.senha);
@@ -326,7 +341,7 @@ function atualizarCPF(valor: string) {
       ? await api.put(targetRoute, formData)
       : await api.post('/users', formData);
 
-    const body = res.data as ApiResponse<User>;
+      const body = res.data as ApiResponse<UserWithProfile>;
 
     if (!body?.success) {
       error = body?.message || 'Não foi possível salvar o usuário.';
@@ -334,7 +349,17 @@ function atualizarCPF(valor: string) {
       return;
     }
 
+if (editando || me === 'true') {
+  const perfilId = body.data?.id ?? user.id ?? id;
+
+  if (perfilId !== null && perfilId !== undefined) {
+    await goto(`/perfil/${perfilId}`);
+  } else {
     await goto('/users');
+  }
+} else {
+  await goto('/users');
+}
   } catch (e: any) {
     const body = e.response?.data as ApiResponse<User> | undefined;
 
@@ -344,9 +369,20 @@ function atualizarCPF(valor: string) {
     loading = false;
   }
 }
-  function handleCancel() {
-    if (!loading) goto('/users');
+function handleCancel() {
+  if (loading) return;
+
+  if (editando || me === 'true') {
+    const perfilId = id ?? user.id;
+
+    if (perfilId) {
+      goto(`/perfil/${perfilId}`);
+      return;
+    }
   }
+
+  goto('/users');
+}
 </script>
 
 <svelte:head>
@@ -550,6 +586,79 @@ function atualizarCPF(valor: string) {
             </div>
           </div>
         </section>
+
+
+<!-- Biografia e personalização -->
+<section>
+  <div class="section-heading">
+    <span class="section-number">03</span>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+      Biografia do perfil
+    </h3>
+  </div>
+
+  <div class="flex flex-col gap-5">
+    <div>
+      <Label for="biografia" class="field-label">
+        Sobre mim
+      </Label>
+
+      <textarea
+        id="biografia"
+        bind:value={user.biografia}
+        maxlength="500"
+        rows="5"
+        placeholder="Conte um pouco sobre você, seus gostos e suas leituras..."
+        disabled={loading}
+        class="mt-2 w-full rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      ></textarea>
+
+      <p class="mt-1 text-right text-xs text-gray-500 dark:text-gray-400">
+        {user.biografia.length}/500 caracteres
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3 rounded-xl border border-purple-200/60 bg-purple-500/5 p-4 dark:border-purple-400/20 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <Label for="cor_biografia" class="field-label">
+          Cor do texto da biografia
+        </Label>
+
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Escolha a cor que aparecerá na sua página pública.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <input
+          id="cor_biografia"
+          type="color"
+          bind:value={user.cor_biografia}
+          disabled={loading}
+          class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-600 dark:bg-gray-800"
+        />
+
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          {user.cor_biografia}
+        </span>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        Prévia da biografia
+      </p>
+
+      <p
+        class="whitespace-pre-wrap break-words text-sm"
+        style={`color: ${user.cor_biografia || '#000000'}`}
+      >
+        {user.biografia || 'Sua biografia aparecerá aqui.'}
+      </p>
+    </div>
+  </div>
+</section>
+
 
         <!-- Segurança -->
         <section>

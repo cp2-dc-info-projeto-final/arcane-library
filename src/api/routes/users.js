@@ -66,7 +66,9 @@ const camposUsuario = `
   TO_CHAR(datanasc, 'YYYY-MM-DD') AS datanasc,
   cpf,
   telefone,
-  role
+  role,
+  biografia,
+  cor_biografia
 `;
 
 /* =====================================================
@@ -353,12 +355,9 @@ router.post('/login', async function(req, res) {
    PUT - Atualizar próprio usuário
 ===================================================== */
 
+
 router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
   try {
-    console.log('========== FOTO RECEBIDA ==========');
-    console.log('req.file:', req.file);
-    console.log('req.body:', req.body);
-    console.log('===================================');
     const id = req.user.id;
 
     const {
@@ -367,18 +366,24 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
       datanasc,
       cpf,
       telefone,
-      senha
+      senha,
+      biografia,
+      cor_biografia
     } = req.body;
 
     const cpfLimpo = limparCPF(cpf);
     const foto = req.file ? req.file.filename : null;
+
+    const biografiaFinal = biografia || '';
+    const corFinal = /^#[0-9A-Fa-f]{6}$/.test(cor_biografia || '')
+      ? cor_biografia
+      : '#000000';
 
     if (!login?.trim() || !email?.trim() || cpfLimpo.length !== 11 ||
         !telefone || !datanasc) {
       return sendError(res, 400, 'Verifique os campos obrigatórios.');
     }
 
-    // Verificar login de outro usuário
     const existingUser = await pool.query(
       'SELECT id FROM usuario WHERE login = $1 AND id != $2::BIGINT',
       [login.trim(), id]
@@ -390,7 +395,6 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
       ]);
     }
 
-    // Verificar email de outro usuário
     const existingEmail = await pool.query(
       'SELECT id FROM usuario WHERE email = $1 AND id != $2::BIGINT',
       [email.trim(), id]
@@ -421,8 +425,10 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
              senha = $4,
              datanasc = $5,
              cpf = $6,
-             telefone = $7
-         WHERE id = $8::BIGINT
+             telefone = $7,
+             biografia = $8,
+             cor_biografia = $9
+         WHERE id = $10::BIGINT
          RETURNING ${camposUsuario}`,
         [
           foto,
@@ -432,6 +438,8 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
           datanasc,
           cpfLimpo,
           telefone,
+          biografiaFinal,
+          corFinal,
           id
         ]
       );
@@ -444,8 +452,10 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
              email = $3,
              datanasc = $4,
              cpf = $5,
-             telefone = $6
-         WHERE id = $7::BIGINT
+             telefone = $6,
+             biografia = $7,
+             cor_biografia = $8
+         WHERE id = $9::BIGINT
          RETURNING ${camposUsuario}`,
         [
           foto,
@@ -454,6 +464,8 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
           datanasc,
           cpfLimpo,
           telefone,
+          biografiaFinal,
+          corFinal,
           id
         ]
       );
@@ -469,6 +481,7 @@ router.put('/me', verifyToken, upload.single('foto'), async function(req, res) {
     return tratarErroBanco(error, res, 'atualizar usuário');
   }
 });
+
 
 /* =====================================================
    DELETE - Remover próprio usuário
@@ -491,6 +504,33 @@ router.delete('/me', verifyToken, async function(req, res) {
 
   } catch (error) {
     return tratarErroBanco(error, res, 'deletar usuário');
+  }
+});
+
+
+// Rota para a pagina do usuario
+
+
+router.get('/public/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT id, login, foto, biografia, cor_biografia
+       FROM usuario
+       WHERE id = $1::BIGINT`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return sendError(res, 404, 'Usuário não encontrado.');
+    }
+
+    return sendSuccess(res, 200, null, result.rows[0]);
+
+  } catch (error) {
+    console.error('Erro ao buscar perfil:', error);
+    return sendError(res, 500, 'Erro ao carregar perfil do usuário.');
   }
 });
 
@@ -526,6 +566,7 @@ router.get('/:id', verifyToken, isAdmin, async function(req, res) {
    Apenas administrador
 ===================================================== */
 
+
 router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(req, res) {
   try {
     const { id } = req.params;
@@ -537,22 +578,28 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
       datanasc,
       cpf,
       telefone,
-      role
+      role,
+      biografia,
+      cor_biografia
     } = req.body;
 
     const cpfLimpo = limparCPF(cpf);
     const foto = req.file ? req.file.filename : null;
+
+    const biografiaFinal = biografia || '';
+    const corFinal = /^#[0-9A-Fa-f]{6}$/.test(cor_biografia || '')
+      ? cor_biografia
+      : '#000000';
 
     if (!login?.trim() || !email?.trim() || !role ||
         cpfLimpo.length !== 11 || !telefone || !datanasc) {
       return sendError(res, 400, 'Verifique os campos obrigatórios.');
     }
 
-    if (!['cliente', 'admin'].includes(role)) {
+    if (!['cliente', 'admin', 'bibliotecario'].includes(role)) {
       return sendError(res, 400, 'Perfil de usuário inválido.');
     }
 
-    // Verificar existência
     const userExists = await pool.query(
       'SELECT id FROM usuario WHERE id = $1::BIGINT',
       [id]
@@ -562,7 +609,6 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
       return sendError(res, 404, 'Usuário não encontrado');
     }
 
-    // Verificar login duplicado
     const existingUser = await pool.query(
       'SELECT id FROM usuario WHERE login = $1 AND id != $2::BIGINT',
       [login.trim(), id]
@@ -574,7 +620,6 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
       ]);
     }
 
-    // Verificar email duplicado
     const existingEmail = await pool.query(
       'SELECT id FROM usuario WHERE email = $1 AND id != $2::BIGINT',
       [email.trim(), id]
@@ -606,8 +651,10 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
              datanasc = $5,
              cpf = $6,
              telefone = $7,
-             role = $8
-         WHERE id = $9::BIGINT
+             role = $8,
+             biografia = $9,
+             cor_biografia = $10
+         WHERE id = $11::BIGINT
          RETURNING ${camposUsuario}`,
         [
           foto,
@@ -618,6 +665,8 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
           cpfLimpo,
           telefone,
           role,
+          biografiaFinal,
+          corFinal,
           id
         ]
       );
@@ -631,8 +680,10 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
              datanasc = $4,
              cpf = $5,
              telefone = $6,
-             role = $7
-         WHERE id = $8::BIGINT
+             role = $7,
+             biografia = $8,
+             cor_biografia = $9
+         WHERE id = $10::BIGINT
          RETURNING ${camposUsuario}`,
         [
           foto,
@@ -642,6 +693,8 @@ router.put('/:id', verifyToken, isAdmin, upload.single('foto'), async function(r
           cpfLimpo,
           telefone,
           role,
+          biografiaFinal,
+          corFinal,
           id
         ]
       );
@@ -678,5 +731,6 @@ router.delete('/:id', verifyToken, isAdmin, async function(req, res) {
     return tratarErroBanco(error, res, 'deletar usuário');
   }
 });
+
 
 module.exports = router;
