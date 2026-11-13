@@ -169,27 +169,7 @@
 
           {/if}
 
-          <li class="profile-photo-item">
-            <a
-              href={`/perfil/${user.id}`}
-              class="profile-photo-link"
-              aria-label="Abrir meu perfil"
-              title="Meu perfil"
-            >
-              {#if user.foto}
-                <img
-                  src={getFotoUrl(user.foto)}
-                  alt={`Foto de ${user.login}`}
-                  class="navbar-user-photo"
-                />
-              {:else}
-                <span class="navbar-user-placeholder">
-                  {user.login.charAt(0).toUpperCase()}
-                </span>
-              {/if}
-            </a>
-          </li>
-
+          
           {#if user.role === 'admin'}
 
             <li>
@@ -228,6 +208,26 @@
             </li>
 
           {/if}
+          <li class="profile-photo-item">
+            <a
+              href={`/perfil/${user.id}`}
+              class="profile-photo-link"
+              aria-label="Abrir meu perfil"
+              title="Meu perfil"
+            >
+              {#if user.foto}
+                <img
+                  src={getFotoUrl(user.foto)}
+                  alt={`Foto de ${user.login}`}
+                  class="navbar-user-photo"
+                />
+              {:else}
+                <span class="navbar-user-placeholder">
+                  {user.login.charAt(0).toUpperCase()}
+                </span>
+              {/if}
+            </a>
+          </li>
 
           <!-- USUÁRIO -->
           <li class="user-menu-item">

@@ -3,6 +3,8 @@
     import { onMount } from 'svelte';
     import { Spinner } from 'flowbite-svelte';
     import type { ApiResponse } from '$lib/models/ApiResponse';
+    import api from '$lib/api';
+
 
     interface EmprestimoUsuario {
         id: number;
